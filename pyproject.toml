@@ -1,0 +1,8 @@
+[project]
+name = "openlabtwin-scripts"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "python-dateutil>=2.9.0.post0",
+    "supabase>=2.31.0",
+]

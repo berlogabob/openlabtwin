@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+supabase/.temp/
+supabase/.branches/
+.env
+.pi-runs/
