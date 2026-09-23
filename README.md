@@ -9,7 +9,20 @@ Design: `docs/superpowers/specs/2026-09-23-openlabtwin-core-design.md`
 - `supabase/migrations/` holds the schema. Only staff (a `people` row with `is_staff`) can read or write. The anonymous role has no grants at all.
 - `scripts/timetable.py` scrapes the IADE timetable every 6 hours and upserts `lessons` from this week's Monday onward. Older lessons are kept as history.
 - `scripts/export.py` writes `apps/site/web/data/all.json` and `apps/site/web/calendar/lab.ics` from lessons and **approved** activities. It uses explicit columns and a key allowlist (`KEYS`), so emails, purposes, equipment lists and stock never leave the database.
-- `.github/workflows/sync.yml` (every 6 hours, on push, or by hand) runs both scripts, commits the data when it changes, then builds `apps/site` and deploys it to GitHub Pages.
+- `.github/workflows/sync.yml` scrapes the timetable every 6 hours. Every 10 minutes it runs only the export, so approved bookings reach the site within about 15 minutes. It commits the data when it changes, then builds `apps/site` and `apps/office` and deploys both to GitHub Pages. A deploy happens on every push and every 6-hour run, and on a 10-minute run only when the data changed.
+
+## Back office
+
+`apps/office` is a Flutter web app at https://berlogabob.github.io/openlabtwin/office/. Staff sign in with a link sent to their email. Sign-ups are disabled, so only accounts an admin creates can sign in. There, staff log bookings and events: who asked (the email stays private), what for, the rooms or an off-site location, the time, and an optional weekly repeat with skipped dates. They also record the equipment to prepare and tick it off as prepared, see clash warnings against lessons and other approved bookings, and approve, reject, cancel or mark done. Only approved rows are exported, with the public fields only.
+
+Add a staff member:
+
+1. `POST $SUPABASE_URL/auth/v1/admin/users` with the service key and `{"email": "...", "email_confirm": true}`. The response gives the new `id`.
+2. `insert into people (name, kind, email, is_staff, auth_user_id) values ('Name', 'staff', 'email', true, '<id>')`, for example with `uv run python scripts/sqltest.py`'s `query()` or the SQL editor.
+
+The office test: `cd apps/office && flutter analyze && flutter test`. For browser tests, build with `--dart-define=E2E=true` to turn on the accessibility tree that Playwright reads.
+
+The old Google Calendar bookings feed is retired.
 
 ## Site
 
