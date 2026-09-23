@@ -5,8 +5,7 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: "15 */6 * * *" # scrape the IADE timetable
-    - cron: "*/10 * * * *" # publish approved bookings (export only; deploys only when data changed)
+    - cron: "15 */6 * * *" # scrape the IADE timetable (GitHub may delay or skip scheduled runs; the lab edge node is the backup)
 
 permissions:
   contents: write
@@ -20,38 +19,30 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    outputs:
-      deploy: ${{ steps.commit.outputs.deploy }}
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-      QUICK: ${{ github.event.schedule == '*/10 * * * *' }}
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
       - run: uv sync --locked
       # both scripts exit non-zero before writing if something looks wrong; the last good site stays published
-      - if: env.QUICK != 'true'
-        run: uv run python scripts/timetable.py
+      - run: uv run python scripts/timetable.py
       - run: uv run python scripts/export.py
       - name: Commit data if changed
-        id: commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add apps/site/web/data apps/site/web/calendar
           if git diff --cached --quiet; then
             echo "No changes"
-            [ "$QUICK" = "true" ] || echo "deploy=true" >> "$GITHUB_OUTPUT"
           else
             git commit -m "Sync schedule"
             git push
-            echo "deploy=true" >> "$GITHUB_OUTPUT"
           fi
 
   deploy:
     needs: sync
-    if: needs.sync.outputs.deploy == 'true'
     runs-on: ubuntu-latest
     environment: github-pages
     steps:

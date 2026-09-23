@@ -4,8 +4,11 @@ on:
   push:
   pull_request:
 
+# Database tests (supabase/tests/database) run locally with `uv run python scripts/sqltest.py` against the
+# hosted project over HTTPS before any migration is pushed. They used to run here in a Docker Supabase, but
+# GitHub's container registry rate-limits those image pulls (toomanyrequests), so CI kept failing on infrastructure.
 jobs:
-  test:
+  scripts:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -13,12 +16,6 @@ jobs:
       - run: uv sync --locked
       - name: Python tests
         run: for t in tests/test_*.py; do uv run python "$t"; done
-      - uses: supabase/setup-cli@v1
-        with:
-          version: latest
-      - run: supabase db start
-      - name: Database tests
-        run: supabase test db
 
   site:
     runs-on: ubuntu-latest
