@@ -75,7 +75,7 @@ This follows UNIDCOM RIMS, which learned the hard way that row-level security ha
 | 2 Public site, multi-select filters, lab TV, lab.ics | live |
 | 3 Back office: bookings, approval, equipment, clash warnings | live |
 | 4 Inventory: movements, stock, loans, kit issue/return, stationary clashes | live |
-| Edge node for 10-minute publishing | planned, machine arrives 2026-09-24 |
+| Edge node: 10-minute publishing, nightly backup | scripts ready (`edge-setup.sh`, `publish.sh`, `backup.py`); PC set up 2026-09-24 |
 | 5 Thesis layer: demand forecast, Godot view | not started; scope depends on the thesis topic change |
 
 Deferred on purpose: serial-numbered assets and RFID/QR tagging, procurement, professor and student sign-in, consultation self-booking, and local-first sync.

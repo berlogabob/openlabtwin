@@ -93,6 +93,18 @@ The IADE network blocks outgoing Postgres ports 5432 and 6543, so `psql` and `su
 - migrations and database tests use the Management API's SQL endpoint (`scripts/sqltest.py`);
 - the office uses the Supabase REST and auth APIs.
 
+## Keeping the project alive, and backups
+
+- **Pausing:** free Supabase projects pause after 7 days of low activity, and any API request resets the timer. The edge node's 10-minute export keeps it awake. A paused project can be restored from the dashboard within a year.
+- **Backups:** the free plan keeps none. `scripts/backup.py` on the edge node writes a nightly JSON copy of every table ([edge-node.md → Backups](edge-node.md#backups)).
+
+## Security advisor
+
+Run it after schema changes: Supabase dashboard → Advisors, or `GET https://api.supabase.com/v1/projects/<ref>/advisors/security` with the access token. As of 2026-09-24, the accepted findings are:
+- `is_staff()` is callable by signed-in users. The RLS policies call it as the user, and it only reveals whether you yourself are staff.
+- Leaked-password protection is off. There are no passwords, only email links.
+- The performance advisor lists foreign keys without indexes. The tables are tiny; add indexes when `movements` or `activities` reach thousands of rows.
+
 ## Troubleshooting
 
 | Symptom | Cause | Fix |

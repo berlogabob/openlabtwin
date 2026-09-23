@@ -22,7 +22,8 @@ The IADE game lab's system of record: rooms, storage, equipment, people, booking
 ```
 supabase/migrations/   schema, row-level security, grants, audit      supabase/tests/database/  pgTAP tests
 scripts/               timetable.py (scrape), export.py (public JSON + lab.ics), db.py (PostgREST over urllib),
-                       sqltest.py (migrations + DB tests over HTTPS), publish.sh (edge node), ics.py, timetable_parse.py
+                       sqltest.py (migrations + DB tests over HTTPS), publish.sh + edge-setup.sh (edge node), backup.py,
+                       ics.py, timetable_parse.py
 tests/                 Python tests (plain asserts: uv run python tests/test_x.py)
 apps/site/             public site + TV (Jaspr, static)                 apps/office/  back office (Flutter web)
 .github/workflows/     sync.yml (scrape, export, build, deploy)          test.yml (Python, site, office tests)
