@@ -8,8 +8,18 @@ Design: `docs/superpowers/specs/2026-09-23-openlabtwin-core-design.md`
 
 - `supabase/migrations/` holds the schema. Only staff (a `people` row with `is_staff`) can read or write. The anonymous role has no grants at all.
 - `scripts/timetable.py` scrapes the IADE timetable every 6 hours and upserts `lessons` from this week's Monday onward. Older lessons are kept as history.
-- `scripts/export.py` writes `apps/site/data/all.json` from lessons and **approved** activities. It uses explicit columns and a key allowlist (`KEYS`), so emails, purposes, equipment lists and stock never leave the database.
-- `.github/workflows/sync.yml` runs both scripts and commits `all.json` when it changes.
+- `scripts/export.py` writes `apps/site/web/data/all.json` and `apps/site/web/calendar/lab.ics` from lessons and **approved** activities. It uses explicit columns and a key allowlist (`KEYS`), so emails, purposes, equipment lists and stock never leave the database.
+- `.github/workflows/sync.yml` (every 6 hours, on push, or by hand) runs both scripts, commits the data when it changes, then builds `apps/site` and deploys it to GitHub Pages.
+
+## Site
+
+`apps/site` is a static [Jaspr](https://jaspr.site) site. Both pages fetch `data/all.json` in the browser.
+
+- Schedule: https://berlogabob.github.io/openlabtwin/. Every filter takes several values (`?teacher=A&teacher=B`): values within a field are ORed, and fields are ANDed. `room=` with no value means any room. Bookings show in blue and events in green.
+- Lab TV: https://berlogabob.github.io/openlabtwin/tv/?room=A&room=B shows the rooms side by side for today, plus upcoming events. It reloads every 5 minutes and keeps the last data if the network drops. Without `room`, it shows the Tech Lab.
+- Calendar: https://berlogabob.github.io/openlabtwin/calendar/lab.ics
+
+Locally: `cd apps/site && dart test && jaspr serve` (install the CLI once with `dart pub global activate jaspr_cli 0.23.4`). The page logic is in `lib/schedule.dart` and `lib/calendar.dart`; the pages are in `lib/pages/`.
 
 ## Run locally
 

@@ -19,3 +19,15 @@ jobs:
       - run: supabase db start
       - name: Database tests
         run: supabase test db
+
+  site:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/site
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+      - run: dart pub get
+      - run: dart analyze
+      - run: dart test
