@@ -38,7 +38,7 @@ This is also the first **guarded public write path**. Until now the anonymous ro
 ## Staff flow
 
 - **Office:** a new "Consultation hours" screen (weekday, from, to, slot length) to add and remove rows.
-- **Requests:** they appear in the bookings list as `requested` consultations titled "Consultation". The student's name and email come from `people`, and the project and link are in `purpose`. Approve, reject or cancel as usual; the status page follows.
+- **Requests:** they appear in the bookings list as `requested` consultations titled "Consultation". The student's name and email come from `people`, the project is in `purpose`, and the link is in `contact_link`. The booking form shows the link and whether the student opted in to research, both read-only. Approve, reject or cancel as usual; the status page follows.
 - **Public view:** an approved consultation appears on the site as "Consultation" in the Tech Lab, with no student name (`requester_display` stays null).
 
 ## Data (migration)
