@@ -7,7 +7,7 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 
-from db import chunks, connect, fetch_all
+from db import chunks, connect, request, select
 from timetable_parse import (BASE, TZ, all_lessons_unique, degree, find_pages, get, group_programmes, monday_of,
                              parse_page)
 
@@ -57,14 +57,14 @@ def main():
         sys.exit("Too few lessons or too many failures. Source format may have changed.")
 
     rows = to_rows(lessons, group_programmes(index_html))
-    client = connect()
-    existing = [r["hash"] for r in fetch_all(
-        lambda: client.table("lessons").select("hash").gte("date", monday).order("id"))]
+    db = connect()
+    existing = [r["hash"] for r in select(db, "lessons", {"select": "hash", "date": f"gte.{monday}", "order": "id"})]
     upserts, deletes = plan_sync(existing, rows)
     for c in chunks(upserts):
-        client.table("lessons").upsert(c, on_conflict="hash").execute()
+        request(db, "POST", "lessons", {"on_conflict": "hash"}, c,
+                {"Prefer": "resolution=merge-duplicates,return=minimal"})
     for c in chunks(deletes, 100):  # hashes go in the URL; 100 keeps it short
-        client.table("lessons").delete().in_("hash", c).execute()
+        request(db, "DELETE", "lessons", {"hash": "in.(" + ",".join(c) + ")"}, headers={"Prefer": "return=minimal"})
     print(f"Upserted: {len(upserts)}\nDeleted: {len(deletes)}")
 
 

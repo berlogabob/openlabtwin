@@ -1,9 +1,8 @@
 """IADE timetable fetch + parse, ported verbatim from iade-lab-schedule/scripts/fetch.py."""
-import html
 import re
 import time
 import urllib.request
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from html.parser import HTMLParser
 from zoneinfo import ZoneInfo
 
@@ -14,7 +13,6 @@ BASE = "https://horariosturmas.europeia.pt/UE_IADE/HorariosTurmas/"
 TZ = ZoneInfo("Europe/Lisbon")
 
 
-DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
 
 LINK_RE = re.compile(r'href="(turma_[^"?]+_\d*?(\d{8})\.html)')

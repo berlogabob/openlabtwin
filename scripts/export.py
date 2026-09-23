@@ -12,14 +12,14 @@ from pathlib import Path
 
 from dateutil.rrule import rrulestr
 
-from db import connect, fetch_all
+from db import connect, select
 from timetable_parse import TZ, monday_of
 
 ROOT = Path(__file__).resolve().parent.parent
 WINDOW_DAYS = 180  # how far ahead repeating activities are expanded
 KEYS = frozenset({"date", "start", "end", "course", "groups", "teachers", "type", "rooms", "programmes", "degrees",
                   "layer", "note"})
-LESSON_COLS = "id,date,start_time,end_time,course,groups,teachers,type,rooms,programmes,degrees"
+LESSON_COLS = "date,start_time,end_time,course,groups,teachers,type,rooms,programmes,degrees"
 ACTIVITY_COLS = ("id,title,layer,kind,place_ids,location_text,starts_at,ends_at,rrule,exdates,status,"
                  "requester_display,organization_id,public_note")
 
@@ -84,12 +84,11 @@ def main():
     out_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "apps/site/data"
     today = datetime.now(TZ).date()
     monday = monday_of(today).isoformat()
-    client = connect()
-    lessons = fetch_all(lambda: client.table("lessons").select(LESSON_COLS).gte("date", monday).order("id"))
-    activities = fetch_all(
-        lambda: client.table("activities").select(ACTIVITY_COLS).eq("status", "approved").order("id"))
-    places = fetch_all(lambda: client.table("places").select("id,name,iade_name,public").order("id"))
-    organizations = fetch_all(lambda: client.table("organizations").select("id,name").order("id"))
+    db = connect()
+    lessons = select(db, "lessons", {"select": LESSON_COLS, "date": f"gte.{monday}", "order": "id"})
+    activities = select(db, "activities", {"select": ACTIVITY_COLS, "status": "eq.approved", "order": "id"})
+    places = select(db, "places", {"select": "id,name,iade_name,public", "order": "id"})
+    organizations = select(db, "organizations", {"select": "id,name", "order": "id"})
     records = build(lessons, activities, places, organizations, today)
     if not any(r["layer"] == "lesson" for r in records):
         sys.exit("No lessons to export; refusing to publish an empty schedule.")
