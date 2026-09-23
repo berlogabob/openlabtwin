@@ -1,48 +1,22 @@
-/// The entrypoint for the **server** environment.
-///
-/// The [main] method will only be executed on the server during pre-rendering.
-/// To run code on the client, check the `main.client.dart` file.
+/// Server entrypoint: runs only during the static build (pre-rendering).
 library;
 
 import 'package:jaspr/dom.dart';
-// Server-specific Jaspr import.
 import 'package:jaspr/server.dart';
 
-// Imports the [App] component.
 import 'app.dart';
-
-// This file is generated automatically by Jaspr, do not remove or edit.
 import 'main.server.options.dart';
 
-void main() {
-  // Initializes the server environment with the generated default options.
-  Jaspr.initializeApp(
-    options: defaultServerOptions,
-  );
+/// '/' locally; the GitHub Pages build passes --dart-define=BASE=/openlabtwin/.
+const base = String.fromEnvironment('BASE', defaultValue: '/');
 
-  // Starts the app.
-  //
-  // [Document] renders the root document structure (<html>, <head> and <body>)
-  // with the provided parameters and components.
+void main() {
+  Jaspr.initializeApp(options: defaultServerOptions);
   runApp(Document(
-    title: 'site_tmp',
-    styles: [
-      // Special import rule to include to another css file.
-      css.import('https://fonts.googleapis.com/css?family=Roboto'),
-      // Each style rule takes a valid css selector and a set of styles.
-      // Styles are defined using type-safe css bindings and can be freely chained and nested.
-      css('html, body').styles(
-        width: 100.percent,
-        minHeight: 100.vh,
-        padding: .zero,
-        margin: .zero,
-        fontFamily: const .list([FontFamily('Roboto'), FontFamilies.sansSerif]),
-      ),
-      css('h1').styles(
-        margin: .unset,
-        fontSize: 4.rem,
-      ),
-    ],
-    body: App(),
+    title: 'IADE Schedule',
+    lang: 'en',
+    base: base,
+    head: [link(rel: 'stylesheet', href: 'style.css')],
+    body: const App(),
   ));
 }
