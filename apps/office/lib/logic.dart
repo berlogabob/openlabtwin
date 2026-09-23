@@ -133,3 +133,74 @@ List<String> clashes(Activity a, Set<String> roomNames, List<Map<String, dynamic
   }
   return out;
 }
+
+// ---------- inventory ----------
+
+const movementKinds = ['receive', 'move', 'issue', 'return', 'consume', 'adjust'];
+
+/// A `movements` row, checked against the same shape rule the database enforces (movement_shape).
+/// Fields a kind doesn't use are sent as null, so the check constraint never trips on leftovers.
+Map<String, dynamic> movementRow({
+  required String kind,
+  required int itemId,
+  required num qty,
+  int? from,
+  int? to,
+  int? personId,
+  int? activityId,
+  int? byStaff,
+}) {
+  var problem = switch (kind) {
+    'receive' => to == null ? 'Pick where it goes.' : null,
+    'move' => from == null || to == null ? 'Pick both places.' : (from == to ? 'From and to must differ.' : null),
+    'issue' => from == null || personId == null ? 'Pick the place and the person.' : null,
+    'return' => to == null || personId == null ? 'Pick the person and where it goes back.' : null,
+    'consume' => from == null ? 'Pick where it was used from.' : null,
+    'adjust' => to == null ? 'Pick the place to correct.' : null,
+    _ => 'Unknown kind: $kind',
+  };
+  if (problem == null && kind == 'adjust' && qty == 0) problem = 'A correction of 0 changes nothing.';
+  if (problem == null && kind != 'adjust' && qty <= 0) problem = 'Quantity must be more than 0.';
+  if (problem != null) throw ArgumentError(problem);
+  return {
+    'kind': kind,
+    'item_id': itemId,
+    'qty': qty,
+    'from_place': const {'move', 'issue', 'consume'}.contains(kind) ? from : null,
+    'to_place': const {'receive', 'move', 'return', 'adjust'}.contains(kind) ? to : null,
+    'person_id': const {'issue', 'return'}.contains(kind) ? personId : null,
+    'activity_id': activityId,
+    'by_staff': byStaff,
+  };
+}
+
+/// Kit lines (item_id, qty) the place can't cover, as readable warnings. Stock rows: item_id, place_id, qty.
+List<String> shortages(List<Map<String, dynamic>> kit, int placeId, List<Map<String, dynamic>> stock, Map<int, String> names) {
+  num have(int item) => stock.where((s) => s['item_id'] == item && s['place_id'] == placeId).fold<num>(0, (t, s) => t + (s['qty'] as num));
+  return [
+    for (final k in kit)
+      if (have(k['item_id'] as int) < (k['qty'] as num))
+        '${names[k['item_id']] ?? 'item ${k['item_id']}'}: need ${k['qty']}, have ${have(k['item_id'] as int)}'
+  ];
+}
+
+/// Stationary items (laser cutter, 3D printer…) that another approved activity has at an overlapping time.
+List<String> equipmentClashes(Activity a, Set<int> mine, List<(Activity, Set<int>)> others, Map<int, String> names) {
+  final out = <String>[];
+  final length = a.end.difference(a.start);
+  for (final s in a.occurrences()) {
+    final day = isoDate(s), from = _min(hhmm(s)), to = _min(hhmm(s.add(length)));
+    for (final (o, theirs) in others) {
+      final shared = mine.intersection(theirs);
+      if (o.id == a.id || shared.isEmpty) continue;
+      final oLength = o.end.difference(o.start);
+      for (final os in o.occurrences()) {
+        if (isoDate(os) == day && _min(hhmm(os)) < to && from < _min(hhmm(os.add(oLength)))) {
+          out.add('$day ${hhmm(os)}–${hhmm(os.add(oLength))} ${[for (final i in shared) names[i] ?? '$i'].join(', ')} '
+              'also booked for ${o.title}');
+        }
+      }
+    }
+  }
+  return out;
+}

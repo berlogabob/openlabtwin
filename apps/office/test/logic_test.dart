@@ -58,4 +58,44 @@ void main() {
       '2026-10-20 09:00–10:30 booking: Club',
     ]);
   });
+
+  test('movement rows follow the database shape rule and null the fields a kind does not use', () {
+    expect(movementRow(kind: 'receive', itemId: 1, qty: 10, from: 3, to: 2),
+        {'kind': 'receive', 'item_id': 1, 'qty': 10, 'from_place': null, 'to_place': 2, 'person_id': null, 'activity_id': null, 'by_staff': null});
+    expect(movementRow(kind: 'issue', itemId: 1, qty: 2, from: 2, to: 9, personId: 7, activityId: 5)['to_place'], isNull);
+    expect(movementRow(kind: 'adjust', itemId: 1, qty: -3, to: 2)['qty'], -3);
+    for (final bad in [
+      () => movementRow(kind: 'issue', itemId: 1, qty: 2, from: 2),
+      () => movementRow(kind: 'move', itemId: 1, qty: 2, from: 2, to: 2),
+      () => movementRow(kind: 'receive', itemId: 1, qty: 0, to: 2),
+      () => movementRow(kind: 'adjust', itemId: 1, qty: 0, to: 2),
+      () => movementRow(kind: 'teleport', itemId: 1, qty: 1, to: 2),
+    ]) {
+      expect(bad, throwsArgumentError);
+    }
+  });
+
+  test('shortages: kit lines the chosen place cannot cover', () {
+    final stock = [
+      {'item_id': 1, 'place_id': 2, 'qty': 3},
+      {'item_id': 1, 'place_id': 9, 'qty': 50},
+      {'item_id': 4, 'place_id': 2, 'qty': 8},
+    ];
+    final kit = [
+      {'item_id': 1, 'qty': 5},
+      {'item_id': 4, 'qty': 8},
+      {'item_id': 6, 'qty': 1},
+    ];
+    expect(shortages(kit, 2, stock, {1: 'ESP32', 4: 'Breadboard'}), ['ESP32: need 5, have 3', 'item 6: need 1, have 0']);
+  });
+
+  test('stationary equipment booked twice at overlapping times', () {
+    final a = Activity(id: 1, title: 'Workshop', start: DateTime(2026, 10, 20, 10), end: DateTime(2026, 10, 20, 12));
+    final others = [
+      (Activity(id: 2, title: 'Club', start: DateTime(2026, 10, 20, 11), end: DateTime(2026, 10, 20, 13)), {7}),
+      (Activity(id: 3, title: 'Later', start: DateTime(2026, 10, 20, 12), end: DateTime(2026, 10, 20, 13)), {7}),
+      (Activity(id: 4, title: 'Other kit', start: DateTime(2026, 10, 20, 10), end: DateTime(2026, 10, 20, 12)), {8}),
+    ];
+    expect(equipmentClashes(a, {7}, others, {7: 'Laser cutter'}), ['2026-10-20 11:00–13:00 Laser cutter also booked for Club']);
+  });
 }

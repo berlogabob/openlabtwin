@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 import 'data.dart';
+import 'inventory.dart';
 import 'logic.dart';
 
 const statusColors = {
@@ -43,6 +44,12 @@ class _BookingsPageState extends State<BookingsPage> {
           final loaded = snap.data;
           return Scaffold(
             appBar: AppBar(title: const Text('Lab bookings'), actions: [
+              if (loaded != null)
+                IconButton(
+                  tooltip: 'Inventory',
+                  icon: const Icon(Icons.inventory_2_outlined),
+                  onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => InventoryPage(refs: loaded.$1))),
+                ),
               IconButton(tooltip: 'Reload', icon: const Icon(Icons.refresh), onPressed: () => setState(() => data = _load())),
               IconButton(tooltip: 'Sign out', icon: const Icon(Icons.logout), onPressed: () => db.auth.signOut()),
             ]),
@@ -263,6 +270,71 @@ class _BookingFormState extends State<BookingForm> {
     await _loadKit();
   }
 
+  /// Issue or return the whole equipment list in one go, as movements linked to this booking.
+  Future<void> _kit(String kind) async {
+    int? placeId = [for (final p in refs.places) if (p['tier'] == 'fast') p['id'] as int].firstOrNull;
+    int? personId = a.requesterId;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, set) => AlertDialog(
+          title: Text(kind == 'issue' ? 'Issue kit' : 'Return kit'),
+          content: Column(mainAxisSize: MainAxisSize.min, children: [
+            DropdownButton<int?>(
+              value: placeId,
+              isExpanded: true,
+              hint: Text(kind == 'issue' ? 'From' : 'Back to'),
+              items: [for (final p in refs.places) DropdownMenuItem(value: p['id'] as int, child: Text(p['name'] as String))],
+              onChanged: (v) => set(() => placeId = v),
+            ),
+            DropdownButton<int?>(
+              value: personId,
+              isExpanded: true,
+              hint: Text(kind == 'issue' ? 'Given to' : 'Returned by'),
+              items: [for (final p in refs.people) DropdownMenuItem(value: p['id'] as int, child: Text(p['name'] as String))],
+              onChanged: (v) => set(() => personId = v),
+            ),
+          ]),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+            FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(kind == 'issue' ? 'Issue' : 'Return')),
+          ],
+        ),
+      ),
+    );
+    if (ok != true) return;
+    try {
+      final rows = [
+        for (final k in kit)
+          movementRow(
+              kind: kind, itemId: k['item_id'] as int, qty: k['qty'] as num, from: placeId, to: placeId, personId: personId, activityId: a.id, byStaff: refs.me),
+      ];
+      if (kind == 'issue') {
+        final short = shortages(kit, placeId!, await stock(), refs.itemNames);
+        if (short.isNotEmpty && mounted) {
+          final go = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Not enough in stock there'),
+              content: Text('${short.join('\n')}\n\nIssue anyway? Stock will go negative until you record a receive or move.'),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Issue anyway')),
+              ],
+            ),
+          );
+          if (go != true) return;
+        }
+      }
+      await addMovements(rows);
+      _say('${kind == 'issue' ? 'Issued' : 'Returned'} ${rows.length} line(s).');
+    } on ArgumentError catch (e) {
+      _say(e.message as String);
+    } catch (e) {
+      _say('Could not record: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = a.start;
@@ -374,7 +446,12 @@ class _BookingFormState extends State<BookingForm> {
               await _loadKit();
             },
           ),
-        if (a.id != null) TextButton.icon(onPressed: _addKit, icon: const Icon(Icons.add), label: const Text('Add equipment')),
+        if (a.id != null)
+          Wrap(spacing: 8, children: [
+            TextButton.icon(onPressed: _addKit, icon: const Icon(Icons.add), label: const Text('Add equipment')),
+            if (kit.isNotEmpty) TextButton.icon(onPressed: () => _kit('issue'), icon: const Icon(Icons.outbox), label: const Text('Issue kit')),
+            if (kit.isNotEmpty) TextButton.icon(onPressed: () => _kit('return'), icon: const Icon(Icons.move_to_inbox), label: const Text('Return kit')),
+          ]),
       ]),
     );
   }

@@ -15,6 +15,8 @@ Design: `docs/superpowers/specs/2026-09-23-openlabtwin-core-design.md`
 
 `apps/office` is a Flutter web app at https://berlogabob.github.io/openlabtwin/office/. Staff sign in with a link sent to their email. Sign-ups are disabled, so only accounts an admin creates can sign in. There, staff log bookings and events: who asked (the email stays private), what for, the rooms or an off-site location, the time, and an optional weekly repeat with skipped dates. They also record the equipment to prepare and tick it off as prepared, see clash warnings against lessons and other approved bookings, and approve, reject, cancel or mark done. Only approved rows are exported, with the public fields only.
 
+Inventory: the Inventory button in the office's top bar opens a list of every item with its stock per place (fast storage, long-term storage, rooms) and who has what on loan. "Record movement" handles receive, move, issue, return, consume and adjust. Every change is a new row in `movements`: stock is never edited in place, and a mistake is corrected with an `adjust`. On a booking, "Issue kit" and "Return kit" record the whole equipment list at once, linked to that booking. Issuing more than a place holds shows a warning with "Issue anyway", not a block. A stationary item (laser cutter, 3D printer) booked by two approved bookings at the same time shows up as a clash. The `stock` and `on_loan` views are staff-only, and the public export never includes them.
+
 Add a staff member:
 
 1. `POST $SUPABASE_URL/auth/v1/admin/users` with the service key and `{"email": "...", "email_confirm": true}`. The response gives the new `id`.

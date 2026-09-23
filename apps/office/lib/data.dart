@@ -17,16 +17,18 @@ class TimeoutClient extends http.BaseClient {
 
 typedef Rec = Map<String, dynamic>;
 
-/// Reference lists the form needs, loaded once per page.
+/// Reference lists the pages need, loaded once per page.
 class Refs {
-  Refs(this.rooms, this.people, this.orgs, this.items, this.me);
-  final List<Rec> rooms, people, orgs, items;
+  Refs(this.places, this.people, this.orgs, this.items, this.me);
+  final List<Rec> places, people, orgs, items;
   final int? me; // the signed-in staff member's people.id
+  List<Rec> get rooms => [for (final p in places) if (p['kind'] == 'room') p];
+  Map<int, String> get itemNames => {for (final i in items) i['id'] as int: i['name'] as String};
 }
 
 Future<Refs> loadRefs() async {
   final r = await Future.wait([
-    db.from('places').select('id,name,iade_name').eq('kind', 'room').order('name'),
+    db.from('places').select('id,name,iade_name,kind,tier').order('name'),
     db.from('people').select('id,name,kind,email').order('name'),
     db.from('organizations').select('id,name').order('name'),
     db.from('items').select('id,name,kind').order('name'),
@@ -51,7 +53,7 @@ Future<int> saveActivity(Activity a) async {
 }
 
 Future<List<String>> clashWarnings(Activity a, Refs refs) async {
-  if (a.placeIds.isEmpty) return [];
+  if (a.placeIds.isEmpty) return _stationaryClashes(a, refs);
   final names = {
     for (final r in refs.rooms)
       if (a.placeIds.contains(r['id'])) (r['iade_name'] ?? r['name']) as String
@@ -64,11 +66,33 @@ Future<List<String>> clashWarnings(Activity a, Refs refs) async {
       .lte('date', isoDate(last))
       .overlaps('rooms', names.toList());
   final others = await db.from('activities').select().eq('status', 'approved').overlaps('place_ids', a.placeIds);
-  return clashes(a, names, lessons, [for (final o in others) Activity.fromRow(o)]);
+  return [...clashes(a, names, lessons, [for (final o in others) Activity.fromRow(o)]), ...await _stationaryClashes(a, refs)];
+}
+
+/// The same laser cutter / printer booked by another approved activity at an overlapping time.
+Future<List<String>> _stationaryClashes(Activity a, Refs refs) async {
+  if (a.id == null) return [];
+  final mine = {
+    for (final k in await equipment(a.id!))
+      if ((k['items'] as Rec)['kind'] == 'stationary') k['item_id'] as int
+  };
+  if (mine.isEmpty) return [];
+  final rows = await db
+      .from('activity_items')
+      .select('item_id,activities!inner(*)')
+      .inFilter('item_id', mine.toList())
+      .eq('activities.status', 'approved')
+      .neq('activity_id', a.id!);
+  final byActivity = <int, (Activity, Set<int>)>{};
+  for (final r in rows) {
+    final o = Activity.fromRow(r['activities'] as Rec);
+    byActivity.putIfAbsent(o.id!, () => (o, <int>{})).$2.add(r['item_id'] as int);
+  }
+  return equipmentClashes(a, mine, byActivity.values.toList(), refs.itemNames);
 }
 
 Future<List<Rec>> equipment(int activityId) =>
-    db.from('activity_items').select('item_id,qty,prepared,items(name)').eq('activity_id', activityId).order('item_id');
+    db.from('activity_items').select('item_id,qty,prepared,items(name,kind)').eq('activity_id', activityId).order('item_id');
 
 Future<void> setEquipment(int activityId, int itemId, num qty, bool prepared) => db
     .from('activity_items')
@@ -85,3 +109,12 @@ Future<Rec> addPerson(String name, String kind, String email) => db
 
 Future<Rec> addItem(String name, String kind) =>
     db.from('items').insert({'name': name.trim(), 'kind': kind}).select('id,name,kind').single();
+
+// ---------- inventory ----------
+
+Future<List<Rec>> stock() => db.from('stock').select('item_id,place_id,qty');
+
+Future<List<Rec>> onLoan() => db.from('on_loan').select('item_id,person_id,qty');
+
+/// Movements are append-only: a mistake is corrected with an 'adjust' row, never edited.
+Future<void> addMovements(List<Rec> rows) => db.from('movements').insert(rows);
