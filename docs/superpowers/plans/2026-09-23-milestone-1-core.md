@@ -5,14 +5,14 @@
 **Goal:** A Supabase database holding the lab's core data (places, items, movements, people, organizations, activities, lessons), with access locked to staff. The IADE timetable is scraped into it, and approved data is exported to an `all.json` in the same shape as the current site's.
 
 **Architecture:**
-- **Schema:** SQL migrations under `supabase/`, tested with pgTAP against a local Supabase.
+- **Schema:** SQL migrations under `supabase/`, tested with pgTAP against the hosted Supabase project (no Docker), each test rolled back.
 - **Scripts:** two Python scripts talk to Supabase with the service key.
   - `timetable.py` ports the existing scraper and upserts `lessons`.
   - `export.py` builds the public JSON through a field allowlist.
 - **Helpers:** pure logic (parsing, row mapping, sync planning, repeat expansion, allowlist) is separated from the thin database calls, so it can be tested without a database.
 
 **Tech Stack:**
-- Supabase (Postgres 15+, RLS, pgTAP via `supabase test db`), Supabase CLI 2.x
+- Supabase (Postgres 15+, RLS, pgTAP run with psql by `scripts/sqltest.sh`), Supabase CLI 2.x, libpq
 - Python ≥ 3.11 managed with `uv`, using `supabase` (Python client) and `python-dateutil`
 - GitHub Actions
 
@@ -39,8 +39,13 @@
 
 ## Prerequisites (one-time, on the developer machine)
 
-- A Docker runtime for the local Supabase: `brew install orbstack`, then open OrbStack once. Without it, the SQL tests only run in CI (Task 5).
+- **No Docker.** Database tests run against the hosted Supabase project, not a local one.
+- The hosted Supabase project `openlabtwin` (EU region) exists. `.env` in the repo root (gitignored) holds:
+  - `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`;
+  - `DB_URL`, the session pooler connection string (`postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres`).
+- `psql` from `brew install libpq`. It's keg-only; `scripts/sqltest.sh` finds it with `brew --prefix libpq`.
 - Supabase CLI ≥ 2.0 (`supabase --version`; 2.117.0 is installed).
+- `scripts/sqltest.sh` pushes migrations with `supabase db push --db-url` and then runs each `supabase/tests/database/*.sql` with psql. It fails on `not ok`, a test-count mismatch or an SQL error. Test files wrap themselves in `begin … rollback`, so they leave no data behind.
 - The old repo is available at `~/Documents/GitHub/IADE_Schedule`. Task 3 copies code and fixtures from it.
 
 ## File Structure
@@ -70,7 +75,7 @@ openlabtwin/
     test_db.py
     test_export.py
   .github/workflows/
-    test.yml                             python tests + supabase test db on every push
+    test.yml                             python tests + pgTAP on a CI-only local Supabase (GitHub runs Docker, not you)
     sync.yml                             every 6 h: timetable.py, export.py, commit apps/site/data
   apps/site/data/all.json                written by export.py (the site in milestone 2 reads it)
 ```
@@ -132,8 +137,8 @@ rollback;
 
 - [ ] **Step 3: Run it to verify it fails**
 
-Run: `supabase start && supabase test db`
-Expected: FAIL. `relation "items" does not exist`.
+Run: `scripts/sqltest.sh`
+Expected: FAIL. `✗ supabase/tests/database/01_schema.test.sql (SQL error)` with `relation "items" does not exist`.
 
 - [ ] **Step 4: Write the schema migration**
 
@@ -256,7 +261,7 @@ create index lessons_date on lessons (date);
 
 - [ ] **Step 5: Write the seed**
 
-Create `supabase/seed.sql`. It runs on local `supabase db reset`; production gets the same rows by hand in Task 6.
+Create `supabase/seed.sql`. Loaded once into the hosted project with psql (Task 1 Step 6).
 
 ```sql
 insert into places (name, kind, tier, iade_name, public) values
@@ -268,8 +273,9 @@ insert into organizations (name, kind) values ('TechLab', 'club'), ('RobotClub',
 
 - [ ] **Step 6: Run the test to verify it passes**
 
-Run: `supabase db reset && supabase test db`
-Expected: `01_schema.test.sql .. ok`, `All tests successful.`
+Run: `scripts/sqltest.sh`
+Expected: the migration is pushed, then `✓ supabase/tests/database/01_schema.test.sql (4 passed)`.
+Then load the seed once: `set -a; . ./.env; set +a; "$(brew --prefix libpq)/bin/psql" "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/seed.sql`
 
 - [ ] **Step 7: Commit**
 
@@ -337,7 +343,7 @@ rollback;
 
 - [ ] **Step 2: Run it to verify it fails**
 
-Run: `supabase test db`
+Run: `scripts/sqltest.sh`
 Expected: `02_access.test.sql` FAILS. The first failure is `anon cannot read lessons` (anon still has Supabase's default grants), or `relation "audit_log" does not exist`.
 
 - [ ] **Step 3: Write the access migration**
@@ -408,8 +414,8 @@ revoke insert, update, delete, truncate on lessons from authenticated;   -- only
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `supabase db reset && supabase test db`
-Expected: both files `ok`, `All tests successful.`
+Run: `scripts/sqltest.sh`
+Expected: `✓ …01_schema.test.sql (4 passed)` and `✓ …02_access.test.sql (8 passed)`.
 
 - [ ] **Step 5: Commit**
 
@@ -776,14 +782,10 @@ if __name__ == "__main__":
 
 Lessons from before this Monday are never deleted. They stay as history for the thesis.
 
-- [ ] **Step 6: Run the timetable against the local database**
-
-The service key is printed by `supabase status` as `service_role key` (or `Secret key` on newer CLIs).
+- [ ] **Step 6: Run the timetable against the hosted database**
 
 ```bash
-supabase db reset
-export SUPABASE_URL=http://127.0.0.1:54321
-export SUPABASE_SERVICE_KEY=$(supabase status -o env | sed -n 's/^SERVICE_ROLE_KEY="\(.*\)"$/\1/p')
+set -a; . ./.env; set +a
 uv run python scripts/timetable.py
 uv run python scripts/timetable.py   # second run: same upserts, 0 deleted
 uv run python tests/test_timetable.py && uv run python tests/test_db.py
@@ -1002,7 +1004,7 @@ Expected: `ok`
 
 - [ ] **Step 5: Export from the local database and compare with the live site**
 
-The environment from Task 4 Step 6 must still be set, and the local database must still hold that run's lessons.
+Load `.env` as in Task 4 Step 6. The hosted database must hold that run's lessons.
 
 ```bash
 uv run python scripts/export.py
@@ -1130,15 +1132,14 @@ Design: `docs/superpowers/specs/2026-09-23-openlabtwin-core-design.md`
 
 ## Run locally
 
-Needs Docker (OrbStack) for the local database.
+No Docker needed. The database tests run against the hosted project. Put `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` and `DB_URL` (session pooler string) in `.env`, then:
 
 ```bash
 uv sync
-supabase start && supabase db reset
-supabase test db
+brew install libpq                        # psql, used by scripts/sqltest.sh
+scripts/sqltest.sh                        # push migrations + pgTAP tests (each rolls back)
 for t in tests/test_*.py; do uv run python "$t"; done
-export SUPABASE_URL=http://127.0.0.1:54321
-export SUPABASE_SERVICE_KEY=$(supabase status -o env | sed -n 's/^SERVICE_ROLE_KEY="\(.*\)"$/\1/p')
+set -a; . ./.env; set +a
 uv run python scripts/timetable.py && uv run python scripts/export.py
 ```
 
@@ -1153,10 +1154,10 @@ uv run python scripts/timetable.py && uv run python scripts/export.py
 
 ```bash
 for t in tests/test_*.py; do uv run python "$t"; done
-supabase db reset && supabase test db
+scripts/sqltest.sh
 ```
 
-Expected: three `ok` lines, then `All tests successful.`
+Expected: three `ok` lines, then two `✓` lines.
 
 - [ ] **Step 5: Commit**
 
@@ -1171,9 +1172,9 @@ Claude-Session: https://claude.ai/code/session_01TArcJAcFxarRo4kv9wMDtk"
 - [ ] **Step 6: Go-live. The user performs or approves each step; these touch external services.**
 
 1. Create the GitHub repo and push: `gh repo create berlogabob/openlabtwin --public --source . --push`. Public is needed for free GitHub Pages in milestone 2. `all.json` holds only public data.
-2. Create the Supabase project in the dashboard (region: EU, e.g. Frankfurt). Copy the project ref, the URL and the service role key.
-3. `supabase link --project-ref <ref>` and then `supabase db push`.
-4. In the SQL editor, run `supabase/seed.sql`, then create the first staff row: `insert into people (name, kind, email, is_staff) values ('Andrey Dyakov', 'staff', '<your email>', true);`. Its `auth_user_id` is linked at first sign-in in milestone 3.
+2. The Supabase project already exists (Prerequisites). The migrations and seed were applied in Tasks 1–2.
+3. (nothing: `scripts/sqltest.sh` already pushed the migrations)
+4. In the SQL editor, create the first staff row: `insert into people (name, kind, email, is_staff) values ('Andrey Dyakov', 'staff', '<your email>', true);`. Its `auth_user_id` is linked at first sign-in in milestone 3.
 5. `gh secret set SUPABASE_URL` and `gh secret set SUPABASE_SERVICE_KEY`, pasting the values when prompted.
 6. `gh workflow run "Sync timetable and export"`, then `gh run watch`.
 
