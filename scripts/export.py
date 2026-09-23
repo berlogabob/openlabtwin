@@ -1,0 +1,103 @@
+"""Export approved data to the public schedule JSON.
+
+Usage: SUPABASE_URL=... SUPABASE_SERVICE_KEY=... uv run python scripts/export.py [out_dir]
+
+Runs with the service key, which bypasses RLS: the explicit column lists and KEYS allowlist are what keep
+emails, purposes, equipment lists and stock out of the public site.
+"""
+import json
+import sys
+from datetime import datetime, time, timedelta
+from pathlib import Path
+
+from dateutil.rrule import rrulestr
+
+from db import connect, fetch_all
+from timetable_parse import TZ, monday_of
+
+ROOT = Path(__file__).resolve().parent.parent
+WINDOW_DAYS = 180  # how far ahead repeating activities are expanded
+KEYS = frozenset({"date", "start", "end", "course", "groups", "teachers", "type", "rooms", "programmes", "degrees",
+                  "layer", "note"})
+LESSON_COLS = "id,date,start_time,end_time,course,groups,teachers,type,rooms,programmes,degrees"
+ACTIVITY_COLS = ("id,title,layer,kind,place_ids,location_text,starts_at,ends_at,rrule,exdates,status,"
+                 "requester_display,organization_id,public_note")
+
+
+def lesson_record(r):
+    return {"date": r["date"], "start": r["start_time"][:5], "end": r["end_time"][:5], "course": r["course"],
+            "groups": r["groups"], "teachers": r["teachers"], "type": r["type"], "rooms": r["rooms"],
+            "programmes": r["programmes"], "degrees": r["degrees"], "layer": "lesson", "note": ""}
+
+
+def occurrences(a, first, last):
+    """(start, end) local datetimes of an activity between two dates. Repeats run on Lisbon wall-clock time."""
+    start = datetime.fromisoformat(a["starts_at"]).astimezone(TZ).replace(tzinfo=None)
+    length = datetime.fromisoformat(a["ends_at"]) - datetime.fromisoformat(a["starts_at"])
+    if a.get("rrule"):
+        starts = rrulestr(a["rrule"], dtstart=start).between(datetime.combine(first, time.min),
+                                                            datetime.combine(last, time.max), inc=True)
+    else:
+        starts = [start] if first <= start.date() <= last else []
+    skip = set(a.get("exdates") or [])
+    return [(s, s + length) for s in starts if s.date().isoformat() not in skip]
+
+
+def activity_records(a, place_names, org_names, first, last):
+    rooms = [place_names[p] for p in a["place_ids"] if p in place_names]
+    if not rooms and a.get("location_text"):
+        rooms = [a["location_text"]]
+    org = org_names.get(a.get("organization_id"))
+    return [{"date": s.date().isoformat(), "start": s.strftime("%H:%M"), "end": e.strftime("%H:%M"),
+             "course": a["title"], "groups": [org] if org else [],
+             "teachers": [a["requester_display"]] if a.get("requester_display") else [],
+             "type": a["kind"].capitalize(), "rooms": rooms, "programmes": [], "degrees": [],
+             "layer": a["layer"], "note": a.get("public_note") or ""}
+            for s, e in occurrences(a, first, last)]
+
+
+def assert_whitelist(records):
+    for r in records:
+        stray = set(r) - KEYS
+        assert not stray, f"record {r.get('course')!r} {r.get('date')} has forbidden keys: {sorted(stray)}"
+
+
+def build(lessons, activities, places, organizations, today):
+    first = monday_of(today)
+    last = first + timedelta(days=WINDOW_DAYS)
+    place_names = {p["id"]: p["iade_name"] or p["name"] for p in places if p["public"]}
+    org_names = {o["id"]: o["name"] for o in organizations}
+    out = [lesson_record(r) for r in lessons if r["date"] >= first.isoformat()]
+    for a in activities:
+        if a["status"] == "approved":  # also filtered in the query; checked again so a query change can't leak
+            out += activity_records(a, place_names, org_names, first, last)
+    assert_whitelist(out)
+    return sorted(out, key=lambda r: (r["date"], r["start"], r["course"]))
+
+
+def render(records):
+    """One record per line, like the current all.json, so git diffs stay readable."""
+    return "[\n" + ",\n".join(json.dumps(r, ensure_ascii=False, separators=(",", ":")) for r in records) + "\n]\n"
+
+
+def main():
+    out_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "apps/site/data"
+    today = datetime.now(TZ).date()
+    monday = monday_of(today).isoformat()
+    client = connect()
+    lessons = fetch_all(lambda: client.table("lessons").select(LESSON_COLS).gte("date", monday).order("id"))
+    activities = fetch_all(
+        lambda: client.table("activities").select(ACTIVITY_COLS).eq("status", "approved").order("id"))
+    places = fetch_all(lambda: client.table("places").select("id,name,iade_name,public").order("id"))
+    organizations = fetch_all(lambda: client.table("organizations").select("id,name").order("id"))
+    records = build(lessons, activities, places, organizations, today)
+    if not any(r["layer"] == "lesson" for r in records):
+        sys.exit("No lessons to export; refusing to publish an empty schedule.")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "all.json").write_text(render(records), encoding="utf-8")
+    print(f"Exported {len(records)} records "
+          f"({sum(r['layer'] == 'lesson' for r in records)} lessons) to {out_dir / 'all.json'}")
+
+
+if __name__ == "__main__":
+    main()
