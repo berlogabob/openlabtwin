@@ -13,10 +13,12 @@ from pathlib import Path
 from dateutil.rrule import rrulestr
 
 from db import connect, select
+from ics import render_ics
 from timetable_parse import TZ, monday_of
 
 ROOT = Path(__file__).resolve().parent.parent
 WINDOW_DAYS = 180  # how far ahead repeating activities are expanded
+ICS_STAMP = "20260921T000000Z"  # ponytail: fixed DTSTAMP keeps lab.ics unchanged unless events change; UIDs + times carry updates
 KEYS = frozenset({"date", "start", "end", "course", "groups", "teachers", "type", "rooms", "programmes", "degrees",
                   "layer", "note"})
 LESSON_COLS = "date,start_time,end_time,course,groups,teachers,type,rooms,programmes,degrees"
@@ -80,8 +82,13 @@ def render(records):
     return "[\n" + ",\n".join(json.dumps(r, ensure_ascii=False, separators=(",", ":")) for r in records) + "\n]\n"
 
 
+def lab_items(records, lab_rooms):
+    """One entry per lab room a record uses, in the shape render_ics() expects."""
+    return [r | {"room": room, "source_url": ""} for r in records for room in r["rooms"] if room in lab_rooms]
+
+
 def main():
-    out_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "apps/site/data"
+    out_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "apps/site/web"
     today = datetime.now(TZ).date()
     monday = monday_of(today).isoformat()
     db = connect()
@@ -92,10 +99,14 @@ def main():
     records = build(lessons, activities, places, organizations, today)
     if not any(r["layer"] == "lesson" for r in records):
         sys.exit("No lessons to export; refusing to publish an empty schedule.")
-    out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "all.json").write_text(render(records), encoding="utf-8")
+    lab_rooms = {p["iade_name"] or p["name"] for p in places if p["public"]}
+    (out_dir / "data").mkdir(parents=True, exist_ok=True)
+    (out_dir / "calendar").mkdir(parents=True, exist_ok=True)
+    (out_dir / "data/all.json").write_text(render(records), encoding="utf-8")
+    (out_dir / "calendar/lab.ics").write_text(render_ics(lab_items(records, lab_rooms), ICS_STAMP), encoding="utf-8",
+                                              newline="")
     print(f"Exported {len(records)} records "
-          f"({sum(r['layer'] == 'lesson' for r in records)} lessons) to {out_dir / 'all.json'}")
+          f"({sum(r['layer'] == 'lesson' for r in records)} lessons) to {out_dir / 'data/all.json'} and lab.ics")
 
 
 if __name__ == "__main__":

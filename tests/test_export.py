@@ -51,4 +51,10 @@ else:
 
 text = export.render(out)
 assert text.startswith("[\n{") and text.endswith("}\n]\n") and json.loads(text) == out
+
+# lab.ics: only the lab room's occurrences, CRLF, with the public fields
+ics = export.render_ics(export.lab_items(out, {"Lab. e Estudo de Jogos - Tech Lab (Oriente)"}), export.ICS_STAMP)
+assert ics.count("BEGIN:VEVENT") == 2 and "SUMMARY:Club meeting" in ics, ics
+assert "Game Frameworks" not in ics and "Open day" not in ics, "only lab-room records"
+assert ics.startswith("BEGIN:VCALENDAR\r\n") and "\n" not in ics.replace("\r\n", "")
 print("ok")
