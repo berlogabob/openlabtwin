@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(14);
+select plan(15);
 
 -- a clean slate inside this rolled-back transaction: only our test hours count
 delete from consultation_hours;
@@ -51,5 +51,7 @@ select is((select count(*)::int from activities a join people p on p.id = a.requ
           'honeypot writes nothing')
   from (select request_consultation('Bot', 'bot@example.com', 'Spam spam spam spam', null, pg_temp.at('16:30'), null, 'http://x')) h;
 
+select throws_like($$ select request_consultation('Cat Test', 'cat@example.com', 'hi', null, now()) $$, '%3–300%',
+                   'the request needs at least a short line');
 select * from finish();
 rollback;

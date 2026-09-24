@@ -101,15 +101,14 @@ void main() {
   });
 
   test('book me: form checks mirror request_consultation()', () {
-    String? check({String name = 'Ana', String email = 'ana@example.com', String project = 'A robot arm project', String link = '', String number = ''}) =>
-        formProblem(name: name, email: email, project: project, link: link, number: number);
+    String? check({String name = 'Ana', String email = 'ana@example.com', String need = 'Help with a 3D print'}) =>
+        formProblem(name: name, email: email, need: need);
     expect(check(), isNull);
-    expect(check(link: 'https://github.com/ana', number: 'A-123'), isNull);
+    expect(check(need: 'LED'), isNull);
     expect(check(name: 'A'), contains('name'));
     expect(check(email: 'ana@'), contains('email'));
-    expect(check(project: 'short'), contains('10–2000'));
-    expect(check(link: 'github.com/ana'), contains('http'));
-    expect(check(number: 'A 123'), contains('student number'));
+    expect(check(need: 'hi'), contains('3–300'));
+    expect(check(need: 'x' * 301), contains('3–300'));
   });
 
   test('ideas: form checks mirror submit_idea()', () {

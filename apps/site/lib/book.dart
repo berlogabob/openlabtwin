@@ -33,10 +33,10 @@ String? contactProblem({required String name, required String email, String link
 }
 
 /// The first problem with the Book me form, or null (mirrors request_consultation()).
-String? formProblem({required String name, required String email, required String project, String link = '', String number = ''}) {
-  final p = project.trim();
-  return contactProblem(name: name, email: email, link: link, number: number) ??
-      (p.length < 10 || p.length > 2000 ? 'Describe your project in 10–2000 characters.' : null);
+String? formProblem({required String name, required String email, required String need}) {
+  final n = need.trim();
+  return contactProblem(name: name, email: email) ??
+      (n.length < 3 || n.length > 300 ? 'Say in a line what you need (3–300 characters).' : null);
 }
 
 const statusLabels = {

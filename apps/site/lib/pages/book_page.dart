@@ -1,4 +1,4 @@
-// "Book me" form (/book/): free slots, the request form, then the private status link.
+// "Book me" form (/book/): free slots of the next 7 days, name, email, one line, then the private status link.
 import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
 import 'package:universal_web/web.dart' as web;
@@ -19,7 +19,7 @@ class BookPage extends StatefulComponent {
 class BookPageState extends State<BookPage> {
   List<Slot>? slots;
   Slot? picked;
-  String name = '', email = '', project = '', link = '', number = '', website = '';
+  String name = '', email = '', need = '', website = '';
   String? error, token;
   bool sending = false;
 
@@ -27,14 +27,15 @@ class BookPageState extends State<BookPage> {
   void initState() {
     super.initState();
     if (!kIsWeb) return;
-    project = Uri.parse(web.window.location.href).queryParameters['project'] ?? ''; // from "Book a consultation about this idea"
+    final p = Uri.parse(web.window.location.href).queryParameters['project'] ?? ''; // from "Book a consultation about this idea"
+    need = p.length > 300 ? p.substring(0, 300) : p;
     _load();
   }
 
   Future<void> _load() async {
     final today = iso(DateTime.now());
     try {
-      final s = await freeSlots(today, shift('day', today, 14));
+      final s = await freeSlots(today, shift('day', today, 6));
       setState(() => slots = s);
     } catch (e) {
       setState(() => error = 'Could not load free times: $e');
@@ -44,7 +45,7 @@ class BookPageState extends State<BookPage> {
   Future<void> _send() async {
     final problem = picked == null
         ? 'Pick a time first.'
-        : formProblem(name: name, email: email, project: project, link: link, number: number);
+        : formProblem(name: name, email: email, need: need);
     if (problem != null) return setState(() => error = problem);
     setState(() {
       sending = true;
@@ -52,8 +53,8 @@ class BookPageState extends State<BookPage> {
     });
     try {
       final t = await rpc('request_consultation', {
-        'p_name': name, 'p_email': email, 'p_project': project, 'p_link': link, 'p_starts_at': picked!.iso,
-        'p_student_number': number, 'p_website': website,
+        'p_name': name, 'p_email': email, 'p_project': need, 'p_link': '', 'p_starts_at': picked!.iso,
+        'p_student_number': '', 'p_website': website,
       });
       setState(() => token = t as String);
     } catch (e) {
@@ -75,7 +76,7 @@ class BookPageState extends State<BookPage> {
     final link = token == null ? '' : Uri.base.resolve('status/?t=$token').toString();
     return div(classes: 'book', [
       header([
-        h1([a(href: './', [.text('Book a consultation')])]),
+        h1([a(href: './', [.text('Book time in the lab')])]),
         nav([a(href: './', [.text('Schedule')])]),
       ]),
       main_([
@@ -86,9 +87,9 @@ class BookPageState extends State<BookPage> {
             p([a(href: link, [.text(link)])]),
           ])
         else ...[
-          p([.text('Time with Andrey, the lab technician, for help with your project. Pick a free slot, then tell us about it.')]),
+          p([.text('Book time with Andrey in the Tech Lab. Pick a free slot.')]),
           if (slots == null && error == null) p(classes: 'empty', [.text('Loading free times…')]),
-          if (slots != null && slots!.isEmpty) p(classes: 'empty', [.text('No free times in the next two weeks. Please check again later.')]),
+          if (slots != null && slots!.isEmpty) p(classes: 'empty', [.text('No free times this week. Please check again later.')]),
           if (slots != null)
             for (final e in byDay(slots!).entries)
               section([
@@ -106,12 +107,7 @@ class BookPageState extends State<BookPage> {
           div(classes: 'form', [
             _field('Name', name, (v) => name = v),
             _field('Email', email, (v) => email = v, type: InputType.email),
-            label([
-              .text('Your project, and what you need help with'),
-              textarea(rows: 4, onInput: (v) => project = v, [.text(project)]),
-            ]),
-            _field('Link (optional: example, repository, social)', link, (v) => this.link = v, type: InputType.url),
-            _field('Student number (optional)', number, (v) => number = v),
+            _field('What do you need?', need, (v) => need = v),
             // honeypot: hidden from people, bots fill it in
             label(classes: 'hp', attributes: {'aria-hidden': 'true'}, [
               .text('Website'),
