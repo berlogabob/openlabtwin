@@ -48,6 +48,19 @@ Current staff: Andrey Dyakov (people id 4).
 
 Sign-in links may only return to `https://berlogabob.github.io/openlabtwin/office/**` and `http://127.0.0.1:8765/**` (local tests). Both are set in Supabase Auth → URL configuration. Supabase's built-in mailer sends a few emails per hour. Enough for staff; if links stop arriving, configure custom SMTP.
 
+## The public write path ("Book me")
+
+Anonymous visitors can read and write no table. They can call exactly three functions, all `security definer`, defined in `supabase/migrations/20260924100000_book_me.sql`:
+- `free_slots` lists free slots;
+- `request_consultation` checks every field, the free slot and the limits (2 open per email, 20 in total), then files the student under `people` by email;
+- `consultation_status` returns only status and time for a private token.
+
+The form's hidden "website" field is a honeypot: bots that fill it in get a fake token and nothing is stored. If spam gets through anyway, add a captcha. Student data is kept, identifiable, as their lab history (a decision of 2026-09-24).
+
+The site calls the functions with the anon key, which the Pages build gets from the `SUPABASE_URL` and `SUPABASE_ANON_KEY` repository variables. To build locally: `jaspr build --dart-define=BASE=/openlabtwin/ --dart-define=SUPABASE_URL=… --dart-define=SUPABASE_ANON_KEY=…`.
+
+To regenerate the printable QR code: `uv run --with segno python -c "import segno; segno.make('https://berlogabob.github.io/openlabtwin/book/', error='m').save('apps/site/web/qr/book.svg', scale=8, border=2)"`.
+
 ## Rooms and the TV
 
 The lab rooms are rows in `places` (`kind = 'room'`). `iade_name` must be the exact room name the IADE timetable uses, so lessons, bookings and filters line up. `public = true` lets the room appear in the export. To add the second lab room:

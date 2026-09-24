@@ -7,6 +7,7 @@ The IADE game lab's system of record: rooms, storage, equipment, people, booking
 | Schedule (public) | https://berlogabob.github.io/openlabtwin/ |
 | Lab TV | https://berlogabob.github.io/openlabtwin/tv/?room=Lab.+e+Estudo+de+Jogos+-+Tech+Lab+(Oriente) |
 | Calendar feed | https://berlogabob.github.io/openlabtwin/calendar/lab.ics |
+| Book a consultation (QR) | https://berlogabob.github.io/openlabtwin/book/ |
 | Back office (staff) | https://berlogabob.github.io/openlabtwin/office/ |
 
 ## Documentation

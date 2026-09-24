@@ -51,6 +51,16 @@ The **Inventory** button (box icon, top bar) shows every item: how many are in e
 
 Movements are never edited or deleted. Fix a mistake with an **adjust**, so the history stays true. It's also what the thesis measures.
 
+## "Book me": students request consultations by QR
+
+Students scan the QR code (`apps/site/web/qr/book.svg`, served at `…/openlabtwin/qr/book.svg`, ready to print) or open https://berlogabob.github.io/openlabtwin/book/. They see your free slots for the next 14 days, pick one, and send their name, email, project, an optional link and an optional student number.
+
+- **Your hours.** In the office, the clock icon in the top bar opens **Consultation hours**. Add your weekly hours (for example Tuesday 14:00–17:00, 30-minute slots). A slot is offered only when there's no lesson and no requested or approved booking in that room at that time. Without hours, students see "No free times".
+- **Requests** arrive in the bookings list as **Consultation**, status *requested*. Open one to see the student, their link, and **their history**: every earlier request with its date, status and project. Approve, reject or cancel as usual.
+- **The student's private link** shows the status (requested, approved, declined, cancelled or done) and the time. Nothing else is shown, and there's no email. Write to them from your mail if needed.
+- **Public view:** an approved consultation shows on the schedule and TV only as "Consultation" in the room, with no name.
+- **Limits:** at most 2 open requests per student and 20 in total. A student's requests are all linked to one person by their email: that's the lab history you report on.
+
 ## The TV and the public site
 
 - **Public schedule:** https://berlogabob.github.io/openlabtwin/. Every filter takes several values (two professors, two rooms). Bookings are blue and events green.
