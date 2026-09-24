@@ -38,7 +38,7 @@ The playlist loops in this order:
    - `text`: a title and text.
 2. **Events**: approved `event` activities in the next 14 days: title, day and time, place, public note.
 3. **QR**: Book me (`/openlabtwin/book/`) and Idea hub (`/openlabtwin/ideas/`), using the existing `apps/site/web/qr/*.svg`.
-4. **Ideas**: the TV picks 3 at random, each loop, from all approved ideas with an AI title: title and summary only.
+4. **Ideas**: the TV picks 3 at random, each loop, from all approved ideas the AI has normalised. Only the AI's title and summary are shown, never the student's original text, and never a name: this part is anonymous.
 
 Default `seconds` is 10. Videos use their own length.
 
