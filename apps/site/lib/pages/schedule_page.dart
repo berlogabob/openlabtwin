@@ -140,6 +140,8 @@ class SchedulePageState extends State<SchedulePage> {
           .text('Lab: '),
           a(href: 'tv/', [.text('TV screen')]),
           .text(' · '),
+          a(href: 'book/', [.text('book a consultation')]),
+          .text(' · '),
           a(href: 'calendar/lab.ics', [.text('calendar (.ics)')]),
           .text(' · '),
           a(href: 'https://horariosturmas.europeia.pt/UE_IADE/HorariosTurmas/', [.text('official IADE timetable')]),

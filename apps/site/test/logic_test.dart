@@ -1,4 +1,5 @@
 // Run: dart test (from apps/site). Calendar asserts are ported 1:1 from iade-lab-schedule/tests/test_calendar.mjs.
+import 'package:site/book.dart';
 import 'package:site/calendar.dart';
 import 'package:site/schedule.dart';
 import 'package:test/test.dart';
@@ -89,5 +90,24 @@ void main() {
     final opts = run(lessons, {'room': ['Lab A']}, known, '', '').options;
     expect(opts['teacher'], ['José Graça', 'Rui'], reason: 'smart list: only teachers with lessons in Lab A');
     expect(opts['room'], ['Lab A', 'Lab B'], reason: "a field's own filter doesn't narrow its list");
+  });
+
+  test('book me: slots grouped by local day in time order', () {
+    Slot at(String iso) => (iso: iso, start: DateTime.parse(iso), end: DateTime.parse(iso).add(const Duration(minutes: 30)));
+    final g = byDay([at('2026-10-02T15:00:00'), at('2026-10-01T14:30:00'), at('2026-10-01T14:00:00')]);
+    expect(g.keys, ['2026-10-01', '2026-10-02']);
+    expect([for (final s in g['2026-10-01']!) s.iso], ['2026-10-01T14:00:00', '2026-10-01T14:30:00']);
+  });
+
+  test('book me: form checks mirror request_consultation()', () {
+    String? check({String name = 'Ana', String email = 'ana@example.com', String project = 'A robot arm project', String link = '', String number = ''}) =>
+        formProblem(name: name, email: email, project: project, link: link, number: number);
+    expect(check(), isNull);
+    expect(check(link: 'https://github.com/ana', number: 'A-123'), isNull);
+    expect(check(name: 'A'), contains('name'));
+    expect(check(email: 'ana@'), contains('email'));
+    expect(check(project: 'short'), contains('10–2000'));
+    expect(check(link: 'github.com/ana'), contains('http'));
+    expect(check(number: 'A 123'), contains('student number'));
   });
 }

@@ -104,3 +104,16 @@ article.event { border-left: 3px solid var(--event); }
 .tv article.now { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
 .tv-events { margin-top: 1.5rem; }
 .tv-events .event { margin: .3rem 0; padding-left: .6rem; border-left: 3px solid var(--event); }
+/* book me: slot buttons, the form, the hidden honeypot */
+.book main { display: block; max-width: 44rem; }
+.slots { display: flex; flex-wrap: wrap; gap: .4rem; }
+.slot { font: inherit; padding: .4rem .7rem; color: var(--fg); background: var(--card); border: 1px solid var(--line); border-radius: 999px; cursor: pointer; font-variant-numeric: tabular-nums; }
+.slot.on { color: var(--card); background: var(--booking); border-color: var(--booking); }
+.book .form { display: flex; flex-direction: column; gap: .7rem; margin-top: 1.5rem; }
+.book .form label { display: flex; flex-direction: column; gap: .2rem; font-size: .85rem; color: var(--muted); }
+.book .form input, .book .form textarea { font: inherit; color: var(--fg); background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: .4rem .5rem; }
+.book .form > button { align-self: flex-start; font: inherit; padding: .5rem 1.2rem; color: var(--card); background: var(--accent); border: 0; border-radius: 999px; cursor: pointer; }
+.book .error { color: var(--accent); }
+.book .note { font-size: .8rem; color: var(--muted); }
+.book .status { font-size: 1.3rem; }
+.hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
