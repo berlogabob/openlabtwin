@@ -63,7 +63,7 @@ Students scan the QR code (`apps/site/web/qr/book.svg`, served at `…/openlabtw
 
 ## Idea hub
 
-Students drop project ideas at https://berlogabob.github.io/openlabtwin/ideas/ (QR codes welcome). The form asks for name, email, an optional student number, the idea, an optional link, "I can bring" and "I'm looking for". They get a private link.
+Students drop project ideas at https://berlogabob.github.io/openlabtwin/ideas/. The printable QR code is `…/openlabtwin/qr/ideas.svg`. The form asks for name, email, an optional student number, the idea, an optional link, "I can bring" and "I'm looking for". They get a private link.
 
 - **The AI.** Every 15 minutes the lab PC reads new ideas with the local model (ornith). It writes an English title, a summary and keywords, and turns "I can bring" and "I'm looking for" into skill names. The student sees this on their link straight away. Nothing leaves the lab.
 - **The office.** The bulb icon in the top bar opens **Ideas** (New / Approved / Archived, with a keyword filter). An idea shows what the student wrote, the AI version (edit it and press **Save AI text**), their other ideas, and its matches.

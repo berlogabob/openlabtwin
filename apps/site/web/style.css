@@ -121,3 +121,4 @@ article.event { border-left: 3px solid var(--event); }
 .book p.chips { display: flex; flex-wrap: wrap; gap: .3rem; }
 .book article button { font: inherit; margin-top: .4rem; padding: .35rem .9rem; color: var(--card); background: var(--booking); border: 0; border-radius: 999px; cursor: pointer; }
 .book details { margin: .6rem 0; color: var(--muted); }
+.book .idea-title { margin: 1rem 0 .3rem; font-size: 1.4rem; font-weight: 600; }

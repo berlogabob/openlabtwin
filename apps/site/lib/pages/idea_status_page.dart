@@ -64,7 +64,7 @@ class IdeaStatusPageState extends State<IdeaStatusPage> {
         if (error != null) p(classes: 'error', [.text(error!)]),
         if (v == null && error == null) p(classes: 'empty', [.text('Loading…')]),
         if (v != null) ...[
-          if (v.title != null) h2([.text(v.title!)]),
+          if (v.title != null) p(classes: 'idea-title', [.text(v.title!)]),  // h2 is the uppercase day-heading style
           if (v.summary != null) p([.text(v.summary!)]),
           if (v.keywords.isNotEmpty) p(classes: 'chips', [for (final k in v.keywords) span(classes: 'chip', [.text(k)])]),
           details([summary([.text('What you wrote')]), p([.text(v.body)])]),
