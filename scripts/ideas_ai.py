@@ -7,8 +7,9 @@ Settings (.env):
   AI_URL       server base URL (default http://localhost:11434; OLLAMA_URL is still accepted)
   AI_KEY       optional bearer key for servers that want one (Unsloth Studio: sk-unsloth-…, from Settings → API)
   IDEAS_MODEL  chat model (default ornith-1.5:9b)          EMBED_MODEL  embedding model (default nomic-embed-text)
-  EMBED_URL, EMBED_API   a separate server for embeddings (default: the chat server). Unsloth Studio serves chat but not
-               embeddings, so e.g. chat on Studio + EMBED_URL=http://localhost:11434 EMBED_API=ollama.
+  EMBED_URL, EMBED_API   a separate server for embeddings (default: the chat server). The lab runs chat on Unsloth Studio
+               and embeddings on the node's Ollama (EMBED_URL=http://localhost:11434 EMBED_API=ollama), because the
+               database holds 768-number nomic-embed-text vectors (Studio's built-in embedder gives 384).
 Nothing leaves the lab as long as the server runs in the lab.
 """
 import json
