@@ -42,6 +42,7 @@ The Supabase free plan keeps **no** backups. Every night `scripts/backup.py` sav
 - `tail ~/publish.log`: one block every 10 minutes, ending in `no changes` or `pushed`.
 - `ls ~/openlabtwin-backups`: a new dated folder every morning.
 - `tail ~/ideas_ai.log`: `normalised N, approved M, matches K` every 15 minutes.
-- Hardware check before choosing the model: `free -h` (RAM) and `nproc` (cores). Ornith needs about 8 GB free; on a CPU it takes 1–3 minutes per idea.
+- Hardware check before choosing the model: `free -h` (RAM), `nproc` (cores), `lspci | grep -i nvidia` (GPU). Ornith needs about 8 GB free; on a CPU it takes 1–3 minutes per idea.
+- **Unsloth Studio instead of Ollama:** fine, as long as it serves an OpenAI-compatible API with both chat and embeddings. `curl http://localhost:<port>/v1/models` shows whether it does. Then set `AI_API=openai`, `AI_URL=http://localhost:<port>` and the model names in `.env`, and run `uv run python scripts/ideas_ai.py --check`. Unsloth needs an NVIDIA GPU for fine-tuning, a possible later step: a model tuned on the lab's own ideas.
 - Approve a test booking in the office: within about 15 minutes it's on the schedule. Then cancel it.
 - If the node dies, publish by hand (Actions → Sync and deploy → Run workflow) until it's back.

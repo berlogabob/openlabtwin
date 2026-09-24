@@ -39,4 +39,17 @@ assert (1, 2, "similar") in kinds and (1, 3, "complementary") in kinds, m
 assert not any(4 in (a, b) for a, b, _k, _s, _r in m), "unrelated idea gets no match"
 assert next(r for a, b, k, _s, r in m if (a, b, k) == (1, 2, "similar")) == "similar topic: plants"
 assert all(a < b for a, b, *_ in m)
+# both server styles send the right request and read the right reply
+sent = []
+def fake_post(path, body):
+    sent.append((path, body))
+    return {"/api/chat": {"message": {"content": good}}, "/api/embed": {"embeddings": [[1, 0]]},
+            "/v1/chat/completions": {"choices": [{"message": {"content": good}}]},
+            "/v1/embeddings": {"data": [{"index": 1, "embedding": [0, 1]}, {"index": 0, "embedding": [1, 0]}]}}[path]
+ai.post = fake_post
+ai.API = "ollama"
+assert ai.ask_model("x") == good and ai.embed(["a"]) == [[1, 0]] and sent[0][1]["format"] == "json"
+ai.API = "openai"
+assert ai.ask_model("x") == good and sent[-1][1]["response_format"] == {"type": "json_object"}
+assert ai.embed(["a", "b"]) == [[1, 0], [0, 1]], "openai embeddings come back in input order"
 print("ok")

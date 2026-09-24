@@ -70,9 +70,14 @@ To regenerate the printable QR code: `uv run --with segno python -c "import segn
 4. It rebuilds the matches between approved ideas. The upsert leaves the students' connect flags alone.
 
 - **Settings (`.env` on the edge node):**
-  - `OLLAMA_URL` (default `http://localhost:11434`);
+  - `AI_API`: `ollama` (default) or `openai`, for any OpenAI-compatible server such as Unsloth Studio, llama.cpp or vLLM;
+  - `AI_URL`: the server address (default `http://localhost:11434`; the older `OLLAMA_URL` still works);
+  - `AI_KEY`: optional, for servers that want a key;
   - `IDEAS_MODEL` (default `ornith-1.5:9b`; use a small model such as `qwen2.5:3b` if the PC has under 16 GB of RAM);
   - `EMBED_MODEL` (default `nomic-embed-text`).
+
+  **Check a server before switching:** `set -a; . ./.env; set +a; uv run python scripts/ideas_ai.py --check` runs one tiny chat and one embedding, and prints what works. It writes nothing. Both modes were verified against Ollama on 2026-09-24.
+- **Changing the embedding model** (or its server) changes the vector numbers. Reprocess every idea afterwards (Office → Reprocess, or `update ideas set ai_done_at = null`), so all vectors come from the same model. Vectors from different models can't be compared.
 - **Thresholds** (constants at the top of `ideas_ai.py`, measured on 2026-09-24 with a handful of examples):
   - `SIMILAR = 0.68`, the cosine between summaries;
   - `COMPLEMENTARY = 0.60`, the best phrase-to-phrase cosine between one side's needs and the other's skills;

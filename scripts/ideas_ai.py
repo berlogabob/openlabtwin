@@ -1,8 +1,13 @@
 """Idea hub AI job (edge node, every 15 min): normalise new ideas with a local model, embed them, match approved ones.
 
-Usage: uv run python scripts/ideas_ai.py
-Settings (.env): OLLAMA_URL (default http://localhost:11434), IDEAS_MODEL (default ornith-1.5:9b),
-                 EMBED_MODEL (default nomic-embed-text). Nothing leaves the lab: the models run in the local Ollama.
+Usage: uv run python scripts/ideas_ai.py            process new ideas, rebuild matches
+       uv run python scripts/ideas_ai.py --check    one tiny chat + embedding against the configured server, nothing written
+Settings (.env):
+  AI_API       ollama (default) | openai: any OpenAI-compatible server, e.g. Unsloth Studio, llama.cpp, vLLM, Ollama's /v1
+  AI_URL       server base URL (default http://localhost:11434; OLLAMA_URL is still accepted)
+  AI_KEY       optional bearer key for servers that want one
+  IDEAS_MODEL  chat model (default ornith-1.5:9b)          EMBED_MODEL  embedding model (default nomic-embed-text)
+Nothing leaves the lab as long as the server runs in the lab.
 """
 import json
 import math
@@ -13,7 +18,9 @@ from datetime import datetime, timezone
 
 from db import connect, request, select
 
-OLLAMA = os.environ.get("OLLAMA_URL", "http://localhost:11434").rstrip("/")
+API = os.environ.get("AI_API", "ollama")
+BASE = (os.environ.get("AI_URL") or os.environ.get("OLLAMA_URL") or "http://localhost:11434").rstrip("/")
+KEY = os.environ.get("AI_KEY", "")
 MODEL = os.environ.get("IDEAS_MODEL", "ornith-1.5:9b")
 EMBED = os.environ.get("EMBED_MODEL", "nomic-embed-text")
 # Measured on nomic-embed-text, 2026-09-24 (a handful of examples; re-tune on real ideas):
@@ -27,20 +34,46 @@ PROMPT = ("You normalise student project ideas for a university lab. Reply with 
           "Keep the student's meaning, translate to English, and leave out names and contact details.")
 
 
-def ollama(path, body):
-    req = urllib.request.Request(OLLAMA + path, data=json.dumps(body).encode(), headers={"Content-Type": "application/json"})
+def post(path, body):
+    headers = {"Content-Type": "application/json", **({"Authorization": f"Bearer {KEY}"} if KEY else {})}
+    req = urllib.request.Request(BASE + path, data=json.dumps(body).encode(), headers=headers)
     with urllib.request.urlopen(req, timeout=600) as r:
         return json.load(r)
 
 
 def ask_model(text):
-    reply = ollama("/api/chat", {"model": MODEL, "stream": False, "format": "json", "think": False, "options": {"temperature": 0.2},
-                                 "messages": [{"role": "system", "content": PROMPT}, {"role": "user", "content": text}]})
+    messages = [{"role": "system", "content": PROMPT}, {"role": "user", "content": text}]
+    if API == "openai":
+        reply = post("/v1/chat/completions", {"model": MODEL, "messages": messages, "temperature": 0.2,
+                                              "response_format": {"type": "json_object"}})
+        return reply["choices"][0]["message"]["content"]
+    reply = post("/api/chat", {"model": MODEL, "stream": False, "format": "json", "think": False, "options": {"temperature": 0.2},
+                               "messages": messages})
     return reply["message"]["content"]
 
 
 def embed(texts):
-    return ollama("/api/embed", {"model": EMBED, "input": texts})["embeddings"]
+    if API == "openai":
+        return [d["embedding"] for d in sorted(post("/v1/embeddings", {"model": EMBED, "input": texts})["data"], key=lambda d: d["index"])]
+    return post("/api/embed", {"model": EMBED, "input": texts})["embeddings"]
+
+
+def check():
+    """Is the configured server usable? Prints what works; writes nothing."""
+    print(f"server {BASE} ({API}), chat model {MODEL}, embedding model {EMBED}")
+    ok = True
+    try:
+        out = normalise({"body": "A small game about plants", "can_bring": "Unity", "looking_for": "electronics"})
+        print("chat:", "ok" if out else "replied, but not with the JSON we need", out or "")
+        ok = ok and bool(out)
+    except Exception as e:  # noqa: BLE001 - this is a diagnostic
+        print("chat: failed:", e); ok = False
+    try:
+        v = embed(["electronics", "game design"])
+        print(f"embeddings: ok, {len(v)} vectors of {len(v[0])} numbers")
+    except Exception as e:  # noqa: BLE001
+        print("embeddings: failed:", e); ok = False
+    return ok
 
 
 def idea_text(i):
@@ -151,4 +184,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(0 if check() else 1) if "--check" in sys.argv else main()
