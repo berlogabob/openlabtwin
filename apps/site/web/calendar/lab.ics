@@ -114,6 +114,15 @@ LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
 DESCRIPTION:Bernardo Rodrigues\nGroups: LDJO005D01\nP
 END:VEVENT
 BEGIN:VEVENT
+UID:45e495e2118003d7cd34fbbceed38d96960edc34@iade-lab-schedule
+DTSTAMP:20260921T000000Z
+DTSTART;TZID=Europe/Lisbon:20260925T100000
+DTEND;TZID=Europe/Lisbon:20260925T103000
+SUMMARY:test
+LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
+DESCRIPTION:Andrey Dyakov\nGroups: TechLab\nConsultation
+END:VEVENT
+BEGIN:VEVENT
 UID:6dba06fed302380f8c2f12caf2fa317c4dd8a102@iade-lab-schedule
 DTSTAMP:20260921T000000Z
 DTSTART;TZID=Europe/Lisbon:20260925T110000
