@@ -5,7 +5,8 @@ The IADE game lab's system of record: rooms, storage, equipment, people, booking
 | | URL |
 |---|---|
 | Schedule (public) | https://berlogabob.github.io/openlabtwin/ |
-| Lab TV | https://berlogabob.github.io/openlabtwin/tv/?room=Lab.+e+Estudo+de+Jogos+-+Tech+Lab+(Oriente) |
+| Lab TV (showcase, lab network) | http://192.168.1.131/tv/?room=Lab.+e+Estudo+de+Jogos+-+Tech+Lab+(Oriente) |
+| Lab TV (schedule only, anywhere) | https://berlogabob.github.io/openlabtwin/tv/?room=Lab.+e+Estudo+de+Jogos+-+Tech+Lab+(Oriente) |
 | Calendar feed | https://berlogabob.github.io/openlabtwin/calendar/lab.ics |
 | Book a consultation (QR) | https://berlogabob.github.io/openlabtwin/book/ |
 | Share an idea (QR) | https://berlogabob.github.io/openlabtwin/ideas/ |
@@ -27,7 +28,8 @@ scripts/               timetable.py (scrape), export.py (public JSON + lab.ics),
                        sqltest.py (migrations + DB tests over HTTPS), publish.sh + edge-setup.sh (edge node), backup.py, ideas_ai.py,
                        ics.py, timetable_parse.py
 tests/                 Python tests (plain asserts: uv run python tests/test_x.py)
-apps/site/             public site + TV (Jaspr, static)                 apps/office/  back office (Flutter web)
+apps/site/             public site + TV (Jaspr, static)                 apps/tv/  showcase TV (served by the edge node)
+                 apps/office/  back office (Flutter web)
 .github/workflows/     sync.yml (scrape, export, build, deploy)          test.yml (Python, site, office tests)
 ```
 

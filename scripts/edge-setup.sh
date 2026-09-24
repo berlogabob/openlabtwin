@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One-command setup of the lab edge node (MX Linux / Debian): publishing, backups, idea hub AI. Safe to run again.
+# One-command setup of the lab edge node (MX Linux / Debian): publishing, backups, idea hub AI, TV showcase. Safe to run again.
 # See docs/edge-node.md.
 #   curl -fsSL https://raw.githubusercontent.com/berlogabob/openlabtwin/main/scripts/edge-setup.sh | bash
 #   (or, from a clone:  scripts/edge-setup.sh [--dry-run])
@@ -11,17 +11,17 @@ KEY=$HOME/.ssh/openlabtwin
 run() { if [ "$DRY" = 1 ]; then echo "  would run: $*"; else "$@"; fi; }
 step() { echo; echo "== $*"; }
 
-step "1/8 packages (git, curl, openssh-server) and SSH at boot"
+step "1/9 packages (git, curl, openssh-server) and SSH at boot"
 run sudo apt-get update -qq
 run sudo apt-get install -y -qq git curl openssh-server cron
 if command -v systemctl >/dev/null && [ -d /run/systemd/system ]; then run sudo systemctl enable --now ssh cron
 else run sudo update-rc.d ssh enable; run sudo update-rc.d cron enable; run sudo service ssh start; run sudo service cron start; fi
 
-step "2/8 uv"
+step "2/9 uv"
 command -v uv >/dev/null || [ -x "$HOME/.local/bin/uv" ] || run sh -c 'curl -LsSf https://astral.sh/uv/install.sh | sh'
 export PATH="$HOME/.local/bin:$PATH"
 
-step "3/8 deploy key (write access to this repo only)"
+step "3/9 deploy key (write access to this repo only)"
 if [ ! -f "$KEY" ]; then run ssh-keygen -t ed25519 -f "$KEY" -N "" -C "lab edge node"; fi
 # the IADE network blocks outgoing port 22: talk to GitHub over SSH on port 443 (ssh.github.com)
 grep -q "IdentityFile $KEY" "$HOME/.ssh/config" 2>/dev/null || run sh -c "printf 'Host github.com\n  Hostname ssh.github.com\n  Port 443\n  User git\n  IdentityFile $KEY\n  StrictHostKeyChecking accept-new\n' >> '$HOME/.ssh/config'"
@@ -30,19 +30,19 @@ if [ "$DRY" = 0 ] && ! ssh -o StrictHostKeyChecking=accept-new -T git@github.com
   cat "$KEY.pub"; read -rp "Press Enter once it is added… " _ </dev/tty
 fi
 
-step "4/8 clone"
+step "4/9 clone"
 if [ -d "$DIR/.git" ]; then run git -C "$DIR" pull -q --rebase; else run git clone -q "$REPO" "$DIR"; fi
 run git -C "$DIR" config user.name "lab edge node"
 run git -C "$DIR" config user.email "lab-edge-node@users.noreply.github.com"
 
-step "5/8 secrets (.env, mode 600)"
+step "5/9 secrets (.env, mode 600)"
 if [ ! -f "$DIR/.env" ]; then
   if [ "$DRY" = 1 ]; then echo "  would ask for the service role key and write $DIR/.env"
   else read -rsp "Supabase service role key (input hidden): " SK </dev/tty; echo
     umask 077; printf 'SUPABASE_URL=https://huqecytswaswkswofrqd.supabase.co\nSUPABASE_SERVICE_KEY=%s\n' "$SK" > "$DIR/.env"; fi
 fi
 
-step "6/8 local AI for the idea hub (Ollama; ornith only with >= 16 GB RAM)"
+step "6/9 local AI for the idea hub (Ollama; ornith only with >= 16 GB RAM)"
 command -v ollama >/dev/null || run sh -c 'curl -fsSL https://ollama.com/install.sh | sh'
 if ! command -v systemctl >/dev/null || [ ! -d /run/systemd/system ]; then   # sysVinit: start Ollama from cron at boot
   OLLAMA_BOOT="@reboot ollama serve >> \$HOME/ollama.log 2>&1"
@@ -56,17 +56,38 @@ if [ "$RAM_GB" -ge 16 ]; then run ollama pull ornith-1.5:9b
 else echo "  only ${RAM_GB} GB RAM: ornith (about 8 GB) won't fit comfortably. In $DIR/.env set IDEAS_MODEL to a small model"
      echo "  (e.g. IDEAS_MODEL=qwen2.5:3b after: ollama pull qwen2.5:3b) or OLLAMA_URL to a machine that runs ornith."; fi
 
-step "7/8 first run (sync deps, scrape, export, push if changed, backup)"
-run sh -c "cd '$DIR' && uv sync -q && scripts/publish.sh --scrape && set -a && . ./.env && set +a && uv run python scripts/backup.py && uv run python scripts/ideas_ai.py"
+step "7/9 first run (sync deps, scrape, export, push if changed, backup)"
+run sh -c "cd '$DIR' && uv sync -q && scripts/publish.sh --scrape && set -a && . ./.env && set +a && uv run python scripts/backup.py && { uv run python scripts/ideas_ai.py || echo '  idea AI not reachable now; cron retries every 15 min'; }"
 
-step "8/8 cron (publish every 10 min, scrape every 6 h, idea AI every 15 min, backup nightly)"
+step "8/9 cron (publish every 10 min, scrape every 6 h, idea AI every 15 min, TV playlist every minute, backup nightly)"
 CRON="*/10 * * * *  cd $DIR && scripts/publish.sh          >> \$HOME/publish.log 2>&1
 15 */6 * * *  cd $DIR && scripts/publish.sh --scrape >> \$HOME/publish.log 2>&1
 */15 * * * *  cd $DIR && set -a && . ./.env && set +a && $HOME/.local/bin/uv run python scripts/ideas_ai.py >> \$HOME/ideas_ai.log 2>&1
+* * * * *  cd $DIR && set -a && . ./.env && set +a && $HOME/.local/bin/uv run python scripts/tv.py > /dev/null 2>> \$HOME/tv.log
 30 3 * * *    cd $DIR && set -a && . ./.env && set +a && $HOME/.local/bin/uv run python scripts/backup.py >> \$HOME/backup.log 2>&1${OLLAMA_BOOT:+
 $OLLAMA_BOOT}"
 if [ "$DRY" = 1 ]; then echo "  would install (replacing older openlabtwin lines):"; echo "$CRON" | sed 's/^/    /'
 else { crontab -l 2>/dev/null | grep -v openlabtwin || true; echo "PATH=$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin"; echo "$CRON"; } \
   | awk '!seen[$0]++' | crontab -; crontab -l; fi
+
+step "9/9 TV showcase (nginx serves http://<ip>/tv/, Samba shares ~/tv-media as smb://<ip>/tv)"
+run sudo apt-get install -y -qq nginx-light samba ffmpeg
+run mkdir -p "$HOME/tv-media" "$HOME/tv-out/qr"
+run chmod o+x "$HOME"   # nginx (www-data) may pass through home, and reads only what the site file names
+run sh -c "sed 's#/home/TechLAB#$HOME#g' '$DIR/scripts/tv-nginx.conf' | sudo tee /etc/nginx/sites-available/tv >/dev/null"
+run sudo ln -sf /etc/nginx/sites-available/tv /etc/nginx/sites-enabled/tv
+run sudo rm -f /etc/nginx/sites-enabled/default
+run sudo nginx -t
+if command -v systemctl >/dev/null && [ -d /run/systemd/system ]; then run sudo systemctl enable --now nginx smbd; run sudo systemctl reload nginx
+else run sudo service nginx reload; run sudo service smbd start; fi
+if ! grep -q '^\[tv\]' /etc/samba/smb.conf 2>/dev/null; then
+  run sh -c "printf '\n[tv]\n   path = $HOME/tv-media\n   valid users = $USER\n   read only = no\n   create mask = 0644\n   directory mask = 0755\n' | sudo tee -a /etc/samba/smb.conf >/dev/null"
+  run sudo service smbd restart
+fi
+if [ "$DRY" = 0 ] && ! sudo pdbedit -L 2>/dev/null | grep -q "^$USER:"; then
+  echo "  Samba password for $USER (used to connect to smb://<ip>/tv):"; sudo smbpasswd -a "$USER" </dev/tty
+fi
+if command -v ufw >/dev/null; then for net in 192.168.1.0/24 10.208.16.0/23; do
+  run sudo ufw allow from "$net" to any port 80 proto tcp; run sudo ufw allow from "$net" to any port 445 proto tcp; done; fi
 
 step "done: tail -f ~/publish.log   ·   ip: $(hostname -I 2>/dev/null | cut -d' ' -f1)"

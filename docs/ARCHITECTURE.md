@@ -24,7 +24,9 @@ Staff ──email link──► apps/office (Flutter web) ──► Supabase (Po
 | `scripts/timetable.py` | Scrapes every IADE class page and upserts `lessons` from this Monday on. Older lessons stay as history. | IADE site, Supabase REST |
 | `scripts/export.py` | Writes the public `all.json` and `lab.ics` from lessons and **approved** activities | Supabase REST |
 | `apps/site` | Jaspr static site: schedule page with multi-select filters, lab TV page | its own `data/all.json` |
-| `apps/office` | Flutter web app for staff: bookings, equipment, inventory | Supabase directly, as the signed-in staff member |
+| `apps/tv` | Showcase TV page (plain HTML/JS, no build), served by the edge node's nginx: schedule column plus slide carousel | `tv.json` and `all.json` on the node |
+| `scripts/tv.py` | Runs on the edge node every minute: probes the shared TV folder, syncs `tv_media`, writes the public `tv.json` (explicit columns, key allowlist, ideas as AI title and summary only) | Supabase REST, local files |
+| `apps/office` | Flutter web app for staff: bookings, equipment, inventory, TV slides | Supabase directly, as the signed-in staff member |
 | `sync.yml` | Scrape → export → commit data → build both apps → deploy to Pages | GitHub, Supabase |
 | `scripts/publish.sh` | Runs on the lab edge node: export (and scrape) and push when the data changed | GitHub, Supabase |
 

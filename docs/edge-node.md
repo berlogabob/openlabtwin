@@ -50,6 +50,17 @@ The node's `.env` sends chat to Studio and keeps embeddings on its own Ollama:
 
 **GPU: don't install the NVIDIA driver with `ddm-mx -i nvidia` on this PC.** On 2026-09-24 it installed a driver that fails on the GTX 1070 ("probe with driver nvidia failed with error -1"). The desktop and the network didn't come up, and `sudo ddm-mx -p nvidia` plus a reboot undid it. The cause is probably Debian 13's *open* NVIDIA kernel module, which only supports Turing (GeForce 16xx/20xx) and newer, while the 1070 is Pascal. To try again later, use the proprietary (non-open) kernel module of a driver branch that still supports Pascal, and check with `nvidia-smi` before rebooting into the desktop. The open `nouveau` driver is what drives the screen now. If the monitor shows no picture but the PC answers ping, check from SSH: `cat /sys/class/drm/card0-HDMI-A-1/status` should say `connected`, and `DISPLAY=:0 xrandr --output HDMI-1 --auto` re-sends the signal. If both look right, it's the monitor input or the cable. It's reachable from the Mac with `ssh -i ~/.ssh/techlab TechLAB@192.168.1.131`. Unsloth Studio runs on the big PC, not on this one; its OpenAI-compatible API needs a key.
 
+## TV showcase
+
+Step 9 of `edge-setup.sh` installs nginx, Samba and ffmpeg, and cron runs `scripts/tv.py` every minute.
+
+- **TV page:** `http://192.168.1.131/tv/?room=…&room=…` (nginx site file `scripts/tv-nginx.conf`, installed as `/etc/nginx/sites-available/tv`). It serves `apps/tv/` from the repo checkout, so a push reaches the TV within 10 minutes (the next `publish.sh` pull).
+- **Shared folder:** `~/tv-media`, shared as `smb://192.168.1.131/tv` (user `TechLAB`, Samba password set by `sudo smbpasswd -a TechLAB`). Flat: subfolders and dot-files are ignored.
+- **Playlist:** `~/tv-out/tv.json` and `~/tv-out/qr/`, written atomically by `tv.py`. Only public fields go in; ideas only as the AI title and summary.
+- **Firewall:** ports 80 and 445 are open to `192.168.1.0/24` and `10.208.16.0/23`.
+- **Checks:** `cat ~/tv.log` is empty when all is well; `head -c 300 ~/tv-out/tv.json`; `curl -sI localhost/tv/` returns 200.
+- **The TV itself:** Chromium full screen (kiosk) on the address above; videos autoplay because they're muted.
+
 ## Backups
 
 The Supabase free plan keeps **no** backups. Every night `scripts/backup.py` saves each table as JSON to `~/openlabtwin-backups/YYYY-MM-DD/` and keeps the newest 30 days (about 4 MB a day). The folder is mode 700 and outside the repo because it holds emails. To restore, insert each file's rows back in the order of `TABLES` in `backup.py` (parents first), with the service key.
