@@ -5,8 +5,10 @@ Usage: uv run python scripts/ideas_ai.py            process new ideas, rebuild m
 Settings (.env):
   AI_API       ollama (default) | openai: any OpenAI-compatible server, e.g. Unsloth Studio, llama.cpp, vLLM, Ollama's /v1
   AI_URL       server base URL (default http://localhost:11434; OLLAMA_URL is still accepted)
-  AI_KEY       optional bearer key for servers that want one
+  AI_KEY       optional bearer key for servers that want one (Unsloth Studio: sk-unsloth-…, from Settings → API)
   IDEAS_MODEL  chat model (default ornith-1.5:9b)          EMBED_MODEL  embedding model (default nomic-embed-text)
+  EMBED_URL, EMBED_API   a separate server for embeddings (default: the chat server). Unsloth Studio serves chat but not
+               embeddings, so e.g. chat on Studio + EMBED_URL=http://localhost:11434 EMBED_API=ollama.
 Nothing leaves the lab as long as the server runs in the lab.
 """
 import json
@@ -21,6 +23,8 @@ from db import connect, request, select
 API = os.environ.get("AI_API", "ollama")
 BASE = (os.environ.get("AI_URL") or os.environ.get("OLLAMA_URL") or "http://localhost:11434").rstrip("/")
 KEY = os.environ.get("AI_KEY", "")
+EMBED_API = os.environ.get("EMBED_API") or API
+EMBED_BASE = (os.environ.get("EMBED_URL") or BASE).rstrip("/")
 MODEL = os.environ.get("IDEAS_MODEL", "ornith-1.5:9b")
 EMBED = os.environ.get("EMBED_MODEL", "nomic-embed-text")
 # Measured on nomic-embed-text, 2026-09-24 (a handful of examples; re-tune on real ideas):
@@ -34,9 +38,11 @@ PROMPT = ("You normalise student project ideas for a university lab. Reply with 
           "Keep the student's meaning, translate to English, and leave out names and contact details.")
 
 
-def post(path, body):
-    headers = {"Content-Type": "application/json", **({"Authorization": f"Bearer {KEY}"} if KEY else {})}
-    req = urllib.request.Request(BASE + path, data=json.dumps(body).encode(), headers=headers)
+def post(path, body, base=None):
+    base = base or BASE
+    key = KEY if base == BASE else ""  # the key belongs to the chat server only
+    headers = {"Content-Type": "application/json", **({"Authorization": f"Bearer {key}"} if key else {})}
+    req = urllib.request.Request(base + path, data=json.dumps(body).encode(), headers=headers)
     with urllib.request.urlopen(req, timeout=600) as r:
         return json.load(r)
 
@@ -53,14 +59,15 @@ def ask_model(text):
 
 
 def embed(texts):
-    if API == "openai":
-        return [d["embedding"] for d in sorted(post("/v1/embeddings", {"model": EMBED, "input": texts})["data"], key=lambda d: d["index"])]
-    return post("/api/embed", {"model": EMBED, "input": texts})["embeddings"]
+    if EMBED_API == "openai":
+        reply = post("/v1/embeddings", {"model": EMBED, "input": texts}, EMBED_BASE)
+        return [d["embedding"] for d in sorted(reply["data"], key=lambda d: d["index"])]
+    return post("/api/embed", {"model": EMBED, "input": texts}, EMBED_BASE)["embeddings"]
 
 
 def check():
     """Is the configured server usable? Prints what works; writes nothing."""
-    print(f"server {BASE} ({API}), chat model {MODEL}, embedding model {EMBED}")
+    print(f"chat: {BASE} ({API}, {MODEL}{', with key' if KEY else ''}) · embeddings: {EMBED_BASE} ({EMBED_API}, {EMBED})")
     ok = True
     try:
         out = normalise({"body": "A small game about plants", "can_bring": "Unity", "looking_for": "electronics"})

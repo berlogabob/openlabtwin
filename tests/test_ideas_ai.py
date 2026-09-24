@@ -41,7 +41,7 @@ assert next(r for a, b, k, _s, r in m if (a, b, k) == (1, 2, "similar")) == "sim
 assert all(a < b for a, b, *_ in m)
 # both server styles send the right request and read the right reply
 sent = []
-def fake_post(path, body):
+def fake_post(path, body, base=None):
     sent.append((path, body))
     return {"/api/chat": {"message": {"content": good}}, "/api/embed": {"embeddings": [[1, 0]]},
             "/v1/chat/completions": {"choices": [{"message": {"content": good}}]},
@@ -51,5 +51,8 @@ ai.API = "ollama"
 assert ai.ask_model("x") == good and ai.embed(["a"]) == [[1, 0]] and sent[0][1]["format"] == "json"
 ai.API = "openai"
 assert ai.ask_model("x") == good and sent[-1][1]["response_format"] == {"type": "json_object"}
+ai.EMBED_API = "openai"
 assert ai.embed(["a", "b"]) == [[1, 0], [0, 1]], "openai embeddings come back in input order"
+ai.EMBED_API = "ollama"  # chat on an OpenAI-style server (Unsloth Studio), embeddings from Ollama
+assert ai.embed(["a"]) == [[1, 0]] and sent[-1][0] == "/api/embed"
 print("ok")

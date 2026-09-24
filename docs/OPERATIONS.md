@@ -74,7 +74,10 @@ To regenerate the printable QR code: `uv run --with segno python -c "import segn
   - `AI_URL`: the server address (default `http://localhost:11434`; the older `OLLAMA_URL` still works);
   - `AI_KEY`: optional, for servers that want a key;
   - `IDEAS_MODEL` (default `ornith-1.5:9b`; use a small model such as `qwen2.5:3b` if the PC has under 16 GB of RAM);
-  - `EMBED_MODEL` (default `nomic-embed-text`).
+  - `EMBED_MODEL` (default `nomic-embed-text`);
+  - `EMBED_URL` and `EMBED_API`: a separate server for embeddings (default: the chat server).
+
+  **Unsloth Studio** (the big lab PC, `http://192.168.1.42:8888` on the router network) serves chat through `/v1/chat/completions`, but no embeddings ([Unsloth API docs](https://unsloth.ai/docs/basics/api)). Its key comes from Studio → avatar → Settings → API and starts with `sk-unsloth-`; `GET /v1/models` lists the loaded model IDs. To use it: `AI_API=openai`, `AI_URL=http://192.168.1.42:8888`, `AI_KEY=sk-unsloth-…`, `IDEAS_MODEL=<id from /v1/models>`, plus `EMBED_URL=http://localhost:11434` and `EMBED_API=ollama` so embeddings stay on the node.
 
   **Check a server before switching:** `set -a; . ./.env; set +a; uv run python scripts/ideas_ai.py --check` runs one tiny chat and one embedding, and prints what works. It writes nothing. Both modes were verified against Ollama on 2026-09-24.
 - **Changing the embedding model** (or its server) changes the vector numbers. Reprocess every idea afterwards (Office → Reprocess, or `update ideas set ai_done_at = null`), so all vectors come from the same model. Vectors from different models can't be compared.
