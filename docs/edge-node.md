@@ -35,13 +35,20 @@ The service key bypasses every privacy rule, so this machine must be physically 
 - **The first DNS server handed out by DHCP (`172.23.44.7`) doesn't answer.** Every lookup waited 5 seconds for it, which turned a 30-second scrape into 15 minutes. The fix puts the working one first:
   `sudo nmcli connection modify "Wired connection 1" ipv4.ignore-auto-dns yes ipv4.dns "172.20.44.52 172.23.44.7" && sudo nmcli connection up "Wired connection 1"`.
   Check it with `curl -s -o /dev/null -w "%{time_namelookup}\n" https://github.com`, which should be well under 1 second.
-- **The MX firewall (ufw) is on,** so SSH from the lab network needs `sudo ufw allow from 10.208.16.0/23 to any port 22 proto tcp`.
+- **The MX firewall (ufw) is on,** so SSH needs a rule per network: `sudo ufw allow from 10.208.16.0/23 to any port 22 proto tcp` (campus) and `sudo ufw allow from 192.168.1.0/24 to any port 22 proto tcp` (lab router). Both are in.
+
+## The lab router network (since 2026-09-24)
+
+The node, the big PC with Unsloth Studio and the Mac are wired to the lab's ASUS router (`192.168.1.0/24`), which reaches the internet through campus. The node is `192.168.1.131`, Studio is `192.168.1.42:8888`. The host key didn't change with the address, so `ssh-keyscan -t ed25519 192.168.1.131 >> ~/.ssh/known_hosts` on the Mac is enough. On this network DNS answers quickly, GitHub over port 443 and Supabase work, and the DNS fix above isn't needed.
+
+The node's `.env` sends chat to Studio and keeps embeddings on its own Ollama:
+`AI_API=openai`, `AI_URL=http://192.168.1.42:8888`, `AI_KEY=sk-unsloth-…`, `IDEAS_MODEL=ornith-ai/Ornith-1.5-9B-GGUF`, `EMBED_URL=http://localhost:11434`, `EMBED_API=ollama`. If the big PC is off, the ideas job fails that run and retries 15 minutes later; to fall back for good, delete those six lines.
 
 ## The lab PC (TechLAB-01)
 
-`10.208.17.166` on the wired lab network, user `TechLAB`: an i7-7700K with 8 threads, 46 GB RAM, a GTX 1070, Debian 13 with systemd. Ollama with `ornith-1.5:9b` and `nomic-embed-text` runs on the CPU: `ideas_ai.py --check` takes about 25 s including the model load.
+`192.168.1.131` on the lab router (earlier `10.208.17.166` on campus), user `TechLAB`: an i7-7700K with 8 threads, 46 GB RAM, a GTX 1070, Debian 13 with systemd. Ollama with `ornith-1.5:9b` and `nomic-embed-text` runs on the CPU: `ideas_ai.py --check` takes about 25 s including the model load.
 
-**GPU: don't install the NVIDIA driver with `ddm-mx -i nvidia` on this PC.** On 2026-09-24 it installed a driver that fails on the GTX 1070 ("probe with driver nvidia failed with error -1"). The desktop and the network didn't come up, and `sudo ddm-mx -p nvidia` plus a reboot undid it. The cause is probably Debian 13's *open* NVIDIA kernel module, which only supports Turing (GeForce 16xx/20xx) and newer, while the 1070 is Pascal. To try again later, use the proprietary (non-open) kernel module of a driver branch that still supports Pascal, and check with `nvidia-smi` before rebooting into the desktop. It's reachable from the Mac with `ssh -i ~/.ssh/techlab TechLAB@10.208.17.166`. Unsloth Studio runs on other lab machines (`10.208.17.164:8888`, `.177`), not on this PC; its OpenAI-compatible API needs a key.
+**GPU: don't install the NVIDIA driver with `ddm-mx -i nvidia` on this PC.** On 2026-09-24 it installed a driver that fails on the GTX 1070 ("probe with driver nvidia failed with error -1"). The desktop and the network didn't come up, and `sudo ddm-mx -p nvidia` plus a reboot undid it. The cause is probably Debian 13's *open* NVIDIA kernel module, which only supports Turing (GeForce 16xx/20xx) and newer, while the 1070 is Pascal. To try again later, use the proprietary (non-open) kernel module of a driver branch that still supports Pascal, and check with `nvidia-smi` before rebooting into the desktop. The open `nouveau` driver is what drives the screen now. If the monitor shows no picture but the PC answers ping, check from SSH: `cat /sys/class/drm/card0-HDMI-A-1/status` should say `connected`, and `DISPLAY=:0 xrandr --output HDMI-1 --auto` re-sends the signal. If both look right, it's the monitor input or the cable. It's reachable from the Mac with `ssh -i ~/.ssh/techlab TechLAB@192.168.1.131`. Unsloth Studio runs on the big PC, not on this one; its OpenAI-compatible API needs a key.
 
 ## Backups
 
