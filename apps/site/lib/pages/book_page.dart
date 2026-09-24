@@ -1,6 +1,7 @@
 // "Book me" form (/book/): free slots, the request form, then the private status link.
 import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
+import 'package:universal_web/web.dart' as web;
 
 import '../book.dart';
 import '../calendar.dart';
@@ -25,7 +26,9 @@ class BookPageState extends State<BookPage> {
   @override
   void initState() {
     super.initState();
-    if (kIsWeb) _load();
+    if (!kIsWeb) return;
+    project = Uri.parse(web.window.location.href).queryParameters['project'] ?? ''; // from "Book a consultation about this idea"
+    _load();
   }
 
   Future<void> _load() async {

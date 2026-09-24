@@ -7,6 +7,8 @@
 import 'package:jaspr/client.dart';
 
 import 'package:site/pages/book_page.dart' deferred as _book_page;
+import 'package:site/pages/idea_status_page.dart' deferred as _idea_status_page;
+import 'package:site/pages/ideas_page.dart' deferred as _ideas_page;
 import 'package:site/pages/schedule_page.dart' deferred as _schedule_page;
 import 'package:site/pages/status_page.dart' deferred as _status_page;
 import 'package:site/pages/tv_page.dart' deferred as _tv_page;
@@ -32,6 +34,14 @@ ClientOptions get defaultClientOptions => ClientOptions(
     'book_page': ClientLoader(
       (p) => _book_page.BookPage(),
       loader: _book_page.loadLibrary,
+    ),
+    'idea_status_page': ClientLoader(
+      (p) => _idea_status_page.IdeaStatusPage(),
+      loader: _idea_status_page.loadLibrary,
+    ),
+    'ideas_page': ClientLoader(
+      (p) => _ideas_page.IdeasPage(),
+      loader: _ideas_page.loadLibrary,
     ),
     'schedule_page': ClientLoader(
       (p) => _schedule_page.SchedulePage(),

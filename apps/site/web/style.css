@@ -117,3 +117,7 @@ article.event { border-left: 3px solid var(--event); }
 .book .note { font-size: .8rem; color: var(--muted); }
 .book .status { font-size: 1.3rem; }
 .hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+/* idea hub: keyword chips and match cards reuse the booking / event colours */
+.book p.chips { display: flex; flex-wrap: wrap; gap: .3rem; }
+.book article button { font: inherit; margin-top: .4rem; padding: .35rem .9rem; color: var(--card); background: var(--booking); border: 0; border-radius: 999px; cursor: pointer; }
+.book details { margin: .6rem 0; color: var(--muted); }

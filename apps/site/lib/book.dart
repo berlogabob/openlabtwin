@@ -20,17 +20,23 @@ Map<String, List<Slot>> byDay(List<Slot> slots) {
   return out;
 }
 
-/// The first problem with the form, or null. Same rules as the database, so students see them before sending.
-String? formProblem({required String name, required String email, required String project, String link = '', String number = ''}) {
-  final n = name.trim(), e = email.trim(), p = project.trim(), l = link.trim(), s = number.trim();
+/// The first problem with name, email, link or student number: the rules of check_contact() in the database.
+String? contactProblem({required String name, required String email, String link = '', String number = ''}) {
+  final n = name.trim(), e = email.trim(), l = link.trim(), s = number.trim();
   if (n.length < 2 || n.length > 100) return 'Please give your name (2–100 characters).';
   if (e.length < 3 || e.length > 200 || !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(e)) return 'Please give a valid email.';
-  if (p.length < 10 || p.length > 2000) return 'Describe your project in 10–2000 characters.';
   if (l.isNotEmpty && (l.length > 500 || !RegExp(r'^https?://\S+$', caseSensitive: false).hasMatch(l))) {
     return 'The link must start with http:// or https://.';
   }
   if (s.isNotEmpty && !RegExp(r'^[A-Za-z0-9-]{1,30}$').hasMatch(s)) return 'The student number can only have letters, digits and dashes.';
   return null;
+}
+
+/// The first problem with the Book me form, or null (mirrors request_consultation()).
+String? formProblem({required String name, required String email, required String project, String link = '', String number = ''}) {
+  final p = project.trim();
+  return contactProblem(name: name, email: email, link: link, number: number) ??
+      (p.length < 10 || p.length > 2000 ? 'Describe your project in 10–2000 characters.' : null);
 }
 
 const statusLabels = {

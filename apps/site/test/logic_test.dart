@@ -1,6 +1,7 @@
 // Run: dart test (from apps/site). Calendar asserts are ported 1:1 from iade-lab-schedule/tests/test_calendar.mjs.
 import 'package:site/book.dart';
 import 'package:site/calendar.dart';
+import 'package:site/ideas.dart';
 import 'package:site/schedule.dart';
 import 'package:test/test.dart';
 
@@ -109,5 +110,29 @@ void main() {
     expect(check(project: 'short'), contains('10–2000'));
     expect(check(link: 'github.com/ana'), contains('http'));
     expect(check(number: 'A 123'), contains('student number'));
+  });
+
+  test('ideas: form checks mirror submit_idea()', () {
+    String? check({String body = 'A plant game with real sensors', String canBring = '', String link = ''}) =>
+        ideaProblem(name: 'Ana', email: 'ana@example.com', body: body, canBring: canBring, link: link);
+    expect(check(), isNull);
+    expect(check(body: 'short'), contains('10–4000'));
+    expect(check(canBring: 'x' * 501), contains('500'));
+    expect(check(link: 'nope'), contains('http'));
+  });
+
+  test('ideas: status view hides contact until both connect', () {
+    final v = IdeaView.fromJson({
+      'idea': {'body': 'b', 'status': 'approved', 'processed': true, 'title': 'T', 'summary': 'S', 'keywords': ['k']},
+      'matches': [
+        {'other': 2, 'kind': 'complementary', 'reason': 'r', 'title': 'Robot', 'first_name': 'Ben', 'i_connected': true, 'they_connected': false, 'contact': null},
+        {'other': 3, 'kind': 'similar', 'reason': 'r', 'title': 'Game', 'first_name': 'Cat', 'i_connected': true, 'they_connected': true,
+         'contact': {'email': 'cat@example.com', 'link': null}},
+      ],
+    });
+    expect(v.matches.first.email, isNull);
+    expect(v.matches.last.email, 'cat@example.com');
+    expect(v.stage, contains('Your matches'));
+    expect(IdeaView.fromJson({'idea': {'body': 'b', 'status': 'new', 'processed': false}, 'matches': []}).stage, contains('AI'));
   });
 }
