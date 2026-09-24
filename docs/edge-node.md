@@ -19,8 +19,9 @@ curl -fsSL https://raw.githubusercontent.com/berlogabob/openlabtwin/main/scripts
 3. creates a deploy key. It **pauses** for you to add the printed key at github.com/berlogabob/openlabtwin → Settings → Deploy keys, with "Allow write access" ticked;
 4. clones the repo to `~/openlabtwin`;
 5. **asks** for the Supabase service role key (hidden input) and writes `~/openlabtwin/.env` with mode 600;
-6. runs everything once: scrape, export, push if changed, backup;
-7. installs the cron lines: publish every 10 minutes, scrape every 6 hours, back up nightly at 03:30.
+6. installs **Ollama** with `nomic-embed-text`, and `ornith-1.5:9b` only if the PC has at least 16 GB of RAM. Otherwise it tells you to set `IDEAS_MODEL` to a small model (for example `qwen2.5:3b`) or `OLLAMA_URL` to a machine that runs ornith. On sysVinit it also starts Ollama at boot;
+7. runs everything once: scrape, export, push if changed, backup, idea AI;
+8. installs the cron lines: publish every 10 minutes, scrape every 6 hours, idea AI every 15 minutes, back up nightly at 03:30.
 
 Before running it, turn off sleep and suspend in MX's power settings.
 
@@ -40,5 +41,7 @@ The Supabase free plan keeps **no** backups. Every night `scripts/backup.py` sav
 
 - `tail ~/publish.log`: one block every 10 minutes, ending in `no changes` or `pushed`.
 - `ls ~/openlabtwin-backups`: a new dated folder every morning.
+- `tail ~/ideas_ai.log`: `normalised N, approved M, matches K` every 15 minutes.
+- Hardware check before choosing the model: `free -h` (RAM) and `nproc` (cores). Ornith needs about 8 GB free; on a CPU it takes 1–3 minutes per idea.
 - Approve a test booking in the office: within about 15 minutes it's on the schedule. Then cancel it.
 - If the node dies, publish by hand (Actions → Sync and deploy → Run workflow) until it's back.

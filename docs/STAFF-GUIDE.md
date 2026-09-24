@@ -61,6 +61,19 @@ Students scan the QR code (`apps/site/web/qr/book.svg`, served at `…/openlabtw
 - **Public view:** an approved consultation shows on the schedule and TV only as "Consultation" in the room, with no name.
 - **Limits:** at most 2 open requests per student and 20 in total. A student's requests are all linked to one person by their email: that's the lab history you report on.
 
+## Idea hub
+
+Students drop project ideas at https://berlogabob.github.io/openlabtwin/ideas/ (QR codes welcome). The form asks for name, email, an optional student number, the idea, an optional link, "I can bring" and "I'm looking for". They get a private link.
+
+- **The AI.** Every 15 minutes the lab PC reads new ideas with the local model (ornith). It writes an English title, a summary and keywords, and turns "I can bring" and "I'm looking for" into skill names. The student sees this on their link straight away. Nothing leaves the lab.
+- **The office.** The bulb icon in the top bar opens **Ideas** (New / Approved / Archived, with a keyword filter). An idea shows what the student wrote, the AI version (edit it and press **Save AI text**), their other ideas, and its matches.
+  - **Approve** makes an idea matchable. Matches appear only between approved ideas, on the next AI run.
+  - **Archive** retires an idea.
+  - **Workshop bank** marks it for workshops (the list shows a cap icon).
+  - **Reprocess** has the AI read it again.
+- **Matches.** *Similar* means a close topic. *Complementary* means one student is looking for what the other can bring. A student sees each match as the other idea's AI title and the other student's first name. When **both** tap "I'd like to connect", each sees the other's email and link. The lab never gives out contacts otherwise.
+- **A consultation about an idea.** The student's link has **Book a consultation about this idea**. It opens the booking form with the idea filled in as the project.
+
 ## The TV and the public site
 
 - **Public schedule:** https://berlogabob.github.io/openlabtwin/. Every filter takes several values (two professors, two rooms). Bookings are blue and events green.

@@ -61,6 +61,27 @@ The site calls the functions with the anon key, which the Pages build gets from 
 
 To regenerate the printable QR code: `uv run --with segno python -c "import segno; segno.make('https://berlogabob.github.io/openlabtwin/book/', error='m').save('apps/site/web/qr/book.svg', scale=8, border=2)"`.
 
+## Idea hub AI
+
+`scripts/ideas_ai.py` runs on the edge node every 15 minutes, as a cron line from `edge-setup.sh`.
+1. It reads new ideas (`ai_done_at is null`).
+2. It asks the chat model for JSON: title, summary, keywords, and English `brings` / `needs` skill lists.
+3. It embeds the summary and each skill phrase.
+4. It rebuilds the matches between approved ideas. The upsert leaves the students' connect flags alone.
+
+- **Settings (`.env` on the edge node):**
+  - `OLLAMA_URL` (default `http://localhost:11434`);
+  - `IDEAS_MODEL` (default `ornith-1.5:9b`; use a small model such as `qwen2.5:3b` if the PC has under 16 GB of RAM);
+  - `EMBED_MODEL` (default `nomic-embed-text`).
+- **Thresholds** (constants at the top of `ideas_ai.py`, measured on 2026-09-24 with a handful of examples):
+  - `SIMILAR = 0.68`, the cosine between summaries;
+  - `COMPLEMENTARY = 0.60`, the best phrase-to-phrase cosine between one side's needs and the other's skills;
+  - `TOP = 5` matches per idea and kind.
+
+  Re-tune them once there are real ideas, by printing the scores for pairs that staff agree should or shouldn't match.
+- **Failures:** if the model doesn't give usable JSON twice, the idea waits for the next run (logged in `~/ideas_ai.log`). To test from the Mac, point `OLLAMA_URL` at the Mac's Ollama.
+- **Anonymous access** is exactly three more functions: `submit_idea` (the same contact checks as Book me, 5 ideas per email per day, and a honeypot), `idea_status`, and `idea_connect` (both ideas must be approved). Contact details leave the database only when both sides have connected.
+
 ## Rooms and the TV
 
 The lab rooms are rows in `places` (`kind = 'room'`). `iade_name` must be the exact room name the IADE timetable uses, so lessons, bookings and filters line up. `public = true` lets the room appear in the export. To add the second lab room:
