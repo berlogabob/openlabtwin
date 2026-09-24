@@ -137,3 +137,30 @@ Future<List<Rec>> history(int personId) => db
     .eq('requester_id', personId)
     .order('starts_at', ascending: false)
     .limit(50);
+
+// ---------- idea hub ----------
+
+Future<List<Rec>> ideas(String status) => db
+    .from('ideas')
+    .select('id,body,status,workshop,created_at,ai_title,ai_keywords,people(name)')
+    .eq('status', status)
+    .order('created_at', ascending: false);
+
+Future<Rec> idea1(int id) => db
+    .from('ideas')
+    .select('id,person_id,body,link,can_bring,looking_for,status,workshop,created_at,ai_title,ai_summary,ai_keywords,ai_model,ai_done_at,'
+        'people(name,email,student_number)')
+    .eq('id', id)
+    .single();
+
+Future<void> updateIdea(int id, Rec change) => db.from('ideas').update(change).eq('id', id);
+
+Future<List<Rec>> ideaMatches(int id) => db
+    .from('idea_matches')
+    .select('idea_a,idea_b,kind,score,reason,a_connect,b_connect,'
+        'a:ideas!idea_matches_idea_a_fkey(id,ai_title,people(name)),b:ideas!idea_matches_idea_b_fkey(id,ai_title,people(name))')
+    .or('idea_a.eq.$id,idea_b.eq.$id')
+    .order('score', ascending: false);
+
+Future<List<Rec>> personIdeas(int personId) =>
+    db.from('ideas').select('id,status,created_at,ai_title,body').eq('person_id', personId).order('created_at', ascending: false);

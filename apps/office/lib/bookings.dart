@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'data.dart';
 import 'hours.dart';
+import 'ideas_screen.dart';
 import 'inventory.dart';
 import 'logic.dart';
 
@@ -45,6 +46,11 @@ class _BookingsPageState extends State<BookingsPage> {
           final loaded = snap.data;
           return Scaffold(
             appBar: AppBar(title: const Text('Lab bookings'), actions: [
+              IconButton(
+                tooltip: 'Ideas',
+                icon: const Icon(Icons.lightbulb_outline),
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const IdeasScreen())),
+              ),
               if (loaded != null)
                 IconButton(
                   tooltip: 'Consultation hours',
