@@ -6,6 +6,7 @@ import 'hours.dart';
 import 'ideas_screen.dart';
 import 'inventory.dart';
 import 'logic.dart';
+import 'tv_screen.dart';
 
 const statusColors = {
   'requested': Colors.orange,
@@ -46,6 +47,11 @@ class _BookingsPageState extends State<BookingsPage> {
           final loaded = snap.data;
           return Scaffold(
             appBar: AppBar(title: const Text('Lab bookings'), actions: [
+              IconButton(
+                tooltip: 'TV',
+                icon: const Icon(Icons.tv),
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const TvScreen())),
+              ),
               IconButton(
                 tooltip: 'Ideas',
                 icon: const Icon(Icons.lightbulb_outline),

@@ -109,4 +109,25 @@ void main() {
     expect(a.toRow().containsKey('contact_link'), isFalse);
     expect(a.toRow().containsKey('status_token'), isFalse);
   });
+
+  test('TV slide: row round trip, date window, problems', () {
+    final s = TvSlide.fromRow({
+      'id': 3, 'kind': 'qr', 'title': 'Instagram', 'body': null, 'media_name': null, 'url': 'https://instagram.com/x',
+      'seconds': 8, 'position': 2, 'starts_on': '2026-10-01', 'ends_on': '2026-10-31', 'active': true,
+    });
+    expect(s.toRow(), {
+      'kind': 'qr', 'title': 'Instagram', 'body': null, 'media_name': null, 'url': 'https://instagram.com/x',
+      'seconds': 8, 'position': 2, 'starts_on': '2026-10-01', 'ends_on': '2026-10-31', 'active': true,
+    });
+    expect(s.showsOn(DateTime(2026, 10, 1)), isTrue);
+    expect(s.showsOn(DateTime(2026, 11, 1)), isFalse);
+    expect((s..active = false).showsOn(DateTime(2026, 10, 5)), isFalse);
+    expect(s.problem(), isNull);
+    expect(TvSlide(kind: 'qr', title: 'x', url: 'instagram.com').problem(), contains('http'));
+    expect(TvSlide(kind: 'media').problem(), contains('file'));
+    expect(TvSlide(kind: 'text', title: 'x', seconds: 0).problem(), contains('Seconds'));
+    expect(TvSlide(kind: 'bio').problem(), contains('name'));
+    expect(TvSlide(kind: 'text', title: 'x', startsOn: DateTime(2026, 10, 2), endsOn: DateTime(2026, 10, 1)).problem(),
+        contains('end date'));
+  });
 }

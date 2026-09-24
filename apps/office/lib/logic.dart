@@ -207,3 +207,77 @@ List<String> equipmentClashes(Activity a, Set<int> mine, List<(Activity, Set<int
   }
   return out;
 }
+
+/// A TV carousel slide (tv_slides). The node applies the same date rule when it builds the playlist.
+class TvSlide {
+  TvSlide({
+    this.id,
+    this.kind = 'media',
+    this.title = '',
+    this.body = '',
+    this.mediaName,
+    this.url = '',
+    this.seconds = 10,
+    this.position = 0,
+    this.startsOn,
+    this.endsOn,
+    this.active = true,
+  });
+
+  factory TvSlide.fromRow(Map<String, dynamic> r) => TvSlide(
+        id: r['id'] as int?,
+        kind: r['kind'] as String,
+        title: r['title'] as String? ?? '',
+        body: r['body'] as String? ?? '',
+        mediaName: r['media_name'] as String?,
+        url: r['url'] as String? ?? '',
+        seconds: r['seconds'] as int? ?? 10,
+        position: r['position'] as int? ?? 0,
+        startsOn: r['starts_on'] == null ? null : DateTime.parse(r['starts_on'] as String),
+        endsOn: r['ends_on'] == null ? null : DateTime.parse(r['ends_on'] as String),
+        active: r['active'] as bool? ?? true,
+      );
+
+  int? id;
+  String kind, title, body, url;
+  String? mediaName;
+  int seconds, position;
+  DateTime? startsOn, endsOn;
+  bool active;
+
+  Map<String, dynamic> toRow() => {
+        'kind': kind,
+        'title': _blank(title),
+        'body': _blank(body),
+        'media_name': mediaName,
+        'url': _blank(url),
+        'seconds': seconds,
+        'position': position,
+        'starts_on': startsOn == null ? null : isoDate(startsOn!),
+        'ends_on': endsOn == null ? null : isoDate(endsOn!),
+        'active': active,
+      };
+
+  bool showsOn(DateTime day) {
+    final d = isoDate(day);
+    return active &&
+        (startsOn == null || isoDate(startsOn!).compareTo(d) <= 0) &&
+        (endsOn == null || isoDate(endsOn!).compareTo(d) >= 0);
+  }
+
+  /// The first thing to fix before saving, or null.
+  String? problem() {
+    if (kind == 'media' && mediaName == null) return 'Pick a file.';
+    if ((kind == 'bio' || kind == 'text') && title.trim().isEmpty) {
+      return kind == 'bio' ? 'Add a name.' : 'Add a title.';
+    }
+    if (kind == 'qr' && !RegExp(r'^https?://\S+$').hasMatch(url.trim())) {
+      return 'The link must start with http:// or https://.';
+    }
+    if (seconds < 1) return 'Seconds must be at least 1.';
+    if (startsOn != null && endsOn != null && endsOn!.isBefore(startsOn!)) {
+      return 'The end date is before the start date.';
+    }
+    return null;
+  }
+}

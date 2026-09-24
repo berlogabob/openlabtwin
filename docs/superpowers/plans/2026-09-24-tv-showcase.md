@@ -784,7 +784,6 @@ class _TvScreenState extends State<TvScreen> {
 
   Future<void> _reorder(int from, int to) async {
     final list = [...slides!];
-    if (to > from) to--;
     list.insert(to, list.removeAt(from));
     setState(() => slides = list);
     await _run(() => reorderTvSlides([for (final s in list) s.id!]));
@@ -934,7 +933,7 @@ class _TvScreenState extends State<TvScreen> {
                         ? const Center(child: Text('No slides yet.'))
                         : ReorderableListView(
                             padding: const EdgeInsets.only(bottom: 88),
-                            onReorder: _reorder,
+                            onReorderItem: _reorder,
                             children: [
                               for (final s in list)
                                 ListTile(

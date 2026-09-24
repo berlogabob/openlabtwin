@@ -164,3 +164,22 @@ Future<List<Rec>> ideaMatches(int id) => db
 
 Future<List<Rec>> personIdeas(int personId) =>
     db.from('ideas').select('id,status,created_at,ai_title,body').eq('person_id', personId).order('created_at', ascending: false);
+
+Future<List<TvSlide>> tvSlides() async =>
+    [for (final r in await db.from('tv_slides').select().order('position').order('id')) TvSlide.fromRow(r)];
+
+/// The files the edge node reported from its shared TV folder.
+Future<List<Rec>> tvMedia() async => await db.from('tv_media').select('name,kind,playable').order('name');
+
+Future<void> saveTvSlide(TvSlide s) async {
+  if (s.id == null) {
+    await db.from('tv_slides').insert(s.toRow());
+  } else {
+    await db.from('tv_slides').update(s.toRow()).eq('id', s.id!);
+  }
+}
+
+Future<void> deleteTvSlide(int id) async => await db.from('tv_slides').delete().eq('id', id);
+
+Future<void> reorderTvSlides(List<int> ids) async =>
+    await Future.wait([for (var i = 0; i < ids.length; i++) db.from('tv_slides').update({'position': i}).eq('id', ids[i])]);
