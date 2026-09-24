@@ -18,7 +18,7 @@ Students have project ideas and nowhere to put them. A QR code leads to a simple
 
 ## Student flow
 
-1. The QR leads to `…/openlabtwin/ideas/`. The student fills in the form and sees the notice line "Your idea is saved in your lab history, visible to lab staff only; matched students see its title and your first name."
+1. The QR leads to `…/openlabtwin/ideas/`. The student fills in the form and sees the notice line "Your idea is saved in your lab history, visible to lab staff only; matched students see its title and your first name. Approved ideas may be shown on the lab TV without your name, in the AI's version." (TV sentence added 2026-09-24 with the TV showcase.)
 2. **Send** gives a private link, `…/ideas/status/?t=<token>`. It works anywhere, because the page is on GitHub Pages and the data comes from Supabase.
 3. The status page shows:
    - their idea;

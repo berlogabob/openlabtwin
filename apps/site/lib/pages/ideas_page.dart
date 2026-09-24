@@ -77,7 +77,8 @@ class IdeasPageState extends State<IdeasPage> {
             button(type: ButtonType.button, disabled: sending, onClick: _send, [.text(sending ? 'Sending…' : 'Send idea')]),
             if (error != null) p(classes: 'error', [.text(error!)]),
             p(classes: 'note', [.text('Your idea is saved in your lab history, visible to lab staff only; '
-                'matched students see its title and your first name.')]),
+                'matched students see its title and your first name. Approved ideas may be shown on the lab TV '
+                'without your name, in the AI\'s version.')]),
           ]),
         ],
       ]),
