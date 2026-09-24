@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab TV</title>
+<link rel="icon" href="data:,">
+<!-- Showcase TV, served by the edge node (docs/edge-node.md): schedule column + carousel. No build step. -->
+<style>
+:root { --fg: #1a1a1a; --muted: #666; --bg: #fafaf7; --card: #fff; --line: #e3e1da; --accent: #b3261e;
+        --booking: #1e5cb3; --event: #1eb350; --mat: #efece4; --frame: #d9d5ca; }
+* { box-sizing: border-box; }
+html { font-size: clamp(14px, 1.05vw, 40px); }
+body { margin: 0; height: 100vh; display: grid; grid-template-columns: 1fr 2fr; grid-template-rows: 1fr auto;
+       font: 1rem/1.35 system-ui, sans-serif; color: var(--fg); background: var(--bg); overflow: hidden; }
+#schedule { padding: 1.2rem 1.4rem; border-right: 1px solid var(--line); overflow: hidden; display: flex; flex-direction: column; gap: 1rem; }
+#schedule .day { display: flex; justify-content: space-between; align-items: baseline; color: var(--muted); }
+#schedule .clock { font-size: 2rem; font-weight: 600; color: var(--fg); font-variant-numeric: tabular-nums; }
+#schedule section { flex: 1; min-height: 0; overflow: hidden; }
+#schedule h2 { margin: 0 0 .5rem; font-size: 1.1rem; letter-spacing: .04em; text-transform: uppercase; }
+article { margin: 0 0 .45rem; padding: .45rem .7rem; background: var(--card); border: 1px solid var(--line); border-radius: 8px; }
+article p { margin: 0; }
+article .time { font-weight: 600; font-variant-numeric: tabular-nums; }
+article .who { color: var(--muted); font-size: .85rem; }
+article.booking { border-left: 4px solid var(--booking); }
+article.event { border-left: 4px solid var(--event); }
+article.past { opacity: .4; }
+article.now { box-shadow: 0 0 0 2px var(--accent); }
+.empty { color: var(--muted); }
+#stage { position: relative; background: var(--mat); display: flex; align-items: center; justify-content: center; }
+/* passe-partout: the mat is the stage, the frame's opening takes the slide's shape */
+#frame { background: var(--card); box-shadow: 0 0 0 .35rem #fff, 0 0 0 calc(.35rem + 1px) var(--frame), 0 .8rem 2rem rgb(0 0 0 / .12);
+         display: flex; overflow: hidden; }
+#frame img, #frame video { width: 100%; height: 100%; object-fit: contain; background: #000; display: block; }
+#frame.bio img, #frame.qr img { width: auto; max-width: 45%; object-fit: cover; background: none; }
+#frame.qr img { object-fit: contain; padding: 2rem; }
+#frame .text { flex: 1; padding: 3rem; display: flex; flex-direction: column; justify-content: center; gap: .8rem; }
+#frame h1 { margin: 0; font-size: 3rem; line-height: 1.1; }
+#frame .body { font-size: 1.6rem; color: var(--muted); white-space: pre-line; }
+#frame .when { font-size: 1.6rem; color: var(--event); font-weight: 600; }
+#frame .place { font-size: 1.3rem; color: var(--muted); }
+#frame.idea .when { color: var(--accent); }
+#caption { position: absolute; bottom: 1.2rem; left: 0; right: 0; text-align: center; font-size: 1.3rem; color: var(--muted); }
+footer { grid-column: 1 / -1; padding: .2rem 1.4rem; font-size: .75rem; color: var(--muted); border-top: 1px solid var(--line); }
+</style>
+</head>
+<body>
+<aside id="schedule"></aside>
+<main id="stage"><div id="frame"></div><p id="caption"></p></main>
+<footer></footer>
+<script>
+const DEFAULT_ROOM = 'Lab. e Estudo de Jogos - Tech Lab (Oriente)';
+const rooms = new URLSearchParams(location.search).getAll('room');
+if (!rooms.length) rooms.push(DEFAULT_ROOM);
+let lessons = [], tv = { slides: [], ideas: [] }, updated = null, queue = [], timer = null, current = null;
+
+const pad = n => String(n).padStart(2, '0');
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const hm = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const el = (tag, cls, text) => {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;
+  return e;
+};
+const get = async url => {
+  const r = await fetch(url, { cache: 'no-store' });
+  if (!r.ok) throw new Error(`${url}: ${r.status}`);
+  return r.json();
+};
+
+async function load() {  // keep the last good copy when a reload fails
+  try { lessons = await get('data/all.json'); updated = new Date(); } catch (e) { console.warn(e); }
+  try { tv = await get('tv.json'); updated = new Date(); } catch (e) { console.warn(e); }
+  schedule();
+}
+
+function schedule() {
+  const now = new Date(), day = iso(now), clock = hm(now);
+  const aside = document.getElementById('schedule');
+  const top = el('div', 'day');
+  top.append(el('span', null, now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })), el('span', 'clock', clock));
+  aside.replaceChildren(top);
+  for (const room of rooms) {
+    const sec = el('section');
+    sec.append(el('h2', null, room.replace(/ \(Oriente\)$/, '')));
+    const items = lessons.filter(l => l.date === day && l.rooms.includes(room)).sort((a, b) => a.start.localeCompare(b.start));
+    if (!items.length) sec.append(el('p', 'empty', 'Free all day'));
+    for (const l of items) {
+      const cls = [l.layer !== 'lesson' && l.layer, l.end <= clock && 'past', l.start <= clock && l.end > clock && 'now'];
+      const a = el('article', cls.filter(Boolean).join(' '));
+      a.append(el('p', 'time', `${l.start}–${l.end}`), el('p', 'course', l.course));
+      const who = [l.teachers.join(', '), l.groups.join(', ')].filter(Boolean).join(' · ');
+      if (who) a.append(el('p', 'who', who));
+      sec.append(a);
+    }
+    aside.append(sec);
+  }
+  document.querySelector('footer').textContent = updated ? `updated ${hm(updated)}` : '';
+}
+
+function playlist() {  // 3 random ideas per loop: the AI's anonymous version only
+  const ideas = [...tv.ideas].sort(() => Math.random() - 0.5).slice(0, 3)
+    .map(i => ({ kind: 'idea', when: 'Student idea', title: i.title, body: i.summary, seconds: 12 }));
+  return [...tv.slides, ...ideas];
+}
+
+function fit() {  // the frame's opening takes the slide's shape, as large as the mat allows
+  if (!current) return;
+  const stage = document.getElementById('stage'), frame = document.getElementById('frame');
+  const ratio = current.kind === 'media' && current.w && current.h ? current.w / current.h : 16 / 9;
+  const W = stage.clientWidth * 0.86, H = stage.clientHeight * 0.8;
+  const w = W / H > ratio ? H * ratio : W;
+  frame.style.width = `${w}px`;
+  frame.style.height = `${w / ratio}px`;
+}
+
+function next() {
+  clearTimeout(timer);
+  if (!queue.length) queue = playlist();
+  const s = queue.shift();
+  if (!s) { timer = setTimeout(next, 5000); return; }
+  current = s;
+  const frame = document.getElementById('frame');
+  frame.className = s.kind;
+  frame.replaceChildren();
+  document.getElementById('caption').textContent = s.kind === 'media' ? s.title : '';
+  fit();
+  const skip = () => { clearTimeout(timer); timer = setTimeout(next, 2000); };
+  if (s.video) {
+    const v = el('video');
+    Object.assign(v, { src: s.src, muted: true, autoplay: true, playsInline: true, onended: next, onerror: skip });
+    frame.append(v);
+    v.play().catch(skip);
+    return;
+  }
+  if (s.src) {
+    const img = el('img');
+    Object.assign(img, { src: s.src, alt: s.title || '' });
+    frame.append(img);
+  }
+  if (s.kind !== 'media') {
+    const text = el('div', 'text');
+    if (s.when) text.append(el('p', 'when', s.when));
+    text.append(el('h1', null, s.title || ''));
+    if (s.place) text.append(el('p', 'place', s.place));
+    if (s.body) text.append(el('p', 'body', s.body));
+    frame.append(text);
+  }
+  timer = setTimeout(next, (s.seconds || 10) * 1000);
+}
+
+addEventListener('resize', fit);
+load().then(next);
+setInterval(load, 60 * 1000);
+</script>
+</body>
+</html>
