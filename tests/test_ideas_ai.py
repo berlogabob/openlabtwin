@@ -39,6 +39,8 @@ assert (1, 2, "similar") in kinds and (1, 3, "complementary") in kinds, m
 assert not any(4 in (a, b) for a, b, _k, _s, _r in m), "unrelated idea gets no match"
 assert next(r for a, b, k, _s, r in m if (a, b, k) == (1, 2, "similar")) == "similar topic: plants"
 assert all(a < b for a, b, *_ in m)
+same = [i | {"person": 7} for i in ideas[:2]]
+assert ai.pick_matches(same) == [], "one person's ideas are never matched with each other"
 # both server styles send the right request and read the right reply
 sent = []
 def fake_post(path, body, base=None):

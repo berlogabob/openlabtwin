@@ -133,10 +133,12 @@ def best(needs, brings):
 def pick_matches(ideas):
     """Pairs worth showing: [(a_id, b_id, kind, score, reason)], a_id < b_id, kept if in the top TOP of either idea.
 
-    ideas: [{id, keywords, emb, brings: [vec], needs: [vec]}]."""
+    ideas: [{id, keywords, emb, brings: [vec], needs: [vec], person (optional)}]. One person's ideas are never paired."""
     scored = []
     for i, a in enumerate(ideas):
         for b in ideas[i + 1:]:
+            if a.get("person") is not None and a.get("person") == b.get("person"):
+                continue
             lo, hi = (a, b) if a["id"] < b["id"] else (b, a)
             sim = cosine(a["emb"], b["emb"])
             if sim >= SIMILAR:
@@ -177,12 +179,12 @@ def main():
             "ai_done_at": datetime.now(timezone.utc).isoformat(), "embedding": vectors[0],
         }, {"Prefer": "return=minimal"})
         print(f"idea {idea['id']}: {out['title']}")
-    approved = select(db, "ideas", {"select": "id,ai_keywords,embedding", "status": "eq.approved", "ai_done_at": "not.is.null",
+    approved = select(db, "ideas", {"select": "id,person_id,ai_keywords,embedding", "status": "eq.approved", "ai_done_at": "not.is.null",
                                     "order": "id"})
     skills = select(db, "idea_skills", {"select": "idea_id,side,embedding", "order": "idea_id,side,phrase"}) if approved else []
     def mine(i, side):
         return [vec(s["embedding"]) for s in skills if s["idea_id"] == i and s["side"] == side]
-    pairs = pick_matches([{"id": r["id"], "keywords": r["ai_keywords"], "emb": vec(r["embedding"]),
+    pairs = pick_matches([{"id": r["id"], "person": r["person_id"], "keywords": r["ai_keywords"], "emb": vec(r["embedding"]),
                            "brings": mine(r["id"], "brings"), "needs": mine(r["id"], "needs")} for r in approved])
     if pairs:  # upsert leaves the students' connect flags alone: they aren't in the payload
         request(db, "POST", "idea_matches", {"on_conflict": "idea_a,idea_b,kind"},
