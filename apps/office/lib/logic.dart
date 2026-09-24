@@ -38,6 +38,7 @@ class Activity {
     this.attendees,
     this.purpose = '',
     this.publicNote = '',
+    this.contactLink = '',
   })  : placeIds = placeIds ?? [],
         exdates = exdates ?? [];
 
@@ -60,10 +61,12 @@ class Activity {
         attendees: r['attendees'] as int?,
         purpose: r['purpose'] as String? ?? '',
         publicNote: r['public_note'] as String? ?? '',
+        contactLink: r['contact_link'] as String? ?? '',
       );
 
   int? id, requesterId, ownerStaffId, organizationId, attendees;
   String title, layer, kind, locationText, status, requesterDisplay, purpose, publicNote;
+  final String contactLink; // from the "Book me" form; read-only here, so toRow() leaves it alone
   List<int> placeIds;
   List<String> exdates;
   DateTime start, end;

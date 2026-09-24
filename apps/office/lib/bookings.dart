@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 import 'data.dart';
+import 'hours.dart';
 import 'inventory.dart';
 import 'logic.dart';
 
@@ -44,6 +45,12 @@ class _BookingsPageState extends State<BookingsPage> {
           final loaded = snap.data;
           return Scaffold(
             appBar: AppBar(title: const Text('Lab bookings'), actions: [
+              if (loaded != null)
+                IconButton(
+                  tooltip: 'Consultation hours',
+                  icon: const Icon(Icons.schedule),
+                  onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => HoursPage(refs: loaded.$1))),
+                ),
               if (loaded != null)
                 IconButton(
                   tooltip: 'Inventory',
@@ -107,6 +114,7 @@ class _BookingFormState extends State<BookingForm> {
   late final note = TextEditingController(text: a.publicNote);
   late final skip = TextEditingController(text: a.exdates.join(', '));
   List<Rec> kit = [];
+  List<Rec> past = []; // the requester's lab history
   List<String>? warnings;
   bool busy = false;
 
@@ -114,6 +122,13 @@ class _BookingFormState extends State<BookingForm> {
   void initState() {
     super.initState();
     if (a.id != null) _loadKit();
+    _loadHistory();
+  }
+
+  Future<void> _loadHistory() async {
+    if (a.requesterId == null) return setState(() => past = []);
+    final rows = await history(a.requesterId!);
+    setState(() => past = [for (final r in rows) if (r['id'] != a.id) r]);
   }
 
   Future<void> _loadKit() async {
@@ -223,6 +238,7 @@ class _BookingFormState extends State<BookingForm> {
 
   void _setRequester(Rec p) {
     a.requesterId = p['id'] as int;
+    _loadHistory();
     if (display.text.trim().isEmpty) display.text = p['kind'] == 'professor' ? 'Prof. ${p['name']}' : p['name'] as String;
   }
 
@@ -400,6 +416,20 @@ class _BookingFormState extends State<BookingForm> {
           IconButton(tooltip: 'New person', icon: const Icon(Icons.person_add), onPressed: _newPerson),
         ]),
         TextField(controller: display, decoration: const InputDecoration(labelText: 'Shown on the site as (e.g. Prof. Cláudia)')),
+        if (a.contactLink.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 8), child: SelectableText('Their link: ${a.contactLink}')),
+        if (past.isNotEmpty)
+          ExpansionTile(
+            tilePadding: EdgeInsets.zero,
+            title: Text('Their history (${past.length})'),
+            children: [
+              for (final h in past)
+                ListTile(
+                  dense: true,
+                  title: Text('${(h['starts_at'] as String).substring(0, 10)} · ${h['kind']} · ${h['status']}'),
+                  subtitle: Text([h['title'], h['purpose'] ?? ''].where((x) => '$x'.isNotEmpty).join(' — ')),
+                ),
+            ],
+          ),
         DropdownButtonFormField<int?>(
           initialValue: a.organizationId,
           decoration: const InputDecoration(labelText: 'Club / course / project (optional)'),

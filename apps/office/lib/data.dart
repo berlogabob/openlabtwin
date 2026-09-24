@@ -118,3 +118,22 @@ Future<List<Rec>> onLoan() => db.from('on_loan').select('item_id,person_id,qty')
 
 /// Movements are append-only: a mistake is corrected with an 'adjust' row, never edited.
 Future<void> addMovements(List<Rec> rows) => db.from('movements').insert(rows);
+
+// ---------- book me ----------
+
+Future<List<Rec>> consultationHours() =>
+    db.from('consultation_hours').select('id,weekday,from_time,to_time,slot_minutes,places(name),people(name)').order('weekday').order('from_time');
+
+Future<void> addConsultationHours(int staffId, int placeId, int weekday, String from, String to, int slotMinutes) => db
+    .from('consultation_hours')
+    .insert({'staff_id': staffId, 'place_id': placeId, 'weekday': weekday, 'from_time': from, 'to_time': to, 'slot_minutes': slotMinutes});
+
+Future<void> removeConsultationHours(int id) => db.from('consultation_hours').delete().eq('id', id);
+
+/// Everything a person asked for before: their lab history, newest first.
+Future<List<Rec>> history(int personId) => db
+    .from('activities')
+    .select('id,title,kind,status,starts_at,purpose,contact_link')
+    .eq('requester_id', personId)
+    .order('starts_at', ascending: false)
+    .limit(50);

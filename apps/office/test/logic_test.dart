@@ -98,4 +98,15 @@ void main() {
     ];
     expect(equipmentClashes(a, {7}, others, {7: 'Laser cutter'}), ['2026-10-20 11:00–13:00 Laser cutter also booked for Club']);
   });
+
+  test('the student link from "Book me" is read, never written back by staff saves', () {
+    final a = Activity.fromRow({
+      'id': 9, 'title': 'Consultation', 'layer': 'booking', 'kind': 'consultation', 'place_ids': [1],
+      'starts_at': '2026-10-06T13:00:00Z', 'ends_at': '2026-10-06T13:30:00Z', 'status': 'requested',
+      'contact_link': 'https://github.com/ana', 'purpose': 'Robot arm',
+    });
+    expect(a.contactLink, 'https://github.com/ana');
+    expect(a.toRow().containsKey('contact_link'), isFalse);
+    expect(a.toRow().containsKey('status_token'), isFalse);
+  });
 }
