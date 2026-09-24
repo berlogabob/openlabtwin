@@ -29,6 +29,18 @@ To reach the PC from the Mac: `ssh <user>@<ip>`, with the IP printed at the end 
 
 The service key bypasses every privacy rule, so this machine must be physically in the lab and under your account only.
 
+## The IADE network: two gotchas (found on TechLAB-01, 2026-09-24)
+
+- **Outgoing SSH (port 22) is blocked,** so GitHub is reached over SSH on port 443 (`Hostname ssh.github.com`, `Port 443` in `~/.ssh/config`; `edge-setup.sh` writes this).
+- **The first DNS server handed out by DHCP (`172.23.44.7`) doesn't answer.** Every lookup waited 5 seconds for it, which turned a 30-second scrape into 15 minutes. The fix puts the working one first:
+  `sudo nmcli connection modify "Wired connection 1" ipv4.ignore-auto-dns yes ipv4.dns "172.20.44.52 172.23.44.7" && sudo nmcli connection up "Wired connection 1"`.
+  Check it with `curl -s -o /dev/null -w "%{time_namelookup}\n" https://github.com`, which should be well under 1 second.
+- **The MX firewall (ufw) is on,** so SSH from the lab network needs `sudo ufw allow from 10.208.16.0/23 to any port 22 proto tcp`.
+
+## The lab PC (TechLAB-01)
+
+`10.208.17.166` on the wired lab network, user `TechLAB`: an i7-7700K with 8 threads, 46 GB RAM, a GTX 1070 (no NVIDIA driver yet; `nouveau`), Debian 13 with systemd. It's reachable from the Mac with `ssh -i ~/.ssh/techlab TechLAB@10.208.17.166`. Unsloth Studio runs on other lab machines (`10.208.17.164:8888`, `.177`), not on this PC; its OpenAI-compatible API needs a key.
+
 ## Backups
 
 The Supabase free plan keeps **no** backups. Every night `scripts/backup.py` saves each table as JSON to `~/openlabtwin-backups/YYYY-MM-DD/` and keeps the newest 30 days (about 4 MB a day). The folder is mode 700 and outside the repo because it holds emails. To restore, insert each file's rows back in the order of `TABLES` in `backup.py` (parents first), with the service key.
