@@ -16,7 +16,7 @@ Type your staff email and press **Send sign-in link**. Open the link from the em
 6. **Date, from, to.** For a club that meets every week, switch on **Repeats weekly**, pick the end date, and list any dates to skip (holidays).
 7. **Requested by:** pick the person, or add them with the person button. Their email stays private. **Shown on the site as** fills itself (for example "Prof. Cláudia"); change it if needed.
 8. Optional: club or course, number of people, **Purpose and notes** (private), **Public note** (shown on the site).
-9. **Save** keeps it as *requested*; nothing is public yet. **Approve** publishes it: it's on the schedule, the TV and `lab.ics` within about 15 minutes.
+9. **Save** keeps it as *requested*; nothing is public yet. **Approve** publishes it: it's on the schedule, the TV and `lab.ics` within about 15 minutes, listed under the requester and the staff member in charge (you, for bookings you create), so the **Professor / staff** filter finds it.
 
 After every save the form lists **clashes**:
 - lessons in the same rooms;
@@ -58,7 +58,7 @@ Students scan the QR code (`apps/site/web/qr/book.svg`, served at `…/openlabtw
 - **Your hours.** In the office, the clock icon in the top bar opens **Consultation hours**. Add your weekly hours (for example Tuesday 14:00–17:00, 30-minute slots). A slot is offered only when there's no lesson and no requested or approved booking in that room at that time. Without hours, students see "No free times".
 - **Requests** arrive in the bookings list as **Consultation**, status *requested*. Open one to see the student, their link, and **their history**: every earlier request with its date, status and project. Approve, reject or cancel as usual.
 - **The student's private link** shows the status (requested, approved, declined, cancelled or done) and the time. Nothing else is shown, and there's no email. Write to them from your mail if needed.
-- **Public view:** an approved consultation shows on the schedule and TV only as "Consultation" in the room, with no name.
+- **Public view:** an approved consultation shows on the schedule and TV only as "Consultation" in the room, under the staff member's name, never the student's.
 - **Limits:** at most 2 open requests per student and 20 in total. A student's requests are all linked to one person by their email: that's the lab history you report on.
 
 ## Idea hub

@@ -16,14 +16,15 @@ lesson = {"date": "2026-09-21", "start_time": "09:00:00", "end_time": "11:00:00"
 club = {"id": 1, "title": "Club meeting", "layer": "booking", "kind": "club", "place_ids": [1, 2],
         "location_text": None, "starts_at": "2026-10-20T16:00:00+00:00", "ends_at": "2026-10-20T18:00:00+00:00",
         "rrule": "FREQ=WEEKLY;COUNT=3", "exdates": ["2026-10-27"], "status": "approved",
-        "requester_display": "Prof. Cláudia", "organization_id": 7, "public_note": "Bring laptops"}
+        "requester_display": "Prof. Cláudia", "owner_staff_id": 4, "organization_id": 7, "public_note": "Bring laptops"}
 fair = {"id": 2, "title": "Open day", "layer": "event", "kind": "external", "place_ids": [],
         "location_text": "Aula Magna", "starts_at": "2026-09-25T09:00:00+00:00", "ends_at": "2026-09-25T12:00:00+00:00",
         "rrule": None, "exdates": [], "status": "approved", "requester_display": None, "organization_id": None,
         "public_note": None}
 pending = club | {"id": 3, "title": "Secret", "status": "requested", "rrule": None}
 
-out = export.build([lesson, lesson | {"date": "2026-09-20"}], [club, fair, pending], places, orgs, date(2026, 9, 23))
+out = export.build([lesson, lesson | {"date": "2026-09-20"}], [club, fair, pending], places, orgs, date(2026, 9, 23),
+                   [{"id": 4, "name": "Andrey Dyakov"}])
 
 assert all(set(r) == export.KEYS for r in out), out
 assert not any(r["course"] == "Secret" for r in out), "unapproved activity was exported"
@@ -35,7 +36,8 @@ assert [r["date"] for r in clubs] == ["2026-10-20", "2026-11-03"], "weekly repea
 assert all(r["start"] == "17:00" and r["end"] == "19:00" for r in clubs), "wall-clock time kept across DST (25 Oct)"
 c = clubs[0]
 assert c["rooms"] == ["Lab. e Estudo de Jogos - Tech Lab (Oriente)"], "public places only, by their IADE name"
-assert c["teachers"] == ["Prof. Cláudia"] and c["groups"] == ["RobotClub"] and c["type"] == "Club"
+assert c["teachers"] == ["Prof. Cláudia", "Andrey Dyakov"], "requester and staff in charge"
+assert c["groups"] == ["RobotClub"] and c["type"] == "Club"
 assert c["layer"] == "booking" and c["note"] == "Bring laptops" and c["programmes"] == [] and c["degrees"] == []
 
 f = next(r for r in out if r["course"] == "Open day")

@@ -23,7 +23,7 @@ KEYS = frozenset({"date", "start", "end", "course", "groups", "teachers", "type"
                   "layer", "note"})
 LESSON_COLS = "date,start_time,end_time,course,groups,teachers,type,rooms,programmes,degrees"
 ACTIVITY_COLS = ("id,title,layer,kind,place_ids,location_text,starts_at,ends_at,rrule,exdates,status,"
-                 "requester_display,organization_id,public_note")
+                 "requester_display,owner_staff_id,organization_id,public_note")
 
 
 def lesson_record(r):
@@ -45,14 +45,16 @@ def occurrences(a, first, last):
     return [(s, s + length) for s in starts if s.date().isoformat() not in skip]
 
 
-def activity_records(a, place_names, org_names, first, last):
+def activity_records(a, place_names, org_names, first, last, staff_names=None):
     rooms = [place_names[p] for p in a["place_ids"] if p in place_names]
     if not rooms and a.get("location_text"):
         rooms = [a["location_text"]]
     org = org_names.get(a.get("organization_id"))
+    # the requester and the staff member in charge, so "Professor / staff" finds a technician's bookings
+    people = list(dict.fromkeys(x for x in [a.get("requester_display"), (staff_names or {}).get(a.get("owner_staff_id"))] if x))
     return [{"date": s.date().isoformat(), "start": s.strftime("%H:%M"), "end": e.strftime("%H:%M"),
              "course": a["title"], "groups": [org] if org else [],
-             "teachers": [a["requester_display"]] if a.get("requester_display") else [],
+             "teachers": people,
              "type": a["kind"].capitalize(), "rooms": rooms, "programmes": [], "degrees": [],
              "layer": a["layer"], "note": a.get("public_note") or ""}
             for s, e in occurrences(a, first, last)]
@@ -64,15 +66,16 @@ def assert_whitelist(records):
         assert not stray, f"record {r.get('course')!r} {r.get('date')} has forbidden keys: {sorted(stray)}"
 
 
-def build(lessons, activities, places, organizations, today):
+def build(lessons, activities, places, organizations, today, staff=()):
     first = monday_of(today)
     last = first + timedelta(days=WINDOW_DAYS)
     place_names = {p["id"]: p["iade_name"] or p["name"] for p in places if p["public"]}
     org_names = {o["id"]: o["name"] for o in organizations}
+    staff_names = {p["id"]: p["name"] for p in staff}
     out = [lesson_record(r) for r in lessons if r["date"] >= first.isoformat()]
     for a in activities:
         if a["status"] == "approved":  # also filtered in the query; checked again so a query change can't leak
-            out += activity_records(a, place_names, org_names, first, last)
+            out += activity_records(a, place_names, org_names, first, last, staff_names)
     assert_whitelist(out)
     return sorted(out, key=lambda r: (r["date"], r["start"], r["course"]))
 
@@ -96,7 +99,8 @@ def main():
     activities = select(db, "activities", {"select": ACTIVITY_COLS, "status": "eq.approved", "order": "id"})
     places = select(db, "places", {"select": "id,name,iade_name,public", "order": "id"})
     organizations = select(db, "organizations", {"select": "id,name", "order": "id"})
-    records = build(lessons, activities, places, organizations, today)
+    staff = select(db, "people", {"select": "id,name", "is_staff": "eq.true", "order": "id"})  # names only, never emails
+    records = build(lessons, activities, places, organizations, today, staff)
     if not any(r["layer"] == "lesson" for r in records):
         sys.exit("No lessons to export; refusing to publish an empty schedule.")
     lab_rooms = {p["iade_name"] or p["name"] for p in places if p["public"]}
