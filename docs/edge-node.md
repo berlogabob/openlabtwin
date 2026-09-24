@@ -39,7 +39,9 @@ The service key bypasses every privacy rule, so this machine must be physically 
 
 ## The lab PC (TechLAB-01)
 
-`10.208.17.166` on the wired lab network, user `TechLAB`: an i7-7700K with 8 threads, 46 GB RAM, a GTX 1070 (no NVIDIA driver yet; `nouveau`), Debian 13 with systemd. It's reachable from the Mac with `ssh -i ~/.ssh/techlab TechLAB@10.208.17.166`. Unsloth Studio runs on other lab machines (`10.208.17.164:8888`, `.177`), not on this PC; its OpenAI-compatible API needs a key.
+`10.208.17.166` on the wired lab network, user `TechLAB`: an i7-7700K with 8 threads, 46 GB RAM, a GTX 1070, Debian 13 with systemd. Ollama with `ornith-1.5:9b` and `nomic-embed-text` runs on the CPU: `ideas_ai.py --check` takes about 25 s including the model load.
+
+**GPU: don't install the NVIDIA driver with `ddm-mx -i nvidia` on this PC.** On 2026-09-24 it installed a driver that fails on the GTX 1070 ("probe with driver nvidia failed with error -1"). The desktop and the network didn't come up, and `sudo ddm-mx -p nvidia` plus a reboot undid it. The cause is probably Debian 13's *open* NVIDIA kernel module, which only supports Turing (GeForce 16xx/20xx) and newer, while the 1070 is Pascal. To try again later, use the proprietary (non-open) kernel module of a driver branch that still supports Pascal, and check with `nvidia-smi` before rebooting into the desktop. It's reachable from the Mac with `ssh -i ~/.ssh/techlab TechLAB@10.208.17.166`. Unsloth Studio runs on other lab machines (`10.208.17.164:8888`, `.177`), not on this PC; its OpenAI-compatible API needs a key.
 
 ## Backups
 

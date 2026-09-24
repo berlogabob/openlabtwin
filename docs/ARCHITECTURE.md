@@ -82,8 +82,8 @@ This follows UNIDCOM RIMS, which learned the hard way that row-level security ha
 | 3 Back office: bookings, approval, equipment, clash warnings | live |
 | 4 Inventory: movements, stock, loans, kit issue/return, stationary clashes | live |
 | Book me: consultation requests by QR, private status link, consultation hours, student history | live |
-| Idea hub: QR form, local AI normalising and matching, connect by mutual consent, office idea bank | live (the AI runs once the edge node is set up) |
-| Edge node: 10-minute publishing, nightly backup | scripts ready (`edge-setup.sh`, `publish.sh`, `backup.py`); PC set up 2026-09-24 |
+| Idea hub: QR form, local AI normalising and matching, connect by mutual consent, office idea bank | live |
+| Edge node (TechLAB-01): 10-minute publishing, 6-hourly scrape, 15-minute idea AI (ornith on CPU), nightly backup | live since 2026-09-24 |
 | 5 Thesis layer: demand forecast, Godot view | not started; scope depends on the thesis topic change |
 
 Deferred on purpose: serial-numbered assets and RFID/QR tagging, procurement, professor and student sign-in, consultation self-booking, and local-first sync.
