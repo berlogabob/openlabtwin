@@ -47,7 +47,8 @@ if ! command -v systemctl >/dev/null || [ ! -d /run/systemd/system ]; then   # s
   OLLAMA_BOOT="@reboot ollama serve >> \$HOME/ollama.log 2>&1"
   pgrep -x ollama >/dev/null || run sh -c 'nohup ollama serve >> "$HOME/ollama.log" 2>&1 &'
 fi
-run sleep 3
+# wait until Ollama answers (a slow PC can take a while to start it)
+if [ "$DRY" = 0 ]; then for _ in $(seq 1 30); do ollama list >/dev/null 2>&1 && break; sleep 2; done; fi
 run ollama pull nomic-embed-text
 RAM_GB=$(awk '/MemTotal/ {print int($2/1048576)}' /proc/meminfo 2>/dev/null || echo 0)
 if [ "$RAM_GB" -ge 16 ]; then run ollama pull ornith-1.5:9b
