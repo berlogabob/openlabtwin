@@ -30,6 +30,9 @@ class OfficeApp extends StatelessWidget {
   Widget build(BuildContext context) => MaterialApp(
         title: 'Lab office',
         theme: ThemeData(colorSchemeSeed: const Color(0xFFB3261E)),
+        // 24-hour clock everywhere, time pickers included, whatever the phone's locale says
+        builder: (context, child) =>
+            MediaQuery(data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true), child: child!),
         home: StreamBuilder<AuthState>(
           stream: db.auth.onAuthStateChange,
           builder: (context, _) => db.auth.currentSession == null ? const LoginPage() : const BookingsPage(),
