@@ -155,3 +155,26 @@ for info in (phone_video, old_phone):
     assert (r["width"], r["height"]) == (1080, 1920), r
 assert (tv.media_row("arm.mp4", 10, h264)["width"], tv.media_row("arm.mp4", 10, h264)["height"]) == (1920, 1080)
 print("ok rotation")
+
+# a TV page linked to a schedule event plays exactly in the event's time slot (its own dates and times are ignored)
+proto = {"id": 56, "status": "approved", "starts_at": "2026-10-01T16:00:00+00:00", "ends_at": "2026-10-01T19:00:00+00:00",
+         "rrule": None, "exdates": []}  # 17:00-20:00 in Lisbon
+page = base | {"id": 40, "position": 0, "kind": "media", "title": "PROTO26", "media_name": "arm.mp4", "seconds": None,
+               "activity_id": 56, "takeover": True, "fullscreen": True, "starts_on": "2026-01-01", "ends_on": "2026-01-02"}
+reel_page = base | {"id": 41, "position": 1, "kind": "text", "title": "Normal page"}
+linked = tv.link_events([page, reel_page], [proto], day)
+assert (linked[0]["starts_on"], linked[0]["ends_on"], linked[0]["from_time"], linked[0]["to_time"]) == \
+    ("2026-10-01", "2026-10-01", "17:00:00", "20:00:00"), linked[0]
+assert linked[1] == reel_page, "pages without a link are untouched"
+for clock, takeover in [("16:59", False), ("17:00", True), ("19:59", True), ("20:00", False)]:
+    t = tv.build(linked, media, [], [], day, "", clock)
+    assert t["takeover"] is takeover, (clock, t["playing"])
+    if takeover:
+        assert t["playing"] == "Takeover: PROTO26 until 20:00", t["playing"]
+assert tv.build(linked, media, [], [], day, "")["slides"][0]["src"] == "media/arm.mp4", "the linked media is what plays"
+assert tv.link_events([page], [proto | {"status": "cancelled"}], day)[0]["active"] is False, "a cancelled event: the page stops"
+assert tv.link_events([page], [], day)[0]["active"] is False, "a deleted event: the page stops"
+assert tv.link_events([page], [proto], date(2026, 10, 2))[0]["active"] is False, "another day: not playing"
+weekly = proto | {"starts_at": "2026-09-17T16:00:00+00:00", "ends_at": "2026-09-17T19:00:00+00:00", "rrule": "FREQ=WEEKLY;COUNT=5"}
+assert tv.link_events([page], [weekly], day)[0]["from_time"] == "17:00:00", "a weekly event: today's occurrence"
+print("ok event link")

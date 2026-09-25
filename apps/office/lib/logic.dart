@@ -226,6 +226,7 @@ class TvSlide {
     this.toTime,
     this.fullscreen = false,
     this.takeover = false,
+    this.activityId,
   });
 
   factory TvSlide.fromRow(Map<String, dynamic> r) => TvSlide(
@@ -244,12 +245,14 @@ class TvSlide {
         toTime: (r['to_time'] as String?)?.substring(0, 5),
         fullscreen: r['fullscreen'] as bool? ?? false,
         takeover: r['takeover'] as bool? ?? false,
+        activityId: r['activity_id'] as int?,
       );
 
   int? id;
   String kind, title, body, url;
   String? fromTime, toTime; // HH:MM, times of day the page plays; null: all day
   bool fullscreen, takeover; // takeover: while on, the TV plays only takeover pages
+  int? activityId; // linked schedule event: the page plays in its time slot, its own dates and times are ignored
   String? mediaName;
   int? seconds; // null: play the video to its end
   int position;
@@ -271,6 +274,7 @@ class TvSlide {
         'to_time': toTime,
         'fullscreen': fullscreen,
         'takeover': takeover,
+        'activity_id': activityId,
       };
 
   bool showsOn(DateTime day) {
@@ -290,7 +294,7 @@ class TvSlide {
       return 'The link must start with http:// or https://.';
     }
     if (seconds != null && seconds! < 1) return 'Seconds must be at least 1.';
-    if (takeover && endsOn == null && toTime == null) {
+    if (takeover && activityId == null && endsOn == null && toTime == null) {
       return 'A takeover needs an end: set "Until" (a date or a time), or it takes over the TV for good.';
     }
     if (fromTime != null && toTime != null && toTime!.compareTo(fromTime!) <= 0) {

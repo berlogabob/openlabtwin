@@ -31,6 +31,7 @@ class _TvScreenState extends State<TvScreen> {
   List<TvSlide>? slides;
   List<Rec> media = [];
   Rec? status;
+  List<Rec> events = [];
   String? error;
 
   @override
@@ -41,11 +42,12 @@ class _TvScreenState extends State<TvScreen> {
 
   Future<void> _load() async {
     try {
-      final r = await Future.wait([tvSlides(), tvMedia(), tvStatus()]);
+      final r = await Future.wait([tvSlides(), tvMedia(), tvStatus(), tvEvents()]);
       setState(() {
         slides = r[0] as List<TvSlide>;
         media = r[1] as List<Rec>;
         status = r[2] as Rec?;
+        events = r[3] as List<Rec>;
         error = null;
       });
     } catch (e) {
@@ -77,6 +79,7 @@ class _TvScreenState extends State<TvScreen> {
     if (s.startsOn != null || s.endsOn != null)
       '${s.startsOn == null ? '…' : isoDate(s.startsOn!)} – ${s.endsOn == null ? '…' : isoDate(s.endsOn!)}',
     if (s.fromTime != null || s.toTime != null) '${s.fromTime ?? '…'}–${s.toTime ?? '…'}',
+    if (s.activityId != null) 'during ${_eventLabel(s.activityId)}',
     if (s.fullscreen) 'full screen',
     if (s.takeover) 'takeover',
     if (!s.showsOn(DateTime.now())) 'not showing today',
@@ -87,6 +90,15 @@ class _TvScreenState extends State<TvScreen> {
   String _length(String? name) =>
       _file(name)?['seconds'] == null ? 'full length' : mmss(_file(name)!['seconds'] as num);
 
+  String _eventLabel(int? id) {
+    final e = events.where((e) => e['id'] == id).firstOrNull;
+    if (e == null) return 'event #$id (not upcoming)';
+    final start = DateTime.parse(e['starts_at'] as String).toLocal(),
+        end = DateTime.parse(e['ends_at'] as String).toLocal();
+    String hm(DateTime d) => '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+    return '${e['title']} · ${isoDate(start)} ${hm(start)}–${hm(end)}';
+  }
+
   Future<void> _edit(TvSlide s) async {
     final title = TextEditingController(text: s.title), body = TextEditingController(text: s.body);
     final url = TextEditingController(text: s.url), seconds = TextEditingController(text: '${s.seconds ?? 10}');
@@ -96,6 +108,7 @@ class _TvScreenState extends State<TvScreen> {
     DateTime? from = s.startsOn, to = s.endsOn;
     String? fromTime = s.fromTime, toTime = s.toTime;
     var fullscreen = s.fullscreen, takeover = s.takeover;
+    int? activityId = events.any((e) => e['id'] == s.activityId) ? s.activityId : null;
     Future<String?> pickTime(String? t) async {
       final v = await showTimePicker(
         context: context,
@@ -192,55 +205,82 @@ class _TvScreenState extends State<TvScreen> {
                       labelText: kind == 'events' || kind == 'ideas' ? 'Seconds per page' : 'Seconds on screen',
                     ),
                   ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    OutlinedButton(
-                      onPressed: () async {
-                        final d = await pick(from);
-                        if (d != null) set(() => from = d);
-                      },
-                      child: Text(from == null ? 'From: now' : 'From ${isoDate(from!)}'),
-                    ),
-                    OutlinedButton(
-                      onPressed: () async {
-                        final d = await pick(to);
-                        if (d != null) set(() => to = d);
-                      },
-                      child: Text(to == null ? 'Until: no end' : 'Until ${isoDate(to!)}'),
-                    ),
-                    if (from != null || to != null)
-                      TextButton(onPressed: () => set(() => from = to = null), child: const Text('Clear dates')),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    OutlinedButton(
-                      onPressed: () async {
-                        final t = await pickTime(fromTime);
-                        if (t != null) set(() => fromTime = t);
-                      },
-                      child: Text(fromTime == null ? 'Time from: any' : 'From $fromTime'),
-                    ),
-                    OutlinedButton(
-                      onPressed: () async {
-                        final t = await pickTime(toTime);
-                        if (t != null) set(() => toTime = t);
-                      },
-                      child: Text(toTime == null ? 'Time until: any' : 'Until $toTime'),
-                    ),
-                    if (fromTime != null || toTime != null)
-                      TextButton(
-                        onPressed: () => set(() => fromTime = toTime = null),
-                        child: const Text('Clear times'),
+                DropdownButtonFormField<int?>(
+                  initialValue: activityId,
+                  isExpanded: true,
+                  decoration: const InputDecoration(labelText: 'Play during a schedule event (optional)'),
+                  items: [
+                    const DropdownMenuItem<int?>(value: null, child: Text('No: use the dates and times below')),
+                    for (final e in events)
+                      DropdownMenuItem<int?>(
+                        value: e['id'] as int,
+                        child: Text(_eventLabel(e['id'] as int), overflow: TextOverflow.ellipsis),
                       ),
                   ],
+                  onChanged: (v) => set(() => activityId = v),
                 ),
+                if (activityId != null)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: Text(
+                      'Plays exactly in the event\'s time slot; if the event moves or is cancelled, the page follows.',
+                    ),
+                  )
+                else
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          OutlinedButton(
+                            onPressed: () async {
+                              final d = await pick(from);
+                              if (d != null) set(() => from = d);
+                            },
+                            child: Text(from == null ? 'From: now' : 'From ${isoDate(from!)}'),
+                          ),
+                          OutlinedButton(
+                            onPressed: () async {
+                              final d = await pick(to);
+                              if (d != null) set(() => to = d);
+                            },
+                            child: Text(to == null ? 'Until: no end' : 'Until ${isoDate(to!)}'),
+                          ),
+                          if (from != null || to != null)
+                            TextButton(onPressed: () => set(() => from = to = null), child: const Text('Clear dates')),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          OutlinedButton(
+                            onPressed: () async {
+                              final t = await pickTime(fromTime);
+                              if (t != null) set(() => fromTime = t);
+                            },
+                            child: Text(fromTime == null ? 'Time from: any' : 'From $fromTime'),
+                          ),
+                          OutlinedButton(
+                            onPressed: () async {
+                              final t = await pickTime(toTime);
+                              if (t != null) set(() => toTime = t);
+                            },
+                            child: Text(toTime == null ? 'Time until: any' : 'Until $toTime'),
+                          ),
+                          if (fromTime != null || toTime != null)
+                            TextButton(
+                              onPressed: () => set(() => fromTime = toTime = null),
+                              child: const Text('Clear times'),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   title: const Text('Full screen'),
@@ -285,6 +325,7 @@ class _TvScreenState extends State<TvScreen> {
       toTime: toTime,
       fullscreen: fullscreen,
       takeover: takeover,
+      activityId: activityId,
     );
     final problem = slide.problem();
     if (problem != null) {
@@ -319,7 +360,10 @@ class _TvScreenState extends State<TvScreen> {
                     final st = tvStatusLine(status, DateTime.now());
                     return ListTile(
                       dense: true,
-                      leading: Icon(st.ok ? Icons.check_circle : Icons.warning, color: st.ok ? Colors.green : Colors.red),
+                      leading: Icon(
+                        st.ok ? Icons.check_circle : Icons.warning,
+                        color: st.ok ? Colors.green : Colors.red,
+                      ),
                       title: Text(st.text, style: TextStyle(color: st.ok ? null : Colors.red)),
                     );
                   },

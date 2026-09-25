@@ -168,6 +168,15 @@ Future<List<Rec>> personIdeas(int personId) =>
 Future<List<TvSlide>> tvSlides() async =>
     [for (final r in await db.from('tv_slides').select().order('position').order('id')) TvSlide.fromRow(r)];
 
+/// Approved events and bookings from yesterday on, to link TV pages to.
+Future<List<Rec>> tvEvents() async => await db
+    .from('activities')
+    .select('id,title,layer,starts_at,ends_at')
+    .eq('status', 'approved')
+    .gte('ends_at', DateTime.now().subtract(const Duration(days: 1)).toUtc().toIso8601String())
+    .order('starts_at')
+    .limit(100);
+
 /// The edge node's heartbeat for the TV (one row), or null before its first run.
 Future<Rec?> tvStatus() async => await db.from('tv_status').select().maybeSingle();
 
