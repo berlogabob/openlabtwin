@@ -24,7 +24,7 @@ article.event { --c: var(--event); }
 article.past { opacity: .45; }
 article.now { outline: 2px solid var(--c); outline-offset: -1px; }
 article p { margin: .1rem 0; font-size: .9rem; overflow-wrap: anywhere; }
-article .time { margin-right: .35rem; color: var(--fg); font-weight: 600; font-variant-numeric: tabular-nums; }
+article .time { margin-right: .35rem; color: var(--fg); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
 article .course { color: var(--fg); font-size: 1.05rem; }
 /* single day (Today): spread its lessons across the width */
 main > section:only-child { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 0 1rem; align-items: start; }
