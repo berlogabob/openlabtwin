@@ -105,7 +105,7 @@ uv run python -c "import sys; sys.path.insert(0,'scripts'); import sqltest; prin
 ```
 
 There are two TV pages, both showing the rooms named in the URL (`?room=<IADE name>&room=<IADE name>`, spaces as `+` or `%20`; without `room`, the Tech Lab), stacked in the left third under a top line with the day and the room names:
-- **Showcase TV** `http://192.168.1.131/tv/…`, served by the edge node on the lab network (or over Tailscale): the right two thirds play the pages from the office TV list. Data reloads every minute; takeovers switch on the TV's own clock (checked every 5 s); the last good copy keeps playing if a reload fails, and the footer says in red when the playlist is over 5 minutes old. Details in [edge-node.md → TV showcase](edge-node.md#tv-showcase).
+- **Showcase TV** `http://192.168.1.131/tv/…`, served by the edge node on the lab network (or over Tailscale): the right two thirds play the pages from the office TV list. Every screen shows the page the clock says (so several TVs stay in sync) and reloads at second 20 of each minute; takeovers switch on the TV's own clock; the last good copy keeps playing if a reload fails, and the footer says in red when the playlist is over 5 minutes old. Details in [edge-node.md → TV showcase](edge-node.md#tv-showcase).
 - **Public TV** `https://berlogabob.github.io/openlabtwin/tv/…`: the same layout, with only the Book me and Idea hub QR codes and upcoming events on the right. It works anywhere.
 
 ## Database changes

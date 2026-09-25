@@ -20,7 +20,7 @@ Waiting for access to the Pi (`192.168.1.194`, a Pi 3 or older by its network ma
 - **Preview link in the office:** see the TV page from anywhere over Tailscale.
 - **Upload from the office:** needs HTTPS on the node (for example a Tailscale certificate) and a staff check on the node. Today files go in through the shared folder, on the lab network only.
 - **Event pages with photos:** approved events carry an optional image, shown on their TV page.
-- **Video wall:** several screens in sync.
+- **Video wall:** one picture split across several screens. (Several screens showing the same page in sync is done: they follow the clock.)
 
 ## Other
 

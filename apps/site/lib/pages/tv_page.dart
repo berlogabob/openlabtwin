@@ -26,7 +26,7 @@ class TvPageState extends State<TvPage> {
   DateTime now = DateTime.now();
   DateTime? loaded;
   Timer? timer;
-  int slide = 0;
+  int slide = DateTime.now().millisecondsSinceEpoch ~/ 10000; // from the clock: every screen shows the same slide
 
   @override
   void initState() {
@@ -34,14 +34,18 @@ class TvPageState extends State<TvPage> {
     if (!kIsWeb) return;
     final picked = Filters.parse(web.window.location.search).values['room'] ?? const [];
     if (picked.isNotEmpty) rooms = picked;
-    // Timer starts after the first load: a new slide every 10 s, data reloads every 5 minutes.
-    _load().whenComplete(() => timer = Timer.periodic(const Duration(seconds: 10), (t) {
-          setState(() {
-            now = DateTime.now();
-            slide++;
-          });
-          _fitSchedule();
-          if (t.tick % 30 == 0) _load();
+    // Timer starts after the first load: checks the clock each second (a new slide every 10 s, the same on every
+    // screen), data reloads every 5 minutes.
+    _load().whenComplete(() => timer = Timer.periodic(const Duration(seconds: 1), (t) {
+          final n = DateTime.now().millisecondsSinceEpoch ~/ 10000;
+          if (n != slide) {
+            setState(() {
+              now = DateTime.now();
+              slide = n;
+            });
+            _fitSchedule();
+          }
+          if (t.tick % 300 == 0) _load();
         }));
   }
 

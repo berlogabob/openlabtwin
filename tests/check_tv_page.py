@@ -50,6 +50,16 @@ with sync_playwright() as p:
     assert heads == ["Lab. e Estudo de Jogos - Tech Lab", "Sala 017 Mac 1"], heads
     assert "VR Development" in page.inner_text("#schedule") and page.locator("#schedule article.booking.now").count() == 1
     assert page.locator("#schedule .now-line").count() == 2, "a now line in each room"
+    # clock sync: a second screen opened later shows the same page at the same moment
+    other = page.context.browser.new_page(viewport={"width": 1920, "height": 1080})
+    other.goto(url)
+    other.wait_for_selector("#frame > *", timeout=10000)
+    for _ in range(3):
+        page.wait_for_function("Date.now() % 1000 > 400 && Date.now() % 1000 < 600")  # mid-second: away from page changes
+        a, b = page.evaluate("shown"), other.evaluate("shown")
+        assert a == b and a, f"screens in sync: {a!r} vs {b!r}"
+        page.wait_for_timeout(700)
+    other.close()
     picks = page.evaluate("""() => { const s = {src: 'o.mov', renditions: {'480': 'a', '720': 'b', '1080': 'c'}};
         const r = []; for (const t of [480, 720, 1080]) { tier = t; r.push(videoSrc(s)); } tier = 480; r.push(videoSrc({src: 'o'}));
         tier = 360; r.push(videoSrc(s)); return r; }""")
@@ -81,7 +91,7 @@ with sync_playwright() as p:
     page.wait_for_selector("#frame h1:has-text('Normal page')", timeout=4000)
     assert page.evaluate("!live().takeover"), "before its time the takeover page stays out"
     page.evaluate(f"(() => {{ const real = Date; const t = new real(real.now() + 61000); Date = class extends real {{ constructor(...a) {{ super(...(a.length ? a : [t])); }} static now() {{ return t.getTime(); }} }}; }})()")
-    page.evaluate("watch()")
+    page.evaluate("tick()")
     page.wait_for_selector("#frame h1:has-text('Moda show')", timeout=4000)
     assert page.evaluate("document.body.classList.contains('full')") and not page.locator("#schedule").is_visible()
     box = page.locator("#frame").bounding_box()

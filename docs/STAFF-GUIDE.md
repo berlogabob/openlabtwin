@@ -95,6 +95,7 @@ Students drop project ideas at https://berlogabob.github.io/openlabtwin/ideas/. 
   Each slide has its seconds on screen (default 10), optional start and end dates, and an on/off switch. Drag to reorder. If a page's file is missing from the folder (renamed or deleted), the page keeps its file name, the list says FILE MISSING, and the TV skips it until the file is back.
 - **Starting pages:** the Book me QR code, the Idea hub QR code, Upcoming events and 3 random student ideas. Reorder, edit, hide or delete them like any other page.
 - **Is the TV alive?** The top of the office TV screen shows the node's heartbeat: what plays now ("Takeover: PROTO26 until 20:00" or "Normal loop: 4 pages"), when the playlist was last built, and how many files. It turns red when the build is more than 5 minutes old or the last run failed (with the error). The TV's own footer also says so in red when its playlist is more than 5 minutes old.
+- **Several screens:** every TV works out the current page from the clock, so all screens show the same page (and the same second of a video, the same three ideas) at the same moment. They need correct clocks.
 - **Busy days:** the schedule column shrinks its text until every card fits.
 - The TV reloads every minute. If the internet drops it keeps playing what it has; if the edge node is off, the showcase TV is dark and the public TV still works.
 - **The TV computer:** see [edge-node.md → The TV computer](edge-node.md#the-tv-computer-raspberry-pi); its setup is the next [roadmap](ROADMAP.md) item.
