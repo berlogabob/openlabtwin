@@ -169,7 +169,7 @@ Future<List<TvSlide>> tvSlides() async =>
     [for (final r in await db.from('tv_slides').select().order('position').order('id')) TvSlide.fromRow(r)];
 
 /// The files the edge node reported from its shared TV folder.
-Future<List<Rec>> tvMedia() async => await db.from('tv_media').select('name,kind,playable').order('name');
+Future<List<Rec>> tvMedia() async => await db.from('tv_media').select('name,kind,playable,seconds').order('name');
 
 Future<void> saveTvSlide(TvSlide s) async {
   if (s.id == null) {

@@ -152,6 +152,8 @@ function next() {
     Object.assign(v, { src: s.src, muted: true, autoplay: true, playsInline: true, onended: next, onerror: skip });
     frame.append(v);
     v.play().catch(skip);
+    // seconds set: cut there; otherwise play to the end, with a safety skip if the video stalls
+    timer = setTimeout(next, (s.seconds || (s.length || 600) + 30) * 1000);
     return;
   }
   if (s.src) {

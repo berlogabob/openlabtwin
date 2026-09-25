@@ -22,7 +22,7 @@ PHOTO = {".jpg", ".jpeg", ".png", ".webp"}
 VIDEO = {".mp4", ".m4v", ".webm"}
 CODECS = {"h264", "vp8", "vp9", "av1"}  # what Chromium on Linux plays without licensed decoders
 EVENT_DAYS = 14
-SLIDE_KEYS = {"kind", "title", "body", "seconds", "src", "video", "w", "h", "when", "place"}
+SLIDE_KEYS = {"kind", "title", "body", "seconds", "src", "video", "w", "h", "when", "place", "length"}
 
 
 def media_row(name, size, info):
@@ -62,11 +62,12 @@ def build(slides, media, events, ideas, day, generated):
         if not in_window(s, day) or (s["kind"] == "media" and not m):
             continue
         if s["kind"] == "events":
-            out += [e | {"seconds": s["seconds"]} for e in events]
+            out += [e | {"seconds": s["seconds"] or 10} for e in events]
             continue
         slide = {"kind": s["kind"], "title": s["title"] or "", "body": s["body"] or "", "seconds": s["seconds"]}
         if m:
-            slide |= {"src": "media/" + quote(m["name"]), "video": m["kind"] == "video", "w": m["width"], "h": m["height"]}
+            slide |= {"src": "media/" + quote(m["name"]), "video": m["kind"] == "video", "w": m["width"], "h": m["height"],
+                      "length": m["seconds"]}  # seconds None on a video: play it to the end
         if s["kind"] == "qr":
             slide["src"] = f"qr/{s['id']}.svg"
         out.append(slide)

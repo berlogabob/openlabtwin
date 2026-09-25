@@ -126,6 +126,10 @@ void main() {
     expect(TvSlide(kind: 'qr', title: 'x', url: 'instagram.com').problem(), contains('http'));
     expect(TvSlide(kind: 'media').problem(), contains('file'));
     expect(TvSlide(kind: 'text', title: 'x', seconds: 0).problem(), contains('Seconds'));
+    final whole = TvSlide.fromRow({'id': 4, 'kind': 'media', 'media_name': 'reel.m4v', 'seconds': null});
+    expect(whole.seconds, isNull, reason: 'empty seconds: the whole video');
+    expect(whole.toRow()['seconds'], isNull);
+    expect(whole.problem(), isNull);
     expect(TvSlide(kind: 'bio').problem(), contains('name'));
     expect(TvSlide(kind: 'text', title: 'x', startsOn: DateTime(2026, 10, 2), endsOn: DateTime(2026, 10, 1)).problem(),
         contains('end date'));

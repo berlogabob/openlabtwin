@@ -58,7 +58,9 @@ assert kinds == [("event", "Open day"), ("media", "Robot arm"), ("bio", "Andrey 
 assert out["slides"][0]["seconds"] == 8, "events take their row's seconds"
 assert out["slides"][-1]["seconds"] == 12
 arm, bio = out["slides"][1], out["slides"][2]
-assert arm["src"] == "media/arm.mp4" and arm["video"] and (arm["w"], arm["h"]) == (1920, 1080)
+assert arm["src"] == "media/arm.mp4" and arm["video"] and (arm["w"], arm["h"]) == (1920, 1080) and arm["length"] == 12.3
+whole = tv.build([base | {"id": 1, "position": 0, "kind": "media", "media_name": "arm.mp4", "seconds": None}], media, [], [], day, "")
+assert whole["slides"][0]["seconds"] is None, "empty seconds: the TV plays the whole video"
 assert bio["src"] == "media/me.jpg" and not bio["video"]
 assert out["slides"][4]["src"] == "qr/8.svg"
 assert out["ideas"] == [{"title": "Micro robot arm", "summary": "An ESP32 arm."}], "normalised ideas only, no names"

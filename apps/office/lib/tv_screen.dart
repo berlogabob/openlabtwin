@@ -15,6 +15,9 @@ const slideKinds = {
   'ideas': '3 random student ideas (automatic)',
 };
 
+/// 389.6 -> '6:30'
+String mmss(num s) => '${s ~/ 60}:${(s.round() % 60).toString().padLeft(2, '0')}';
+
 String mediaLabel(Rec m) => '${m['name']}${m['playable'] == true ? '' : " (won't play on the TV)"}';
 
 class TvScreen extends StatefulWidget {
@@ -67,15 +70,20 @@ class _TvScreenState extends State<TvScreen> {
   String _subtitle(TvSlide s) => [
     slideKinds[s.kind]!,
     if (s.mediaName != null) s.mediaName!,
-    '${s.seconds} s',
+    s.seconds == null ? 'whole video' : '${s.seconds} s',
     if (s.startsOn != null || s.endsOn != null)
       '${s.startsOn == null ? '…' : isoDate(s.startsOn!)} – ${s.endsOn == null ? '…' : isoDate(s.endsOn!)}',
     if (!s.showsOn(DateTime.now())) 'not showing today',
   ].join(' · ');
 
+  Rec? _file(String? name) => media.where((m) => m['name'] == name).firstOrNull;
+  bool _video(String kind, String? name) => kind == 'media' && _file(name)?['kind'] == 'video';
+  String _length(String? name) => _file(name)?['seconds'] == null ? 'full length' : mmss(_file(name)!['seconds'] as num);
+
   Future<void> _edit(TvSlide s) async {
     final title = TextEditingController(text: s.title), body = TextEditingController(text: s.body);
-    final url = TextEditingController(text: s.url), seconds = TextEditingController(text: '${s.seconds}');
+    final url = TextEditingController(text: s.url), seconds = TextEditingController(text: '${s.seconds ?? 10}');
+    var whole = s.seconds == null;
     var kind = s.kind;
     String? mediaName = s.mediaName;
     DateTime? from = s.startsOn, to = s.endsOn;
@@ -149,15 +157,22 @@ class _TvScreenState extends State<TvScreen> {
                     controller: url,
                     decoration: const InputDecoration(labelText: 'Link (https://…)'),
                   ),
-                TextField(
-                  controller: seconds,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: kind == 'events' || kind == 'ideas'
-                        ? 'Seconds per page'
-                        : 'Seconds on screen (videos play to the end)',
+                if (_video(kind, mediaName))
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text('Play the whole video (${_length(mediaName)})'),
+                    subtitle: whole ? null : const Text('Off: cut it after the seconds below'),
+                    value: whole,
+                    onChanged: (v) => set(() => whole = v),
                   ),
-                ),
+                if (!_video(kind, mediaName) || !whole)
+                  TextField(
+                    controller: seconds,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: kind == 'events' || kind == 'ideas' ? 'Seconds per page' : 'Seconds on screen',
+                    ),
+                  ),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
@@ -202,7 +217,7 @@ class _TvScreenState extends State<TvScreen> {
       body: kind == 'bio' || kind == 'text' ? body.text : '',
       mediaName: kind == 'media' || kind == 'bio' ? mediaName : null,
       url: kind == 'qr' ? url.text.trim() : '',
-      seconds: int.tryParse(seconds.text.trim()) ?? 0,
+      seconds: _video(kind, mediaName) && whole ? null : int.tryParse(seconds.text.trim()) ?? 0,
       position: s.position,
       startsOn: from,
       endsOn: to,

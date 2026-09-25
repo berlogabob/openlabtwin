@@ -231,7 +231,7 @@ class TvSlide {
         body: r['body'] as String? ?? '',
         mediaName: r['media_name'] as String?,
         url: r['url'] as String? ?? '',
-        seconds: r['seconds'] as int? ?? 10,
+        seconds: r['seconds'] as int?,
         position: r['position'] as int? ?? 0,
         startsOn: r['starts_on'] == null ? null : DateTime.parse(r['starts_on'] as String),
         endsOn: r['ends_on'] == null ? null : DateTime.parse(r['ends_on'] as String),
@@ -241,7 +241,8 @@ class TvSlide {
   int? id;
   String kind, title, body, url;
   String? mediaName;
-  int seconds, position;
+  int? seconds; // null: play the video to its end
+  int position;
   DateTime? startsOn, endsOn;
   bool active;
 
@@ -274,7 +275,7 @@ class TvSlide {
     if (kind == 'qr' && !RegExp(r'^https?://\S+$').hasMatch(url.trim())) {
       return 'The link must start with http:// or https://.';
     }
-    if (seconds < 1) return 'Seconds must be at least 1.';
+    if (seconds != null && seconds! < 1) return 'Seconds must be at least 1.';
     if (startsOn != null && endsOn != null && endsOn!.isBefore(startsOn!)) {
       return 'The end date is before the start date.';
     }
