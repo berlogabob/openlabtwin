@@ -64,6 +64,9 @@ Step 9 of `edge-setup.sh` installs nginx, Samba and ffmpeg, and cron runs `scrip
 - **Firewall:** ports 80 and 445 are open to `192.168.1.0/24` and `10.208.16.0/23`.
 - **Lighter video copies:** for every video, `tv.py` makes 480p, 720p and 1080p H.264 copies without sound (never above the source's height, 480p always) in `~/tv-media/.tv/` (hidden in the shared folder), one run at a time under a lock, after the playlist is written. A 6-minute 1080p video takes a few minutes. Copies of deleted or replaced files are removed. This also makes iPhone `.mov`/HEVC files playable.
 - **Probe cache and Mac clutter:** `tv.py` re-reads a file's details only when its size or time changed (`~/tv-out/probe.json`), and deletes the `._*` and `.DS_Store` files a Mac leaves in the share; Samba is also set to refuse them (`veto files`, from `edge-setup.sh`).
+- **Phone pictures:** a portrait photo or video that a phone stored landscape with a rotation tag (EXIF orientation, or a video's rotation) is measured the way people see it, so its frame has the right shape; the video copies come out upright.
+- **Caching:** nginx tells TVs to keep the video copies for a month (their names change whenever their content does) and to re-check originals each time (a cheap "not modified" answer). The nginx file is `scripts/tv-nginx.conf`; `edge-setup.sh` installs it.
+- **No black gap:** in a page's last 5 seconds the TV starts loading the next page's video (or picture), and plays that same element when the page changes.
 - **Heartbeat:** every run writes `tv_status` (last build, pages, files, takeover, or the last error), which the office TV screen shows.
 - **Checks:** `cat ~/tv.log` is empty when all is well; `head -c 300 ~/tv-out/tv.json`; `curl -sI localhost/tv/` returns 200.
 - **The TV itself:** Chromium full screen (kiosk) on the address above; videos autoplay because they're muted.

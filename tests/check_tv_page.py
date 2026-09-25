@@ -60,6 +60,16 @@ with sync_playwright() as p:
         assert a == b and a, f"screens in sync: {a!r} vs {b!r}"
         page.wait_for_timeout(700)
     other.close()
+    # the next page's video is loaded 5 s ahead, then used for real (no second download)
+    pre = page.evaluate("""() => { const saved = tv; tv = {generated: '', ideas: [], slides: [
+        {kind: 'text', title: 'Before', body: '', seconds: 3},
+        {kind: 'media', title: '', src: 'media/clip.mp4', video: true, w: 16, h: 9, seconds: 3}]};
+      const L = 6, t = Math.floor(Date.now() / 1000 / L) * L + 1.5;  // 1.5 s into 'Before', the video due in 1.5 s
+      shown = ''; const w = where(t); show(w.page, w.off); shown = w.key; prepare(where(t + w.left + 0.05));
+      const early = ahead && ahead.v; const v = where(t + 3); show(v.page, v.off);
+      const r = [!!early, document.querySelector('#frame video') === early, !document.querySelector('video.ahead')];
+      tv = saved; shown = ''; return r; }""")
+    assert pre == [True, True, True], f"preloaded video reused: {pre}"
     picks = page.evaluate("""() => { const s = {src: 'o.mov', renditions: {'480': 'a', '720': 'b', '1080': 'c'}};
         const r = []; for (const t of [480, 720, 1080]) { tier = t; r.push(videoSrc(s)); } tier = 480; r.push(videoSrc({src: 'o'}));
         tier = 360; r.push(videoSrc(s)); return r; }""")
@@ -73,13 +83,13 @@ with sync_playwright() as p:
     assert all(x[0] == "none" for x in look), f"no glow: {look}"
     assert look[-1][1] == "rgb(30, 92, 179)", f"the running booking is outlined in its own blue: {look}"
     assert look[0][2] == look[1][2], "outline adds no height (running lesson vs a finished one)"
-    box = page.locator("#frame").bounding_box()
-    assert abs(box["width"] / box["height"] - 0.5) < 0.02, f"frame follows the photo's 1:2 shape: {box}"
+    # measured in one step with the photo showing (pages here last 1 s, so they change fast)
+    page.wait_for_function("""() => { const f = document.querySelector('#frame');
+        return f.querySelector('img') && Math.abs(f.offsetWidth / f.offsetHeight - 0.5) < 0.02; }""", timeout=5000)
     aside = page.locator("#schedule").bounding_box()
     assert 0.3 < aside["width"] / 1920 < 0.37, f"schedule column is a third: {aside}"
-    page.wait_for_selector("#frame h1:has-text('Welcome')", timeout=4000)
-    box = page.locator("#frame").bounding_box()
-    assert abs(box["width"] / box["height"] - 16 / 9) < 0.02, f"text slides are 16:9: {box}"
+    page.wait_for_function("""() => { const f = document.querySelector('#frame'), h = f.querySelector('h1');
+        return h && h.textContent === 'Welcome' && Math.abs(f.offsetWidth / f.offsetHeight - 16 / 9) < 0.02; }""", timeout=5000)
     page.wait_for_selector("#frame h1:has-text('Micro robot arm')", timeout=4000)
     over = page.eval_on_selector("#frame .text", "t => [t.scrollHeight - t.clientHeight, t.scrollWidth - t.clientWidth]")
     assert over[0] <= 0 and over[1] <= 0, f"long idea text fits the frame: {over}"

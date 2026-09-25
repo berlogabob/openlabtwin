@@ -54,6 +54,7 @@ body.full { grid-template-columns: 1fr; grid-template-rows: 1fr; }
 body.full #top, body.full #schedule, body.full footer { display: none; }
 body.full #frame h1 { font-size: 4.5em; }
 body.full #frame .body, body.full #frame .when { font-size: 2.4em; }
+video.ahead { position: fixed; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 footer .stale { color: var(--accent); font-weight: 600; }
 footer { grid-column: 1 / -1; padding: .2rem 1.4rem; font-size: .75rem; color: var(--muted); border-top: 1px solid var(--line); }
 </style>
@@ -67,7 +68,7 @@ footer { grid-column: 1 / -1; padding: .2rem 1.4rem; font-size: .75rem; color: v
 const DEFAULT_ROOM = 'Lab. e Estudo de Jogos - Tech Lab (Oriente)';
 const rooms = new URLSearchParams(location.search).getAll('room');
 if (!rooms.length) rooms.push(DEFAULT_ROOM);
-let lessons = [], tv = { slides: [], ideas: [] }, updated = null, current = null, shown = '';
+let lessons = [], tv = { slides: [], ideas: [] }, updated = null, current = null, shown = '', ahead = null;
 
 // Video quality: the node makes 480p, 720p and 1080p copies. Start from what the device says it is, then let dropped
 // frames decide: step down when a video stutters, back up after 5 smooth plays. Remembered across reloads.
@@ -173,21 +174,23 @@ function where(t) {  // at time t (seconds since the epoch): the page, how far i
   const n = Math.floor(t / L);
   let off = t - n * L, i = 0;
   while (off >= lens[i]) off -= lens[i++];
-  let page = pages[i];
+  let page = pages[i], left = lens[i] - off;
   if (page.kind === 'ideas') {  // 3 ideas from a seed shared by every screen; the AI's anonymous version only
     const r = rng(n * 31 + i), pool = [...tv.ideas];
     for (let k = pool.length - 1; k > 0; k--) { const j = Math.floor(r() * (k + 1)); [pool[k], pool[j]] = [pool[j], pool[k]]; }
     const one = page.seconds || 12, idea = pool[Math.floor(off / one)];
     page = { kind: 'idea', when: 'Student idea', title: idea.title, body: idea.summary };
     off %= one;
+    left = one - off;
   }
-  return { page, off, key: `${n}/${i}/${page.title}/${page.src}` };
+  return { page, off, left, key: `${n}/${i}/${page.title}/${page.src}` };
 }
 
 function tick() {  // 4 times a second: show the page the clock says; keep a playing video within a second of the clock
   const w = where(Date.now() / 1000);
   if (!w) { shown = ''; return; }
   if (w.key !== shown) { shown = w.key; show(w.page, w.off); return; }
+  if (w.left < 5) prepare(where(Date.now() / 1000 + w.left + 0.05));  // the next page, in its last 5 s
   const v = document.querySelector('#frame video');
   if (v && v.readyState >= 2 && Math.abs(v.currentTime - w.off) > 1.5) v.currentTime = w.off;
 }
@@ -219,6 +222,21 @@ function fitText(box) {  // shrink the slide's text until it fits inside the fra
   }
 }
 
+function prepare(w) {  // start loading the next page's video (or picture) early, so it starts without a black gap
+  if (!w || w.key === shown) return;
+  if (w.page.video) {
+    const src = videoSrc(w.page);
+    if (ahead && ahead.src === src) return;
+    if (ahead) ahead.v.remove();
+    const v = el('video', 'ahead');
+    Object.assign(v, { src, muted: true, playsInline: true, preload: 'auto' });
+    document.body.append(v);
+    ahead = { src, v };
+  } else if (w.page.src) {
+    new Image().src = w.page.src;
+  }
+}
+
 function show(s, off) {
   if (playing) judge(playing);
   playing = null;
@@ -230,9 +248,14 @@ function show(s, off) {
   document.getElementById('caption').textContent = s.kind === 'media' ? s.title : '';
   fit();
   if (s.video) {  // starts at the clock's second; the clock, not the video's end, moves on to the next page
-    const v = el('video');
-    Object.assign(v, { src: videoSrc(s), muted: true, autoplay: true, playsInline: true, preload: 'auto' });
-    v.addEventListener('loadedmetadata', () => { if (off > 0.5) v.currentTime = off; }, { once: true });
+    const src = videoSrc(s), v = ahead && ahead.src === src ? ahead.v : el('video');  // the preloaded one if it is this video
+    if (ahead && ahead.v !== v) ahead.v.remove();
+    ahead = null;
+    v.className = '';
+    if (!v.src) v.src = src;  // re-setting the same src would load it again
+    Object.assign(v, { muted: true, autoplay: true, playsInline: true, preload: 'auto' });
+    if (v.readyState >= 1) { if (off > 0.5) v.currentTime = off; }
+    else v.addEventListener('loadedmetadata', () => { if (off > 0.5) v.currentTime = off; }, { once: true });
     playing = v;
     frame.append(v);
     v.play().catch(() => {});

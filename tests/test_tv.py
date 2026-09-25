@@ -128,3 +128,30 @@ tv.probe_cached(F("a.mp4", 11, 2.0), cache)
 assert calls == ["a.mp4"] * 3, "a new size or time probes again"
 assert cache["a.mp4"] == {"size": 11, "mtime": 2.0, "info": {"streams": [], "format": {"n": 3}}}, cache
 print("ok probe cache")
+
+# phone pictures stored landscape with a "rotate" tag: the frame must take the shape people see
+import tempfile  # noqa: E402
+def jpeg(orientation, little=True):
+    order = "little" if little else "big"
+    entry = (0x0112).to_bytes(2, order) + (3).to_bytes(2, order) + (1).to_bytes(4, order) + orientation.to_bytes(2, order) + b"\0\0"
+    tiff = (b"II*\0" if little else b"MM\0*") + (8).to_bytes(4, order) + (1).to_bytes(2, order) + entry + b"\0\0\0\0"
+    app1 = b"Exif\0\0" + tiff
+    return b"\xff\xd8\xff\xe1" + (len(app1) + 2).to_bytes(2, "big") + app1 + b"\xff\xd9"
+tmp = Path(tempfile.mkdtemp())
+for o, little in [(6, True), (8, False), (1, True)]:
+    (tmp / f"o{o}.jpg").write_bytes(jpeg(o, little))
+assert tv.exif_orientation(tmp / "o6.jpg") == 6 and tv.exif_orientation(tmp / "o8.jpg") == 8, "Intel and Motorola byte order"
+assert tv.exif_orientation(tmp / "o1.jpg") == 1
+(tmp / "plain.jpg").write_bytes(b"\xff\xd8\xff\xd9")
+assert tv.exif_orientation(tmp / "plain.jpg") == 1 and tv.exif_orientation(tmp / "missing.jpg") == 1, "no EXIF, or no file: upright"
+portrait_photo = {**jpg, "exif_orientation": 6}
+assert (tv.media_row("me.jpg", 5, portrait_photo)["width"], tv.media_row("me.jpg", 5, portrait_photo)["height"]) == (1000, 800)
+phone_video = {"streams": [{"codec_type": "video", "codec_name": "h264", "width": 1920, "height": 1080,
+                            "side_data_list": [{"side_data_type": "Display Matrix", "rotation": -90}]}], "format": {"duration": "9"}}
+old_phone = {"streams": [{"codec_type": "video", "codec_name": "h264", "width": 1920, "height": 1080, "tags": {"rotate": "270"}}],
+             "format": {"duration": "9"}}
+for info in (phone_video, old_phone):
+    r = tv.media_row("clip.mp4", 5, info)
+    assert (r["width"], r["height"]) == (1080, 1920), r
+assert (tv.media_row("arm.mp4", 10, h264)["width"], tv.media_row("arm.mp4", 10, h264)["height"]) == (1920, 1080)
+print("ok rotation")

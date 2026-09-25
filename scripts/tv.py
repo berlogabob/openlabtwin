@@ -31,6 +31,26 @@ SLIDE_KEYS = {"kind", "title", "body", "seconds", "src", "video", "w", "h", "whe
               "from", "to", "takeover"}
 
 
+def exif_orientation(path):
+    """The EXIF Orientation of a JPEG (1 = upright; 5 to 8 mean turned a quarter), from its header; 1 if there is none.
+    (A local model drafted this; it read the value as an offset, fixed.)"""
+    try:
+        with open(path, "rb") as f:
+            data = f.read(65536)
+    except OSError:
+        return 1
+    t = data.find(b"Exif\0\0") + 6
+    order = {b"II": "little", b"MM": "big"}.get(data[t:t + 2]) if t >= 6 else None
+    if not order:
+        return 1
+    num = lambda at, n=2: int.from_bytes(data[t + at:t + at + n], order)  # noqa: E731
+    ifd = num(4, 4)
+    for e in range(ifd + 2, ifd + 2 + 12 * num(ifd), 12):
+        if num(e) == 0x0112:  # Orientation: a short, stored inside the entry
+            return num(e + 8) or 1
+    return 1
+
+
 def media_row(name, size, info):
     """A tv_media row from ffprobe's JSON (empty dict if ffprobe couldn't read the file)."""
     ext = Path(name).suffix.lower()
@@ -38,7 +58,13 @@ def media_row(name, size, info):
     v = next((s for s in info.get("streams", []) if s.get("codec_type") == "video"), None)
     dur = info.get("format", {}).get("duration")
     playable = bool(v) and (ext in PHOTO or (ext in VIDEO and v.get("codec_name") in CODECS))
-    return {"name": name, "kind": kind, "width": (v or {}).get("width"), "height": (v or {}).get("height"),
+    v = v or {}
+    # phones store portrait pictures landscape plus a "turn a quarter" tag; the TV shows them turned, so swap
+    turn = info.get("exif_orientation") in (5, 6, 7, 8) or \
+        any(abs(round(float(d.get("rotation", 0)))) % 180 == 90 for d in v.get("side_data_list", [])) or \
+        abs(int(float(v.get("tags", {}).get("rotate", 0) or 0))) % 180 == 90
+    w, h = (v.get("height"), v.get("width")) if turn else (v.get("width"), v.get("height"))
+    return {"name": name, "kind": kind, "width": w, "height": h,
             "seconds": round(float(dur), 1) if kind == "video" and dur else None, "bytes": size, "playable": playable}
 
 
@@ -125,7 +151,10 @@ def describe_playing(slides, takeover, pages):
 def probe(path):
     r = subprocess.run(["ffprobe", "-v", "error", "-print_format", "json", "-show_streams", "-show_format", str(path)],
                        capture_output=True, text=True, timeout=60)
-    return json.loads(r.stdout or "{}")
+    info = json.loads(r.stdout or "{}")
+    if Path(path).suffix.lower() in {".jpg", ".jpeg"}:
+        info["exif_orientation"] = exif_orientation(path)
+    return info
 
 
 # Drafted by a local model (Qwen3-Coder 30B on Unsloth Studio).
@@ -156,7 +185,7 @@ def main():
     for junk in [*MEDIA.glob("._*"), *MEDIA.glob(".DS_Store")]:  # what a Mac leaves on a network share
         junk.unlink(missing_ok=True)
     files = [p for p in sorted(MEDIA.iterdir()) if p.is_file() and not p.name.startswith(".")]
-    cache_file = OUT / "probe.json"
+    cache_file = OUT / "probe-v2.json"  # v2: photos carry their EXIF orientation
     cache = json.loads(cache_file.read_text()) if cache_file.exists() else {}
     media = [media_row(p.name, p.stat().st_size, probe_cached(p, cache)) for p in files]
     OUT.mkdir(parents=True, exist_ok=True)
