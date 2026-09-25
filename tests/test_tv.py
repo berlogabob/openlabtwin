@@ -98,3 +98,15 @@ assert tv.describe_playing([], False, 0) == "Nothing to play"
 assert tv.describe_playing([moda | {"to_time": None, "ends_on": "2026-10-09"}, moda | {"to_time": None, "ends_on": "2026-10-02"}],
                            True, 2).endswith("until 2026-10-02"), "the earliest end"
 print("ok playing")
+
+# lighter copies for slow TV computers
+arm_row = tv.media_row("arm.mp4", 10, h264)
+names = tv.rendition_names(arm_row, 1790000000)
+assert sorted(names) == [480, 720, 1080] and names[720] == "arm.a6ab13b80.720p.mp4", names
+assert sorted(tv.rendition_names(tv.media_row("small.mp4", 10, {"streams": [{"codec_type": "video", "codec_name": "h264",
+    "width": 640, "height": 360}], "format": {"duration": "3"}}), 1)) == [480], "never above the source, but 480p always"
+withr = tv.build([base | {"id": 1, "position": 0, "kind": "media", "media_name": "arm.mp4", "seconds": None}], media, [], [], day, "",
+                 renditions={"arm.mp4": {720: "arm.x.720p.mp4", 480: "arm.x.480p.mp4"}})
+assert withr["slides"][0]["renditions"] == {"480": "media/.tv/arm.x.480p.mp4", "720": "media/.tv/arm.x.720p.mp4"}
+tv.assert_public(withr)
+print("ok renditions")

@@ -17,7 +17,7 @@ body { margin: 0; height: 100vh; display: grid; grid-template-columns: 1fr 2fr; 
 #top { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
        padding: .7rem 1.4rem; border-bottom: 1px solid var(--line); font-size: 1.2rem; font-weight: 600; white-space: nowrap; }
 #top .rooms { overflow: hidden; text-overflow: ellipsis; letter-spacing: .04em; text-transform: uppercase; font-size: 1rem; }
-#schedule { padding: .8rem 1.2rem; border-right: 1px solid var(--line); overflow: hidden; display: flex; flex-direction: column; gap: .6rem; }
+#schedule { contain: strict; padding: .8rem 1.2rem; border-right: 1px solid var(--line); overflow: hidden; display: flex; flex-direction: column; gap: .6rem; }
 /* sizes in em below: fitSchedule() shrinks the whole column until a busy day fits */
 #schedule section { flex: none; }
 #schedule h2 { margin: 0 0 .3em; font-size: .8em; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
@@ -33,9 +33,10 @@ article.now { outline: 2px solid var(--c); outline-offset: -1px; }
 .empty { color: var(--muted); }
 .now-line { display: flex; align-items: center; gap: .4em; margin: .1em 0 .45em; color: var(--accent); font-size: .8em; font-weight: 600; font-variant-numeric: tabular-nums; }
 .now-line::after { content: ""; flex: 1; border-top: 2px solid var(--accent); }
-#stage { position: relative; background: var(--mat); display: flex; align-items: center; justify-content: center; }
+#stage { position: relative; background: var(--mat); display: flex; align-items: center; justify-content: center; contain: strict; }
 /* passe-partout: the mat is the stage, the frame's opening takes the slide's shape */
-#frame { background: var(--card); box-shadow: 0 0 0 .35rem #fff, 0 0 0 calc(.35rem + 1px) var(--frame), 0 .8rem 2rem rgb(0 0 0 / .12);
+/* no blurred shadow: over a playing video it costs a slow TV computer every frame */
+#frame { background: var(--card); box-shadow: 0 0 0 .35rem #fff, 0 0 0 calc(.35rem + 1px) var(--frame);
          display: flex; overflow: hidden; }
 #frame img, #frame video { width: 100%; height: 100%; object-fit: contain; background: #000; display: block; }
 #frame.bio img, #frame.qr img { width: auto; max-width: 45%; object-fit: cover; background: none; }
@@ -67,6 +68,26 @@ const DEFAULT_ROOM = 'Lab. e Estudo de Jogos - Tech Lab (Oriente)';
 const rooms = new URLSearchParams(location.search).getAll('room');
 if (!rooms.length) rooms.push(DEFAULT_ROOM);
 let lessons = [], tv = { slides: [], ideas: [] }, updated = null, queue = [], timer = null, current = null, mode = null;
+
+// Video quality: the node makes 480p, 720p and 1080p copies. Start from what the device says it is, then let dropped
+// frames decide: step down when a video stutters, back up after 5 smooth plays. Remembered across reloads.
+const store = (k, v) => { try { return v === undefined ? localStorage.getItem(k) : localStorage.setItem(k, v); } catch { return null; } };
+let tier = +store('tv-tier') || ((navigator.deviceMemory || 4) <= 2 || (navigator.hardwareConcurrency || 4) <= 4 ? 720 : 1080);
+let smooth = 0, playing = null;
+const setTier = t => { tier = t; smooth = 0; store('tv-tier', t); };
+function videoSrc(s) {  // the largest copy not above the tier, else the smallest; the original only before copies exist
+  const hs = Object.keys(s.renditions || {}).map(Number).sort((a, b) => a - b);
+  if (!hs.length) return s.src;
+  const fit = hs.filter(h => h <= tier);
+  return s.renditions[fit.length ? fit[fit.length - 1] : hs[0]];
+}
+function judge(v) {  // after a video: more than 10% dropped frames -> lighter copies; 5 smooth plays -> heavier
+  const q = v.getVideoPlaybackQuality && v.getVideoPlaybackQuality();
+  if (!q || q.totalVideoFrames < 100) return;
+  const drop = q.droppedVideoFrames / q.totalVideoFrames;
+  if (drop > 0.1 && tier > 480) setTier(tier > 720 ? 720 : 480);
+  else if (drop < 0.01 && ++smooth >= 5 && tier < 1080) setTier(tier < 720 ? 720 : 1080);
+}
 
 const pad = n => String(n).padStart(2, '0');
 const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -118,7 +139,7 @@ function schedule() {
     aside.append(sec);
   }
   const foot = document.querySelector('footer'), built = Date.parse(tv.generated || '');
-  foot.textContent = updated ? `updated ${hm(updated)}` : '';
+  foot.textContent = updated ? `updated ${hm(updated)} · video ${tier}p` : '';
   if (built && Date.now() - built > 5 * 60 * 1000) {  // the node stopped rebuilding: say so instead of playing old content quietly
     foot.append(' · ', el('span', 'stale', `playlist from ${hm(new Date(built))}: the lab node is not updating it`));
   }
@@ -159,6 +180,8 @@ function fitText(box) {  // shrink the slide's text until it fits inside the fra
 
 function next() {
   clearTimeout(timer);
+  if (playing) judge(playing);
+  playing = null;
   if (!queue.length) queue = playlist();
   const s = queue.shift();
   if (!s) { timer = setTimeout(next, 5000); return; }
@@ -172,7 +195,8 @@ function next() {
   const skip = () => { clearTimeout(timer); timer = setTimeout(next, 2000); };
   if (s.video) {
     const v = el('video');
-    Object.assign(v, { src: s.src, muted: true, autoplay: true, playsInline: true, onended: next, onerror: skip });
+    Object.assign(v, { src: videoSrc(s), muted: true, autoplay: true, playsInline: true, onended: next, onerror: skip });
+    playing = v;
     frame.append(v);
     v.play().catch(skip);
     // seconds set: cut there; otherwise play to the end, with a safety skip if the video stalls

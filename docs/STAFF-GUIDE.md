@@ -82,7 +82,7 @@ Students drop project ideas at https://berlogabob.github.io/openlabtwin/ideas/. 
 
 ## The TV slides
 
-- **Files:** copy videos and photos into the shared folder `smb://192.168.1.131/tv` (Finder: Go → Connect to Server; Windows: `\\192.168.1.131\tv`), user `TechLAB` with its Samba password, from the lab network. Within a minute they appear in the office. The TV plays MP4 or WebM (H.264, VP8, VP9 or AV1) and JPG, PNG or WebP. Other files, such as iPhone `.mov` or HEVC video, show as "won't play on the TV": export them as MP4 (H.264) first.
+- **Files:** copy videos and photos into the shared folder `smb://192.168.1.131/tv` (Finder: Go → Connect to Server; Windows: `\\192.168.1.131\tv`), user `TechLAB` with its Samba password, from the lab network. Within a minute they appear in the office. The TV plays MP4 or WebM (H.264, VP8, VP9 or AV1) and JPG, PNG or WebP. The node also makes lighter copies of every video (480p, 720p, 1080p), which takes a few minutes after you add one; iPhone `.mov` and HEVC videos become playable once their copies exist. The TV picks the copy its computer plays smoothly: it starts from the device's memory and processor, steps down when it drops frames and back up after 5 smooth plays. Its footer shows the level in use ("video 720p").
 - **The office:** the TV icon in the top bar opens the list of every page the TV plays, in order; the TV loops through it. **Add page** makes:
   - **Video or photo:** a file from the folder, with an optional caption. The frame takes the file's shape. Videos play muted and, by default, to the end (**Play the whole video**); switch that off to cut one after a number of seconds.
   - **Bio:** a name, role and short bio, with an optional photo.

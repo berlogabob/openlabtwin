@@ -46,6 +46,10 @@ with sync_playwright() as p:
     assert heads == ["Lab. e Estudo de Jogos - Tech Lab", "Sala 017 Mac 1"], heads
     assert "VR Development" in page.inner_text("#schedule") and page.locator("#schedule article.booking.now").count() == 1
     assert page.locator("#schedule .now-line").count() == 2, "a now line in each room"
+    picks = page.evaluate("""() => { const s = {src: 'o.mov', renditions: {'480': 'a', '720': 'b', '1080': 'c'}};
+        const r = []; for (const t of [480, 720, 1080]) { tier = t; r.push(videoSrc(s)); } tier = 480; r.push(videoSrc({src: 'o'}));
+        tier = 360; r.push(videoSrc(s)); return r; }""")
+    assert picks == ["a", "b", "c", "o", "a"], f"quality tiers pick the right copy: {picks}"
     fits = page.eval_on_selector("#schedule", "a => [a.scrollHeight, a.clientHeight, a.style.fontSize]")
     assert fits[0] <= fits[1] and fits[2] != "100%", f"a busy day shrinks to fit the column: {fits}"
     assert "not updating" in page.inner_text("footer"), "an old playlist is flagged on the TV"

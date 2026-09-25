@@ -5,6 +5,7 @@ Reads ~/tv-media (TV_MEDIA), writes ~/tv-out/tv.json and ~/tv-out/qr/*.svg (TV_O
 docs/edge-node.md. Runs with the service key, so it selects explicit columns and assert_public() checks the output:
 the TV shows only public fields, and ideas only as the AI's anonymous title and summary.
 """
+import fcntl
 import json
 import os
 import subprocess
@@ -19,10 +20,14 @@ from timetable_parse import TZ
 MEDIA = Path(os.environ.get("TV_MEDIA", Path.home() / "tv-media"))
 OUT = Path(os.environ.get("TV_OUT", Path.home() / "tv-out"))
 PHOTO = {".jpg", ".jpeg", ".png", ".webp"}
+# Lighter copies of every video, so a slow TV computer (a Pi 3) can play them: height -> H.264 bit rate, no audio (the
+# TV plays muted). Kept in a hidden folder inside the shared one, so nginx serves them as media/.tv/... with no change.
+TIERS = {480: "1200k", 720: "2500k", 1080: "5000k"}
+REND = MEDIA / ".tv"
 VIDEO = {".mp4", ".m4v", ".webm"}
 CODECS = {"h264", "vp8", "vp9", "av1"}  # what Chromium on Linux plays without licensed decoders
 EVENT_DAYS = 14
-SLIDE_KEYS = {"kind", "title", "body", "seconds", "src", "video", "w", "h", "when", "place", "length", "full"}
+SLIDE_KEYS = {"kind", "title", "body", "seconds", "src", "video", "w", "h", "when", "place", "length", "full", "renditions"}
 
 
 def media_row(name, size, info):
@@ -34,6 +39,13 @@ def media_row(name, size, info):
     playable = bool(v) and (ext in PHOTO or (ext in VIDEO and v.get("codec_name") in CODECS))
     return {"name": name, "kind": kind, "width": (v or {}).get("width"), "height": (v or {}).get("height"),
             "seconds": round(float(dur), 1) if kind == "video" and dur else None, "bytes": size, "playable": playable}
+
+
+def rendition_names(m, mtime):
+    """The copies a video gets: each tier up to its own height (480p always). The name carries the source's size and
+    time, so replacing a file under the same name makes new copies."""
+    tag = f"{m['bytes']:x}{int(mtime):x}"
+    return {h: f"{Path(m['name']).stem}.{tag}.{h}p.mp4" for h in TIERS if h <= max(m["height"] or 0, 480)}
 
 
 def in_window(s, day, clock=None):
@@ -56,7 +68,7 @@ def event_slides(activities, places, today):
     return [slide for _s, slide in sorted(out, key=lambda x: x[0])]
 
 
-def build(slides, media, events, ideas, day, generated, clock=None):
+def build(slides, media, events, ideas, day, generated, clock=None, renditions=None):
     """The playlist in the staff's order. An 'events' row expands into the events at its place; an 'ideas' row
     stays a marker the TV fills with 3 random ideas each loop. While a takeover page is on (dates and times),
     only the takeover pages play."""
@@ -78,6 +90,8 @@ def build(slides, media, events, ideas, day, generated, clock=None):
         if m:
             slide |= {"src": "media/" + quote(m["name"]), "video": m["kind"] == "video", "w": m["width"], "h": m["height"],
                       "length": m["seconds"]}  # seconds None on a video: play it to the end
+            if (renditions or {}).get(m["name"]):  # the TV picks the copy its computer can play smoothly
+                slide["renditions"] = {str(h): "media/.tv/" + quote(f) for h, f in sorted(renditions[m["name"]].items())}
         if s["kind"] == "qr":
             slide["src"] = f"qr/{s['id']}.svg"
         out.append(slide)
@@ -119,9 +133,14 @@ def write_qr(qr_slides):
 def main():
     db = connect()
     now = datetime.now(TZ)
-    MEDIA.mkdir(parents=True, exist_ok=True)
-    media = [media_row(p.name, p.stat().st_size, probe(p)) for p in sorted(MEDIA.iterdir())
-             if p.is_file() and not p.name.startswith(".")]
+    REND.mkdir(parents=True, exist_ok=True)
+    files = [p for p in sorted(MEDIA.iterdir()) if p.is_file() and not p.name.startswith(".")]
+    media = [media_row(p.name, p.stat().st_size, probe(p)) for p in files]
+    mtimes = {p.name: p.stat().st_mtime for p in files}
+    wanted = {m["name"]: rendition_names(m, mtimes[m["name"]]) for m in media if m["kind"] == "video" and m["height"]}
+    ready = {name: {h: f for h, f in r.items() if (REND / f).exists()} for name, r in wanted.items()}
+    for m in media:
+        m["playable"] = m["playable"] or bool(ready.get(m["name"]))  # an iPhone .mov plays once its copies exist
     known = {r["name"] for r in select(db, "tv_media", {"select": "name", "order": "name"})}
     if media:
         request(db, "POST", "tv_media", {"on_conflict": "name"}, media,
@@ -137,7 +156,7 @@ def main():
     ideas = select(db, "ideas", {"select": "ai_title,ai_summary", "status": "eq.approved", "ai_title": "not.is.null",
                                  "order": "id"})
     tv = build(slides, media, event_slides(activities, places, now.date()), ideas, now.date(), now.isoformat(timespec="seconds"),
-               now.strftime("%H:%M"))
+               now.strftime("%H:%M"), ready)
     assert_public(tv)
     write_qr([s for s in slides if s["kind"] == "qr" and s["url"]])
     tmp = OUT / "tv.json.tmp"
@@ -146,6 +165,32 @@ def main():
     heartbeat(db, {"built_at": now.isoformat(), "pages": len(tv["slides"]), "media": len(media), "takeover": tv["takeover"],
                    "playing": tv["playing"], "error": None, "error_at": None})
     print(f"media {len(media)}, slides {len(tv['slides'])}, ideas {len(tv['ideas'])}")
+    transcode(wanted)  # slow: after the playlist and heartbeat are out; later runs use what it made
+
+
+def transcode(wanted):
+    """Make the missing copies (one run at a time: a lock) and remove copies whose source is gone or changed."""
+    keep = {f for r in wanted.values() for f in r.values()}
+    for f in REND.glob("*.mp4"):
+        if f.name not in keep:
+            f.unlink()
+    with open(REND / ".lock", "w") as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            return  # another run is transcoding
+        for f in REND.glob("*.part"):
+            f.unlink()
+        for name, r in wanted.items():
+            for h, f in sorted(r.items()):
+                if (REND / f).exists():
+                    continue
+                part = REND / f"{f}.part"
+                subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(MEDIA / name), "-vf", f"scale=-2:{h}", "-c:v", "libx264",
+                                "-preset", "veryfast", "-profile:v", "main", "-pix_fmt", "yuv420p", "-b:v", TIERS[h],
+                                "-maxrate", TIERS[h], "-bufsize", TIERS[h], "-an", "-movflags", "+faststart", "-f", "mp4", str(part)],
+                               check=True, timeout=3 * 3600)
+                part.replace(REND / f)
 
 
 def heartbeat(db, fields):
