@@ -156,7 +156,7 @@ DTSTART;TZID=Europe/Lisbon:20260925T170000
 DTEND;TZID=Europe/Lisbon:20260925T200000
 SUMMARY:PROTO26
 LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
-DESCRIPTION:Moda\, Andrey Dyakov\nGroups: \nExternal
+DESCRIPTION:Groups: \nExternal
 END:VEVENT
 BEGIN:VEVENT
 UID:83376af4fb6361ddd32426867ca255ecf70df17f@iade-lab-schedule
