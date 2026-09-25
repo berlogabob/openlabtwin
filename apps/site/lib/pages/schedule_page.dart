@@ -302,9 +302,12 @@ class SchedulePageState extends State<SchedulePage> {
         h2([.text(dayName(date))]),
         for (final (i, l) in items.indexed) ...[
           if (i == line) div(classes: 'now-line', [span([.text(clock)])]),
-          article(classes: l.layer == 'lesson' ? null : l.layer, [
-            p(classes: 'time', [.text('${l.start}–${l.end}')]),
-            p(classes: 'course', [.text(l.course)]),
+          article(classes: [
+            if (l.layer != 'lesson') l.layer,
+            if (date == now && l.end.compareTo(clock) <= 0) 'past',
+            if (date == now && l.start.compareTo(clock) <= 0 && l.end.compareTo(clock) > 0) 'now',
+          ].join(' '), [
+            p(classes: 'course', [span(classes: 'time', [.text('${l.start}–${l.end}')]), .text(l.course)]),
             for (final m in [l.rooms.join(', '), l.teachers.join(', '), l.groups.join(', '), l.type, l.note])
               if (m.isNotEmpty) p([.text(m)]),
           ]),

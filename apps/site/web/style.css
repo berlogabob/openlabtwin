@@ -17,9 +17,14 @@ nav a, nav strong { display: inline-block; padding: .3rem .1rem; }
 a { color: var(--accent); }
 main { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 0 1rem; }
 h2 { margin: 1rem 0 .5rem; font-size: .85rem; letter-spacing: .06em; text-transform: uppercase; }
-article { margin: 0 0 .6rem; padding: .6rem .8rem; background: var(--card); border: 1px solid var(--line); border-radius: 8px; }
+/* cards: one colour each (--c) for the left stripe and, for the slot running now, an inset outline (takes no space) */
+article { --c: var(--accent); margin: 0 0 .6rem; padding: .6rem .8rem; background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--c); border-radius: 8px; }
+article.booking { --c: var(--booking); }
+article.event { --c: var(--event); }
+article.past { opacity: .45; }
+article.now { outline: 2px solid var(--c); outline-offset: -1px; }
 article p { margin: .1rem 0; font-size: .9rem; overflow-wrap: anywhere; }
-article .time { color: var(--fg); font-weight: 600; font-variant-numeric: tabular-nums; }
+article .time { margin-right: .35rem; color: var(--fg); font-weight: 600; font-variant-numeric: tabular-nums; }
 article .course { color: var(--fg); font-size: 1.05rem; }
 /* single day (Today): spread its lessons across the width */
 main > section:only-child { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 0 1rem; align-items: start; }
@@ -73,7 +78,6 @@ article p:not(.time, .course, .room) + p:not(.room)::before { content: " · "; }
 .cal-now::before { content: ""; position: absolute; left: -5px; top: -6px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
 .ev { position: absolute; overflow: hidden; display: flex; flex-direction: column; padding: .15rem .3rem; font-size: .75rem; line-height: 1.15; background: var(--card); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 5px; }
 /* bookings (Google Calendar layer): blue, the palette twin of the red accent */
-article.booking { border-left: 3px solid var(--booking); }
 .ev.booking { border-left-color: var(--booking); background: color-mix(in srgb, var(--booking) 8%, var(--card)); }
 .month-ev.booking .ev-time { color: var(--booking); }
 .ev-time { font-weight: 600; font-variant-numeric: tabular-nums; }
@@ -92,7 +96,6 @@ article.booking { border-left: 3px solid var(--booking); }
 [hidden] { display: none !important; }
 main > .cal, main > .month { grid-column: 1 / -1; }
 /* events: green, same saturation/lightness as the red accent and the booking blue */
-article.event { border-left: 3px solid var(--event); }
 .ev.event { border-left-color: var(--event); background: color-mix(in srgb, var(--event) 8%, var(--card)); }
 .month-ev.event .ev-time { color: var(--event); }
 /* multi-select: picked values as chips, then an input to add more */
@@ -108,11 +111,7 @@ article.event { border-left: 3px solid var(--event); }
 .tv-schedule { padding: .8rem 1.2rem; border-right: 1px solid var(--line); overflow: hidden; display: flex; flex-direction: column; gap: .6rem; }
 .tv-schedule section { flex: 1; min-height: 0; overflow: hidden; }
 .tv-schedule h2 { margin: 0 0 .3rem; font-size: .8rem; color: var(--muted); }
-.tv article { --c: var(--accent); margin: 0 0 .3rem; padding: .25rem .55rem; font-size: .9rem; line-height: 1.25; border-radius: 6px; border-left: 4px solid var(--c); }
-.tv article.booking { --c: var(--booking); }
-.tv article.event { --c: var(--event); }
-.tv article.past { opacity: .4; }
-.tv article.now { outline: 2px solid var(--c); outline-offset: -1px; } /* no box-shadow: outlines take no space, nothing shifts */
+.tv article { margin: 0 0 .3rem; padding: .25rem .55rem; font-size: .9rem; line-height: 1.25; border-radius: 6px; }
 .tv article .time { margin-right: .35rem; color: var(--fg); font-weight: 600; font-variant-numeric: tabular-nums; }
 .tv article p.who { display: block; font-size: .8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tv-stage { min-height: 0; display: flex; align-items: center; justify-content: center; background: var(--mat); }
