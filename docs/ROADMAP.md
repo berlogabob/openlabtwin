@@ -20,7 +20,7 @@ Waiting for access to the Pi (`192.168.1.194`, a Pi 3 or older by its network ma
 - **Preview link in the office:** see the TV page from anywhere over Tailscale.
 - **Upload from the office:** needs HTTPS on the node (for example a Tailscale certificate) and a staff check on the node. Today files go in through the shared folder, on the lab network only.
 - **Event pages with photos:** approved events carry an optional image, shown on their TV page.
-- **Video wall:** one picture split across several screens. (Several screens showing the same page in sync is done: they follow the clock.)
+- **Video wall:** one picture split across several screens, built in its own repo [videowall](https://github.com/berlogabob/videowall) (Pi per monitor, FFmpeg server on the lab network; plan in its `docs/ROADMAP.md`). This repo's part comes last: tables `wall_state` (mode, play/stop, blackout) and `wall_status` (heartbeat), which the wall server polls like `tv.py`, plus a Video wall screen in the office. The office can't call the wall directly: HTTPS page, plain-http LAN server. (Several screens showing the same page in sync is done: they follow the clock.)
 
 ## Other
 
