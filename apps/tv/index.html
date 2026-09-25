@@ -11,17 +11,19 @@
         --booking: #1e5cb3; --event: #1eb350; --mat: #efece4; --frame: #d9d5ca; }
 * { box-sizing: border-box; }
 html { font-size: clamp(14px, 1.05vw, 40px); }
-body { margin: 0; height: 100vh; display: grid; grid-template-columns: 1fr 2fr; grid-template-rows: 1fr auto;
+body { margin: 0; height: 100vh; display: grid; grid-template-columns: 1fr 2fr; grid-template-rows: auto 1fr auto;
        font: 1rem/1.35 system-ui, sans-serif; color: var(--fg); background: var(--bg); overflow: hidden; }
-#schedule { padding: 1.2rem 1.4rem; border-right: 1px solid var(--line); overflow: hidden; display: flex; flex-direction: column; gap: 1rem; }
-#schedule .day { display: flex; justify-content: space-between; align-items: baseline; color: var(--muted); }
-#schedule .clock { font-size: 2rem; font-weight: 600; color: var(--fg); font-variant-numeric: tabular-nums; }
+/* one line across the top: the day (it belongs to the schedule below it) on the left, the room(s) on the right */
+#top { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+       padding: .7rem 1.4rem; border-bottom: 1px solid var(--line); font-size: 1.2rem; font-weight: 600; white-space: nowrap; }
+#top .rooms { overflow: hidden; text-overflow: ellipsis; letter-spacing: .04em; text-transform: uppercase; font-size: 1rem; }
+#schedule { padding: .8rem 1.2rem; border-right: 1px solid var(--line); overflow: hidden; display: flex; flex-direction: column; gap: .6rem; }
 #schedule section { flex: 1; min-height: 0; overflow: hidden; }
-#schedule h2 { margin: 0 0 .5rem; font-size: 1.1rem; letter-spacing: .04em; text-transform: uppercase; }
-article { margin: 0 0 .45rem; padding: .45rem .7rem; background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; }
+#schedule h2 { margin: 0 0 .3rem; font-size: .8rem; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+article { margin: 0 0 .3rem; padding: .25rem .55rem; font-size: .9rem; line-height: 1.25; background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 6px; }
 article p { margin: 0; }
-article .time { font-weight: 600; font-variant-numeric: tabular-nums; }
-article .who { color: var(--muted); font-size: .85rem; }
+article .time { font-weight: 600; font-variant-numeric: tabular-nums; margin-right: .35rem; }
+article .who { color: var(--muted); font-size: .8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 article.booking { border-left-color: var(--booking); }
 article.event { border-left-color: var(--event); }
 article.past { opacity: .4; }
@@ -36,17 +38,20 @@ article.now { box-shadow: 0 0 0 2px var(--accent); }
 #frame img, #frame video { width: 100%; height: 100%; object-fit: contain; background: #000; display: block; }
 #frame.bio img, #frame.qr img { width: auto; max-width: 45%; object-fit: cover; background: none; }
 #frame.qr img { object-fit: contain; padding: 2rem; }
-#frame .text { flex: 1; padding: 3rem; display: flex; flex-direction: column; justify-content: center; gap: .8rem; }
-#frame h1 { margin: 0; font-size: 3rem; line-height: 1.1; }
-#frame .body { font-size: 1.6rem; color: var(--muted); white-space: pre-line; }
-#frame .when { font-size: 1.6rem; color: var(--event); font-weight: 600; }
-#frame .place { font-size: 1.3rem; color: var(--muted); }
+/* text sizes in em: fitText() shrinks the whole block until it fits the frame */
+#frame .text { flex: 1; min-width: 0; padding: 2.5rem; display: flex; flex-direction: column; justify-content: center; gap: .6em; overflow: hidden; }
+#frame .text p { margin: 0; }
+#frame h1 { margin: 0; font-size: 3em; line-height: 1.1; overflow-wrap: anywhere; }
+#frame .body { font-size: 1.6em; line-height: 1.35; color: var(--muted); white-space: pre-line; overflow-wrap: anywhere; }
+#frame .when { font-size: 1.6em; color: var(--event); font-weight: 600; }
+#frame .place { font-size: 1.3em; color: var(--muted); }
 #frame.idea .when { color: var(--accent); }
 #caption { position: absolute; bottom: 1.2rem; left: 0; right: 0; text-align: center; font-size: 1.3rem; color: var(--muted); }
 footer { grid-column: 1 / -1; padding: .2rem 1.4rem; font-size: .75rem; color: var(--muted); border-top: 1px solid var(--line); }
 </style>
 </head>
 <body>
+<header id="top"><span class="date"></span><span class="rooms"></span></header>
 <aside id="schedule"></aside>
 <main id="stage"><div id="frame"></div><p id="caption"></p></main>
 <footer></footer>
@@ -79,13 +84,13 @@ async function load() {  // keep the last good copy when a reload fails
 
 function schedule() {
   const now = new Date(), day = iso(now), clock = hm(now);
-  const aside = document.getElementById('schedule');
-  const top = el('div', 'day');
-  top.append(el('span', null, now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })), el('span', 'clock', clock));
-  aside.replaceChildren(top);
+  const aside = document.getElementById('schedule'), short = r => r.replace(/ \(Oriente\)$/, '');
+  document.querySelector('#top .date').textContent = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+  document.querySelector('#top .rooms').textContent = rooms.map(short).join(' · ');
+  aside.replaceChildren();
   for (const room of rooms) {
     const sec = el('section');
-    sec.append(el('h2', null, room.replace(/ \(Oriente\)$/, '')));
+    if (rooms.length > 1) sec.append(el('h2', null, short(room)));  // one room: its name is already in the top line
     const items = lessons.filter(l => l.date === day && l.rooms.includes(room)).sort((a, b) => a.start.localeCompare(b.start));
     if (!items.length) sec.append(el('p', 'empty', 'Free all day'));
     const at = items.findIndex(l => l.start > clock), line = at < 0 ? items.length : at;  // before the first not yet started
@@ -94,7 +99,9 @@ function schedule() {
       if (i === line) nowLine();
       const cls = [l.layer !== 'lesson' && l.layer, l.end <= clock && 'past', l.start <= clock && l.end > clock && 'now'];
       const a = el('article', cls.filter(Boolean).join(' '));
-      a.append(el('p', 'time', `${l.start}–${l.end}`), el('p', 'course', l.course));
+      const line1 = el('p', 'course');
+      line1.append(el('span', 'time', `${l.start}–${l.end}`), l.course);
+      a.append(line1);
       const who = [l.teachers.join(', '), l.groups.join(', ')].filter(Boolean).join(' · ');
       if (who) a.append(el('p', 'who', who));
       sec.append(a);
@@ -118,6 +125,14 @@ function fit() {  // the frame's opening takes the slide's shape, as large as th
   const w = W / H > ratio ? H * ratio : W;
   frame.style.width = `${w}px`;
   frame.style.height = `${w / ratio}px`;
+}
+
+function fitText(box) {  // shrink the slide's text until it fits inside the frame, down to 40%
+  if (!box) return;
+  for (let size = 100; size >= 40; size -= 5) {
+    box.style.fontSize = `${size}%`;
+    if (box.scrollHeight <= box.clientHeight && box.scrollWidth <= box.clientWidth) return;
+  }
 }
 
 function next() {
@@ -151,11 +166,12 @@ function next() {
     if (s.place) text.append(el('p', 'place', s.place));
     if (s.body) text.append(el('p', 'body', s.body));
     frame.append(text);
+    fitText(text);
   }
   timer = setTimeout(next, (s.seconds || 10) * 1000);
 }
 
-addEventListener('resize', fit);
+addEventListener('resize', () => { fit(); fitText(document.querySelector('#frame .text')); });
 load().then(next);
 setInterval(load, 60 * 1000);
 </script>

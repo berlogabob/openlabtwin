@@ -22,7 +22,8 @@ today = date.today().isoformat()
 lesson = {"date": today, "start": "00:00", "end": "23:59", "course": "VR Development", "groups": [], "teachers": ["José"],
           "type": "P", "rooms": [LAB], "programmes": [], "degrees": [], "layer": "lesson", "note": ""}
 (d / "data/all.json").write_text(json.dumps([lesson, lesson | {"course": "Mac lab", "rooms": [MAC], "layer": "booking"}]))
-(d / "tv.json").write_text(json.dumps({"generated": "", "ideas": [{"title": "Micro robot arm", "summary": "An ESP32 arm."}],
+long = "A small robot arm built with servos and 3D-printed parts, controlled remotely from a smartphone. " * 6
+(d / "tv.json").write_text(json.dumps({"generated": "", "ideas": [{"title": "Micro robot arm with a very long descriptive title", "summary": long}],
     "slides": [{"kind": "media", "src": "media/tall.svg", "video": False, "w": 400, "h": 800, "title": "Tall photo", "body": "", "seconds": 1},
                {"kind": "text", "title": "Welcome", "body": "Open lab on Fridays", "seconds": 1},
                {"kind": "ideas", "seconds": 1}]}))
@@ -53,8 +54,12 @@ with sync_playwright() as p:
     box = page.locator("#frame").bounding_box()
     assert abs(box["width"] / box["height"] - 16 / 9) < 0.02, f"text slides are 16:9: {box}"
     page.wait_for_selector("#frame h1:has-text('Micro robot arm')", timeout=4000)
-    assert "updated" in page.inner_text("footer")
+    over = page.eval_on_selector("#frame .text", "t => [t.scrollHeight - t.clientHeight, t.scrollWidth - t.clientWidth]")
+    assert over[0] <= 0 and over[1] <= 0, f"long idea text fits the frame: {over}"
+    top = page.text_content("#top")
+    assert "Tech Lab" in top and ":" not in top, f"top line: day and rooms, no clock: {top!r}"
     if len(sys.argv) > 1:
         page.screenshot(path=sys.argv[1])
+    assert "updated" in page.inner_text("footer")
 server.shutdown()
 print("ok")
