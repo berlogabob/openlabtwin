@@ -27,7 +27,8 @@ REND = MEDIA / ".tv"
 VIDEO = {".mp4", ".m4v", ".webm"}
 CODECS = {"h264", "vp8", "vp9", "av1"}  # what Chromium on Linux plays without licensed decoders
 EVENT_DAYS = 14
-SLIDE_KEYS = {"kind", "title", "body", "seconds", "src", "video", "w", "h", "when", "place", "length", "full", "renditions"}
+SLIDE_KEYS = {"kind", "title", "body", "seconds", "src", "video", "w", "h", "when", "place", "length", "full", "renditions",
+              "from", "to", "takeover"}
 
 
 def media_row(name, size, info):
@@ -69,22 +70,23 @@ def event_slides(activities, places, today):
 
 
 def build(slides, media, events, ideas, day, generated, clock=None, renditions=None):
-    """The playlist in the staff's order. An 'events' row expands into the events at its place; an 'ideas' row
-    stays a marker the TV fills with 3 random ideas each loop. While a takeover page is on (dates and times),
-    only the takeover pages play."""
+    """The day's playlist in the staff's order. An 'events' row expands into the events at its place; an 'ideas' row
+    stays a marker the TV fills with 3 random ideas each loop. Pages carry their times of day ('from', 'to') and
+    'takeover'; the TV applies them on its own clock, so an event takes over at 17:00:00, not a minute or two later.
+    'takeover' and 'playing' describe the node's clock, for the office."""
     files = {m["name"]: m for m in media if m["playable"]}
-    live = [s for s in sorted(slides, key=lambda s: (s["position"], s["id"])) if in_window(s, day, clock)
-            and not (s["kind"] == "media" and not files.get(s["media_name"] or ""))]
+    ordered = [s for s in sorted(slides, key=lambda s: (s["position"], s["id"])) if in_window(s, day)
+               and not (s["kind"] == "media" and not files.get(s["media_name"] or ""))]
+    live = [s for s in ordered if in_window(s, day, clock)]
     takeover = any(s.get("takeover") for s in live)
-    out = []
-    for s in live:
-        m = files.get(s["media_name"] or "")
-        if takeover and not s.get("takeover"):
-            continue
+
+    def pages(s):
+        times = {k: v for k, v in (("from", (s.get("from_time") or "")[:5]), ("to", (s.get("to_time") or "")[:5]),
+                                   ("takeover", bool(s.get("takeover")))) if v}
         if s["kind"] == "events":
-            out += [e | {"seconds": s["seconds"] or 10} for e in events]
-            continue
-        slide = {"kind": s["kind"], "title": s["title"] or "", "body": s["body"] or "", "seconds": s["seconds"]}
+            return [e | {"seconds": s["seconds"] or 10} | times for e in events]
+        m = files.get(s["media_name"] or "")
+        slide = {"kind": s["kind"], "title": s["title"] or "", "body": s["body"] or "", "seconds": s["seconds"]} | times
         if s.get("fullscreen"):
             slide["full"] = True
         if m:
@@ -94,8 +96,11 @@ def build(slides, media, events, ideas, day, generated, clock=None, renditions=N
                 slide["renditions"] = {str(h): "media/.tv/" + quote(f) for h, f in sorted(renditions[m["name"]].items())}
         if s["kind"] == "qr":
             slide["src"] = f"qr/{s['id']}.svg"
-        out.append(slide)
-    return {"generated": generated, "takeover": takeover, "playing": describe_playing(live, takeover, len(out)), "slides": out,
+        return [slide]
+
+    now = sum(len(pages(s)) for s in live if s.get("takeover") or not takeover)
+    return {"generated": generated, "takeover": takeover, "playing": describe_playing(live, takeover, now),
+            "slides": [x for s in ordered for x in pages(s)],
             "ideas": [{"title": i["ai_title"], "summary": i["ai_summary"]} for i in ideas if i["ai_title"] and i["ai_summary"]]}
 
 

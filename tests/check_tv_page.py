@@ -28,7 +28,11 @@ long = "A small robot arm built with servos and 3D-printed parts, controlled rem
     "slides": [{"kind": "media", "src": "media/tall.svg", "video": False, "w": 400, "h": 800, "title": "Tall photo", "body": "", "seconds": 1},
                {"kind": "text", "title": "Welcome", "body": "Open lab on Fridays", "seconds": 1},
                {"kind": "ideas", "seconds": 1}]}))
-takeover = {"generated": "", "takeover": True, "ideas": [], "slides": [{"kind": "text", "title": "Moda show", "body": "Tonight 17:00", "seconds": 1, "full": True}]}
+from datetime import datetime, timedelta
+soon = (datetime.now() + timedelta(minutes=1)).strftime("%H:%M")
+normal = {"kind": "text", "title": "Normal page", "body": "", "seconds": 1}
+takeover = {"generated": "", "takeover": False, "ideas": [], "slides": [normal, {"kind": "text", "title": "Moda show", "body": "Tonight 17:00",
+            "seconds": 1, "full": True, "takeover": True, "from": soon, "to": "23:59"}]}
 class Quiet(SimpleHTTPRequestHandler):
     def log_message(self, *args):
         pass
@@ -74,6 +78,10 @@ with sync_playwright() as p:
     # event mode: tv.json switches to a takeover, the TV follows on its next reload, full screen
     (d / "tv.json").write_text(json.dumps(takeover))
     page.evaluate("load()")
+    page.wait_for_selector("#frame h1:has-text('Normal page')", timeout=4000)
+    assert page.evaluate("!live().takeover"), "before its time the takeover page stays out"
+    page.evaluate(f"(() => {{ const real = Date; const t = new real(real.now() + 61000); Date = class extends real {{ constructor(...a) {{ super(...(a.length ? a : [t])); }} static now() {{ return t.getTime(); }} }}; }})()")
+    page.evaluate("watch()")
     page.wait_for_selector("#frame h1:has-text('Moda show')", timeout=4000)
     assert page.evaluate("document.body.classList.contains('full')") and not page.locator("#schedule").is_visible()
     box = page.locator("#frame").bounding_box()

@@ -108,7 +108,7 @@ async function load() {  // keep the last good copy when a reload fails
   try { lessons = await get('data/all.json'); updated = new Date(); } catch (e) { console.warn(e); }
   try { tv = await get('tv.json'); updated = new Date(); } catch (e) { console.warn(e); }
   schedule();
-  if (tv.takeover !== mode) { mode = tv.takeover; queue = []; next(); }  // an event takes over (or ends): switch now
+  watch();
 }
 
 function schedule() {
@@ -146,8 +146,19 @@ function schedule() {
   fitSchedule();
 }
 
+function live() {  // the pages for this moment, on the TV's own clock; a takeover page on hides all the others
+  const c = hm(new Date()), on = tv.slides.filter(s => (!s.from || s.from <= c) && (!s.to || c < s.to));
+  const takeover = on.some(s => s.takeover);
+  return { takeover, slides: takeover ? on.filter(s => s.takeover) : on };
+}
+
+function watch() {  // every 5 s and after each reload: when a takeover starts or ends, switch at once
+  const t = live().takeover;
+  if (t !== mode) { mode = t; queue = []; next(); }
+}
+
 function playlist() {  // an 'ideas' page becomes 3 random ideas each loop: the AI's anonymous version only
-  return tv.slides.flatMap(s => s.kind !== 'ideas' ? [s] : [...tv.ideas].sort(() => Math.random() - 0.5).slice(0, 3)
+  return live().slides.flatMap(s => s.kind !== 'ideas' ? [s] : [...tv.ideas].sort(() => Math.random() - 0.5).slice(0, 3)
     .map(i => ({ kind: 'idea', when: 'Student idea', title: i.title, body: i.summary, seconds: s.seconds || 12 })));
 }
 
@@ -223,6 +234,7 @@ function next() {
 addEventListener('resize', () => { fit(); fitText(document.querySelector('#frame .text')); fitSchedule(); });
 load();
 setInterval(load, 60 * 1000);
+setInterval(watch, 5 * 1000);
 </script>
 </body>
 </html>

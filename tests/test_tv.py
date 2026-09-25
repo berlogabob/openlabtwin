@@ -73,10 +73,12 @@ moda = base | {"id": 20, "position": 9, "kind": "text", "title": "Moda show", "f
 assert tv.in_window(moda, day, "17:00") and tv.in_window(moda, day, "19:59") and not tv.in_window(moda, day, "20:00")
 assert not tv.in_window(moda, day, "16:59") and tv.in_window(moda, day), "no clock: times are not checked"
 before = tv.build(slides + [moda], media, events, ideas, day, "", "16:30")
-assert not before["takeover"] and "Moda show" not in [s["title"] for s in before["slides"]], "not yet"
-during = tv.build(slides + [moda], media, events, ideas, day, "17:05")
+during = tv.build(slides + [moda], media, events, ideas, day, "", "17:05")
+assert not before["takeover"] and during["takeover"], "the node's view, for the office"
 assert during["playing"] == "Takeover: Moda show until 20:00" and before["playing"].startswith("Normal loop")
-assert during["takeover"] and during["slides"] == [{"kind": "text", "title": "Moda show", "body": "", "seconds": 10, "full": True}], during
+assert before["slides"] == during["slides"], "the whole day either way: the TV applies the times on its own clock"
+assert before["slides"][-1] == {"kind": "text", "title": "Moda show", "body": "", "seconds": 10, "from": "17:00", "to": "20:00",
+                                "takeover": True, "full": True}, before["slides"][-1]
 tv.assert_public(during)
 tv.assert_public(out)
 try:
