@@ -92,8 +92,10 @@ class TvPageState extends State<TvPage> {
     final items = lessons.where((l) => l.date == day && l.rooms.contains(room)).toList()
       ..sort((x, y) => x.start.compareTo(y.start));
     if (items.isEmpty) return [p(classes: 'empty', [.text('Free all day')])];
+    final line = nowIndex(items, clock);
     return [
-      for (final l in items)
+      for (final (i, l) in items.indexed) ...[
+        if (i == line) div(classes: 'now-line', [span([.text(clock)])]),
         article(
           classes: [
             if (l.layer != 'lesson') l.layer,
@@ -107,6 +109,8 @@ class TvPageState extends State<TvPage> {
               p([.text([l.teachers.join(', '), l.groups.join(', ')].where((x) => x.isNotEmpty).join(' · '))]),
           ],
         ),
+      ],
+      if (line == items.length) div(classes: 'now-line', [span([.text(clock)])]),
     ];
   }
 }

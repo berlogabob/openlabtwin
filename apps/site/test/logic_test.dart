@@ -134,4 +134,13 @@ void main() {
     expect(v.stage, contains('Your matches'));
     expect(IdeaView.fromJson({'idea': {'body': 'b', 'status': 'new', 'processed': false}, 'matches': []}).stage, contains('AI'));
   });
+
+  test('now line: before the first item that has not started', () {
+    Lesson at(String start, String end) => Lesson(date: '2026-09-25', start: start, end: end, course: 'x');
+    final day = [at('09:00', '11:00'), at('11:00', '13:30'), at('14:00', '17:00')];
+    expect(nowIndex(day, '08:00'), 0);
+    expect(nowIndex(day, '12:10'), 2, reason: 'after the lesson in progress');
+    expect(nowIndex(day, '14:00'), 3, reason: 'a lesson starting now has started');
+    expect(nowIndex([], '12:00'), 0);
+  });
 }

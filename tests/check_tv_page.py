@@ -42,6 +42,7 @@ with sync_playwright() as p:
     heads = page.locator("#schedule h2").all_text_contents()
     assert heads == ["Lab. e Estudo de Jogos - Tech Lab", "Sala 017 Mac 1"], heads
     assert "VR Development" in page.inner_text("#schedule") and page.locator("#schedule article.booking.now").count() == 1
+    assert page.locator("#schedule .now-line").count() == 2, "a now line in each room"
     edges = page.eval_on_selector_all("#schedule article", "a => a.map(e => getComputedStyle(e).borderLeftColor)")
     assert edges == ["rgb(179, 38, 30)", "rgb(30, 92, 179)"], f"lessons red, bookings blue: {edges}"
     box = page.locator("#frame").bounding_box()

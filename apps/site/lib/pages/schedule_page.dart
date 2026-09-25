@@ -1,4 +1,5 @@
 // Main page: loads data/all.json in the browser, filters it, keeps filters and the view in the URL.
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -47,10 +48,20 @@ class SchedulePageState extends State<SchedulePage> {
   bool open = true;
   List<Map<String, dynamic>> favs = [];
 
+  Timer? tick;
+
   @override
   void initState() {
     super.initState();
-    if (kIsWeb) _load();
+    if (!kIsWeb) return;
+    _load();
+    tick = Timer.periodic(const Duration(minutes: 1), (_) => setState(() {})); // moves the "now" line
+  }
+
+  @override
+  void dispose() {
+    tick?.cancel();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -283,16 +294,22 @@ class SchedulePageState extends State<SchedulePage> {
   List<Component> _list(List<Lesson> hits) {
     if (hits.isEmpty) return [p(classes: 'empty', [.text('No lessons match these filters.')])];
     final sections = <Component>[];
+    final now = today(), clock = clockNow();
     for (final date in {for (final l in hits.take(maxList)) l.date}) {
+      final items = hits.take(maxList).where((l) => l.date == date).toList();
+      final line = date == now ? nowIndex(items, clock) : -1;
       sections.add(section([
         h2([.text(dayName(date))]),
-        for (final l in hits.take(maxList).where((l) => l.date == date))
+        for (final (i, l) in items.indexed) ...[
+          if (i == line) div(classes: 'now-line', [span([.text(clock)])]),
           article(classes: l.layer == 'lesson' ? null : l.layer, [
             p(classes: 'time', [.text('${l.start}–${l.end}')]),
             p(classes: 'course', [.text(l.course)]),
             for (final m in [l.rooms.join(', '), l.teachers.join(', '), l.groups.join(', '), l.type, l.note])
               if (m.isNotEmpty) p([.text(m)]),
           ]),
+        ],
+        if (line == items.length) div(classes: 'now-line', [span([.text(clock)])]),
       ]));
     }
     if (hits.length > maxList) {
@@ -310,7 +327,7 @@ class SchedulePageState extends State<SchedulePage> {
     }
     first = first ~/ 60 * 60;
     last = (last + 59) ~/ 60 * 60;
-    final now = today();
+    final now = today(), mins = minutes(clockNow());
     return [
       if (hits.length > maxGrid) p(classes: 'empty', [.text('${hits.length} lessons in this period. Narrow the filters to read the grid.')]),
       div(classes: 'cal', attributes: {'style': '--days:${dates.length};--rows:${(last - first) ~/ 60}'}, [
@@ -325,6 +342,8 @@ class SchedulePageState extends State<SchedulePage> {
           ]),
           for (final d in dates)
             div(classes: d == now ? 'cal-col on' : 'cal-col', [
+              if (d == now && mins >= first && mins <= last)
+                div(classes: 'cal-now', attributes: {'style': 'top:${(mins - first) / (last - first) * 100}%'}, []),
               for (final x in layout(hits.where((l) => l.date == d).toList(), first, last))
                 div(
                   classes: x.lesson.layer == 'lesson' ? 'ev' : 'ev ${x.lesson.layer}',

@@ -113,3 +113,15 @@ List<Placed> layout(List<Lesson> dayLessons, int dayStart, int dayEnd) {
   if (cluster.isNotEmpty) place();
   return out;
 }
+
+/// The viewer's clock, HH:MM.
+String clockNow() {
+  final n = DateTime.now();
+  return '${'${n.hour}'.padLeft(2, '0')}:${'${n.minute}'.padLeft(2, '0')}';
+}
+
+/// Where the "now" line goes in one day's items sorted by start: before the first one that hasn't started yet.
+int nowIndex(List<Lesson> day, String clock) {
+  final i = day.indexWhere((l) => l.start.compareTo(clock) > 0);
+  return i < 0 ? day.length : i;
+}

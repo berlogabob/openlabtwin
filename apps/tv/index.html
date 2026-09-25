@@ -27,6 +27,8 @@ article.event { border-left-color: var(--event); }
 article.past { opacity: .4; }
 article.now { box-shadow: 0 0 0 2px var(--accent); }
 .empty { color: var(--muted); }
+.now-line { display: flex; align-items: center; gap: .4rem; margin: .1rem 0 .45rem; color: var(--accent); font-size: .8rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.now-line::after { content: ""; flex: 1; border-top: 2px solid var(--accent); }
 #stage { position: relative; background: var(--mat); display: flex; align-items: center; justify-content: center; }
 /* passe-partout: the mat is the stage, the frame's opening takes the slide's shape */
 #frame { background: var(--card); box-shadow: 0 0 0 .35rem #fff, 0 0 0 calc(.35rem + 1px) var(--frame), 0 .8rem 2rem rgb(0 0 0 / .12);
@@ -86,7 +88,10 @@ function schedule() {
     sec.append(el('h2', null, room.replace(/ \(Oriente\)$/, '')));
     const items = lessons.filter(l => l.date === day && l.rooms.includes(room)).sort((a, b) => a.start.localeCompare(b.start));
     if (!items.length) sec.append(el('p', 'empty', 'Free all day'));
-    for (const l of items) {
+    const at = items.findIndex(l => l.start > clock), line = at < 0 ? items.length : at;  // before the first not yet started
+    const nowLine = () => sec.append(el('div', 'now-line', clock));
+    for (const [i, l] of items.entries()) {
+      if (i === line) nowLine();
       const cls = [l.layer !== 'lesson' && l.layer, l.end <= clock && 'past', l.start <= clock && l.end > clock && 'now'];
       const a = el('article', cls.filter(Boolean).join(' '));
       a.append(el('p', 'time', `${l.start}–${l.end}`), el('p', 'course', l.course));
@@ -94,6 +99,7 @@ function schedule() {
       if (who) a.append(el('p', 'who', who));
       sec.append(a);
     }
+    if (items.length && line === items.length) nowLine();
     aside.append(sec);
   }
   document.querySelector('footer').textContent = updated ? `updated ${hm(updated)}` : '';

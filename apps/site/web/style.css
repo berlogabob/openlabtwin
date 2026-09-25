@@ -66,6 +66,11 @@ article p:not(.time, .course, .room) + p:not(.room)::before { content: " · "; }
 .cal-hour { font-size: .7rem; color: var(--muted); font-variant-numeric: tabular-nums; transform: translateY(-.35em); }
 .cal-col { position: relative; border-left: 1px solid var(--line); background: repeating-linear-gradient(var(--line) 0 1px, transparent 1px calc(var(--hour, 3rem))); }
 .cal-col.on { background-color: color-mix(in srgb, var(--accent) 5%, transparent); }
+/* "now": a red line at the current time, in lists and in the day/week grid */
+.now-line { grid-column: 1 / -1; display: flex; align-items: center; gap: .4rem; margin: .1rem 0 .5rem; color: var(--accent); font-size: .75rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.now-line::after { content: ""; flex: 1; border-top: 2px solid var(--accent); }
+.cal-now { position: absolute; left: 0; right: 0; z-index: 2; border-top: 2px solid var(--accent); pointer-events: none; }
+.cal-now::before { content: ""; position: absolute; left: -5px; top: -6px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
 .ev { position: absolute; overflow: hidden; display: flex; flex-direction: column; padding: .15rem .3rem; font-size: .75rem; line-height: 1.15; background: var(--card); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 5px; }
 /* bookings (Google Calendar layer): blue, the palette twin of the red accent */
 article.booking { border-left: 3px solid var(--booking); }
