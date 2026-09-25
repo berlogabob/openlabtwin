@@ -108,12 +108,15 @@ main > .cal, main > .month { grid-column: 1 / -1; }
 .tv { position: fixed; inset: 0; z-index: 1; display: grid; grid-template-columns: 1fr 2fr; grid-template-rows: auto 1fr auto; background: var(--bg); --mat: color-mix(in srgb, var(--fg) 6%, var(--bg)); }
 .tv > header { grid-column: 1 / -1; justify-content: space-between; align-items: baseline; gap: 1rem; padding: .7rem 1.4rem; font-size: 1.2rem; font-weight: 600; white-space: nowrap; }
 .tv-room-names { overflow: hidden; text-overflow: ellipsis; letter-spacing: .04em; text-transform: uppercase; font-size: 1rem; }
-.tv-schedule { padding: .8rem 1.2rem; border-right: 1px solid var(--line); overflow: hidden; display: flex; flex-direction: column; gap: .6rem; }
-.tv-schedule section { flex: 1; min-height: 0; overflow: hidden; }
-.tv-schedule h2 { margin: 0 0 .3rem; font-size: .8rem; color: var(--muted); }
-.tv article { margin: 0 0 .3rem; padding: .25rem .55rem; font-size: .9rem; line-height: 1.25; border-radius: 6px; }
+.tv-schedule { contain: strict; padding: .8rem 1.2rem; border-right: 1px solid var(--line); overflow: hidden; display: flex; flex-direction: column; gap: .6rem; }
+/* sizes in em: the page shrinks the column's font until a busy day fits */
+.tv-schedule section { flex: none; }
+.tv .now-line { font-size: .8em; }
+.tv-schedule h2 { margin: 0 0 .3em; font-size: .8em; color: var(--muted); }
+.tv article { margin: 0 0 .3em; padding: .25em .6em; font-size: .9em; line-height: 1.25; border-radius: 6px; }
+.tv article p, .tv article .course { margin: 0; font-size: 1em; } /* the site's rem sizes would not shrink */
 .tv article .time { margin-right: .35rem; color: var(--fg); font-weight: 600; font-variant-numeric: tabular-nums; }
-.tv article p.who { display: block; font-size: .8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tv article p.who { display: block; font-size: .89em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tv-stage { min-height: 0; display: flex; align-items: center; justify-content: center; background: var(--mat); }
 .tv-frame { width: min(86%, calc((100vh - 8rem) * 16 / 9)); aspect-ratio: 16 / 9; display: flex; align-items: center; overflow: hidden; background: var(--card); box-shadow: 0 0 0 .35rem var(--card), 0 0 0 calc(.35rem + 1px) var(--line), 0 .8rem 2rem rgb(0 0 0 / .12); }
 .tv-frame img { height: 100%; aspect-ratio: 1; padding: 2rem; background: #fff; }

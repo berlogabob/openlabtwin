@@ -64,6 +64,16 @@ Step 9 of `edge-setup.sh` installs nginx, Samba and ffmpeg, and cron runs `scrip
 - **Checks:** `cat ~/tv.log` is empty when all is well; `head -c 300 ~/tv-out/tv.json`; `curl -sI localhost/tv/` returns 200.
 - **The TV itself:** Chromium full screen (kiosk) on the address above; videos autoplay because they're muted.
 
+## The TV computer (Raspberry Pi)
+
+The lab's TV Pi is `192.168.1.194` (maker code `b8:27:eb`: a Pi 3 or older, 1 GB). The TV page does the work it can for such a device: it plays the node's lighter video copies (480p/720p/1080p, picked by dropped frames and shown in the footer as "video 720p"), draws no blurred shadows, and shrinks a busy schedule to fit. The rest is set up on the Pi:
+
+- **Clock:** the TV's now-line, "past" cards and takeover times use the Pi's own clock. `sudo raspi-config nonint do_change_timezone Europe/Lisbon` and `sudo timedatectl set-ntp true`, then check with `date`.
+- **Kiosk:** Raspberry Pi OS Lite with only Chromium, started full screen at boot on `http://192.168.1.131/tv/?room=…&room=…` (flags `--kiosk --noerrdialogs --disable-infobars --autoplay-policy=no-user-gesture-required --enable-gpu-rasterization --ignore-gpu-blocklist`), mouse pointer hidden, screen blanking off, and a nightly Chromium restart against slow memory growth.
+- **Pi 3:** `gpu_mem=256` in `/boot/firmware/config.txt`, zram swap, Bluetooth and unused services off; draw at 720p (`--force-device-scale-factor` or a 720p output) and let the TV scale up.
+- **Better hardware:** a Pi 4 (2 GB or more) or Pi 5 plays the 1080p copies in hardware without trouble.
+- **The TV itself** (Samsung UE55H6200, 2014): its built-in browser is too old for the page; use it as a screen only. HDMI-CEC ("Anynet+") lets the Pi switch it on and off.
+
 ## Backups
 
 The Supabase free plan keeps **no** backups. Every night `scripts/backup.py` saves each table as JSON to `~/openlabtwin-backups/YYYY-MM-DD/` and keeps the newest 30 days (about 4 MB a day). The folder is mode 700 and outside the repo because it holds emails. To restore, insert each file's rows back in the order of `TABLES` in `backup.py` (parents first), with the service key.

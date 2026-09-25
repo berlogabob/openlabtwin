@@ -40,6 +40,7 @@ class TvPageState extends State<TvPage> {
             now = DateTime.now();
             slide++;
           });
+          _fitSchedule();
           if (t.tick % 30 == 0) _load();
         }));
   }
@@ -50,6 +51,16 @@ class TvPageState extends State<TvPage> {
     super.dispose();
   }
 
+  /// A busy day: shrink the schedule column's text until every card fits, down to 55%.
+  void _fitSchedule() => Timer(const Duration(milliseconds: 50), () {
+        final aside = web.document.querySelector('.tv-schedule') as web.HTMLElement?;
+        if (aside == null) return;
+        for (var size = 100; size >= 55; size -= 5) {
+          aside.style.fontSize = '$size%';
+          if (aside.scrollHeight <= aside.clientHeight) return;
+        }
+      });
+
   Future<void> _load() async {
     try {
       final r = await http.get(Uri.parse('data/all.json'), headers: {'Cache-Control': 'no-cache'});
@@ -58,6 +69,7 @@ class TvPageState extends State<TvPage> {
         lessons = all;
         loaded = DateTime.now();
       });
+      _fitSchedule();
     } catch (_) {} // keep showing the last good data; the footer shows how old it is
   }
 

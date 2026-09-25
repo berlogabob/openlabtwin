@@ -17,6 +17,13 @@ jobs:
       - name: Python tests
         run: for t in tests/test_*.py; do uv run python "$t"; done
 
+  tv-page:  # the showcase TV page in real Chrome (the runner has it), before the edge node pulls it
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv run --with playwright python tests/check_tv_page.py
+
   site:
     runs-on: ubuntu-latest
     defaults:
