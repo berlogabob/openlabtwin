@@ -77,7 +77,7 @@ Students drop project ideas at https://berlogabob.github.io/openlabtwin/ideas/. 
 ## The TV and the public site
 
 - **Public schedule:** https://berlogabob.github.io/openlabtwin/. Every filter takes several values (two professors, two rooms). Bookings are blue and events green. A red line marks the current time in the list, day and week views.
-- **Lab TV (showcase):** `http://192.168.1.131/tv/?room=<room>&room=<room>`, on the lab network only (served by the edge node). A top line shows the day (left) and the room names (right); the left third shows the rooms stacked for today, as compact cards (finished items dimmed, the current one outlined, a red line at the current time); the right two thirds play the slides. Room names are the full IADE names from the schedule's Room filter, with spaces as `%20`.
+- **Lab TV (showcase):** `http://192.168.1.131/tv/?room=<room>&room=<room>`, on the lab network, or from anywhere over Tailscale as `http://techlab-01/tv/…` (served by the edge node). A top line shows the day (left) and the room names (right); the left third shows the rooms stacked for today, as compact cards (finished items dimmed, the current one outlined, a red line at the current time); the right two thirds play the slides. Room names are the full IADE names from the schedule's Room filter, with spaces as `%20`.
 - **Public TV:** `…/tv/?room=<room>&room=<room>` on GitHub Pages works on any network, in the same layout. Its right side cycles only the Book me and Idea hub QR codes and upcoming events (your videos, photos, bios and the ideas live on the node). On a phone it shows the schedule only.
 
 ## The TV slides
@@ -90,12 +90,12 @@ Students drop project ideas at https://berlogabob.github.io/openlabtwin/ideas/. 
   - **Text:** a title and text.
   - **Upcoming events (automatic):** each approved event of the next 14 days, one page each, at this place in the loop.
   - **3 random student ideas (automatic):** a new random pick each loop, in the AI's version, with no names.
-
   - **Event mode**, on any page: **times** (for example 17:00–20:00, on top of the dates), **Full screen** (the page fills the TV and the schedule hides while it plays) and **Takeover** (during its dates and times the TV plays only takeover pages, in a loop, and switches back by itself afterwards; it switches at the exact minute, by the TV's own clock). The list marks in red a takeover whose dates and times overlap another takeover, and two pages that use the same file. A takeover must have an end ("Until" date or time), otherwise it would hold the TV for good.
 
   Each slide has its seconds on screen (default 10), optional start and end dates, and an on/off switch. Drag to reorder. If a page's file is missing from the folder (renamed or deleted), the page keeps its file name, the list says FILE MISSING, and the TV skips it until the file is back.
 - **Starting pages:** the Book me QR code, the Idea hub QR code, Upcoming events and 3 random student ideas. Reorder, edit, hide or delete them like any other page.
 - **Is the TV alive?** The top of the office TV screen shows the node's heartbeat: what plays now ("Takeover: PROTO26 until 20:00" or "Normal loop: 4 pages"), when the playlist was last built, and how many files. It turns red when the build is more than 5 minutes old or the last run failed (with the error). The TV's own footer also says so in red when its playlist is more than 5 minutes old.
 - **Busy days:** the schedule column shrinks its text until every card fits.
-- The TV reloads every minute. If the internet drops it keeps playing what it has; if the edge node is off, the showcase TV is dark and the schedule-only TV still works.
+- The TV reloads every minute. If the internet drops it keeps playing what it has; if the edge node is off, the showcase TV is dark and the public TV still works.
+- **The TV computer:** see [edge-node.md → The TV computer](edge-node.md#the-tv-computer-raspberry-pi); its setup is the next [roadmap](ROADMAP.md) item.
 - **Calendar:** `…/calendar/lab.ics` subscribes in Google Calendar, Apple Calendar or Outlook.

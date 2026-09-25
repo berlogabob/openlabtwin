@@ -25,7 +25,7 @@ curl -fsSL https://raw.githubusercontent.com/berlogabob/openlabtwin/main/scripts
 
 Before running it, turn off sleep and suspend in MX's power settings.
 
-To reach the PC from the Mac: `ssh <user>@<ip>`, with the IP printed at the end of the setup. If the campus network blocks device-to-device traffic, install Tailscale on both machines (`curl -fsSL https://tailscale.com/install.sh | sh && sudo tailscale up` on the PC, the App Store app on the Mac) and use `ssh <user>@<pc-name>`.
+To reach the PC from the Mac: `ssh <user>@<ip>`, with the IP printed at the end of the setup, or over Tailscale (below).
 
 The service key bypasses every privacy rule, so this machine must be physically in the lab and under your account only.
 
@@ -40,6 +40,10 @@ The service key bypasses every privacy rule, so this machine must be physically 
 ## The lab router network (since 2026-09-24)
 
 The node, the big PC with Unsloth Studio and the Mac are wired to the lab's ASUS router (`192.168.1.0/24`), which reaches the internet through campus. The node is `192.168.1.131`, Studio is `192.168.1.42:8888`. The host key didn't change with the address, so `ssh-keyscan -t ed25519 192.168.1.131 >> ~/.ssh/known_hosts` on the Mac is enough. On this network DNS answers quickly, GitHub over port 443 and Supabase work, and the DNS fix above isn't needed.
+
+**Tailscale** (since 2026-09-25, one account): Mac `berlogas-macbook-pro` 100.97.176.12, node `techlab-01` 100.104.12.36, Studio PC `desktop-vdsrh2e` 100.96.84.51. From home: `ssh -i ~/.ssh/techlab TechLAB@techlab-01`, the showcase TV at `http://techlab-01/tv/`, Studio at `http://desktop-vdsrh2e:8888` (same key). The Windows PC needed a firewall rule for Studio on Tailscale (`New-NetFirewallRule -DisplayName "Unsloth Studio (Tailscale)" -Direction Inbound -Protocol TCP -LocalPort 8888 -RemoteAddress 100.64.0.0/10 -Action Allow`).
+
+**The Studio PC** (Windows) starts Unsloth Studio at boot: a shortcut in its Startup folder (`shell:startup`), Windows signs in by itself (`netplwiz`), and sleep is off. It must be on for new ideas to be processed; everything else keeps running without it.
 
 The node's `.env` sends chat to Studio and keeps embeddings on its own Ollama:
 `AI_API=openai`, `AI_URL=http://192.168.1.42:8888`, `AI_KEY=sk-unsloth-…`, `IDEAS_MODEL=ornith-ai/Ornith-1.5-9B-GGUF`, `EMBED_URL=http://localhost:11434`, `EMBED_API=ollama`. If the big PC is off, the ideas job fails that run and retries 15 minutes later; to fall back for good, delete those six lines.
@@ -88,6 +92,6 @@ The Supabase free plan keeps **no** backups. Every night `scripts/backup.py` sav
 - `ls ~/openlabtwin-backups`: a new dated folder every morning.
 - `tail ~/ideas_ai.log`: `normalised N, approved M, matches K` every 15 minutes.
 - Hardware check before choosing the model: `free -h` (RAM), `nproc` (cores), `lspci | grep -i nvidia` (GPU). Ornith needs about 8 GB free; on a CPU it takes 1–3 minutes per idea.
-- **Unsloth Studio instead of Ollama:** fine, as long as it serves an OpenAI-compatible API with both chat and embeddings. `curl http://localhost:<port>/v1/models` shows whether it does. Then set `AI_API=openai`, `AI_URL=http://localhost:<port>` and the model names in `.env`, and run `uv run python scripts/ideas_ai.py --check`. Unsloth needs an NVIDIA GPU for fine-tuning, a possible later step: a model tuned on the lab's own ideas.
+- **Idea AI server:** `set -a; . ./.env; set +a; uv run python scripts/ideas_ai.py --check` runs one chat and one embedding against the configured servers (Studio for chat, the node's Ollama for embeddings) and writes nothing.
 - Approve a test booking in the office: within about 15 minutes it's on the schedule. Then cancel it.
 - If the node dies, publish by hand (Actions → Sync and deploy → Run workflow) until it's back.

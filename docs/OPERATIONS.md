@@ -104,7 +104,9 @@ uv run python -c "import sys; sys.path.insert(0,'scripts'); import sqltest; prin
   \"insert into places (name, kind, iade_name, public) values ('Short name', 'room', '<exact IADE name>', true)\"))"
 ```
 
-The TV shows the rooms named in its URL, side by side, as `…/tv/?room=<IADE name>&room=<IADE name>` with spaces written as `+`. Without `room` it shows the Tech Lab. It reloads its data every 5 minutes and keeps the last copy if the network drops.
+There are two TV pages, both showing the rooms named in the URL (`?room=<IADE name>&room=<IADE name>`, spaces as `+` or `%20`; without `room`, the Tech Lab), stacked in the left third under a top line with the day and the room names:
+- **Showcase TV** `http://192.168.1.131/tv/…`, served by the edge node on the lab network (or over Tailscale): the right two thirds play the pages from the office TV list. Data reloads every minute; takeovers switch on the TV's own clock (checked every 5 s); the last good copy keeps playing if a reload fails, and the footer says in red when the playlist is over 5 minutes old. Details in [edge-node.md → TV showcase](edge-node.md#tv-showcase).
+- **Public TV** `https://berlogabob.github.io/openlabtwin/tv/…`: the same layout, with only the Book me and Idea hub QR codes and upcoming events on the right. It works anywhere.
 
 ## Database changes
 
@@ -120,8 +122,9 @@ Anything new that must be public goes through `export.py`: add it to the explici
 
 | What | Command | In CI |
 |---|---|---|
-| Python (parser, export, db helpers) | `for t in tests/test_*.py; do uv run python "$t"; done` | yes |
-| Database (schema, access, inventory) | `uv run python scripts/sqltest.py` | no, run locally before pushing migrations |
+| Python (parser, export, db helpers, idea AI, TV playlist) | `for t in tests/test_*.py; do uv run python "$t"; done` | yes |
+| Showcase TV page (layout, carousel, takeover, video copies, busy days) | `uv run --with playwright python tests/check_tv_page.py` | yes (Chrome on the runner) |
+| Database (schema, access, inventory, Book me, ideas, TV) | `uv run python scripts/sqltest.py` | no, run locally before pushing migrations |
 | Site logic (filters, calendar maths) | `cd apps/site && dart analyze && dart test` | yes |
 | Office logic (repeats, clashes, movements) | `cd apps/office && flutter analyze && flutter test` | yes |
 | Browser, end to end | Playwright with system Chrome: `uv run --with playwright python …` | no |
@@ -136,6 +139,8 @@ The IADE network blocks outgoing Postgres ports 5432 and 6543, so `psql` and `su
 - the scripts use PostgREST;
 - migrations and database tests use the Management API's SQL endpoint (`scripts/sqltest.py`);
 - the office uses the Supabase REST and auth APIs.
+
+The lab machines sit on the lab's ASUS router (`192.168.1.0/24`); the Mac, the node and the Studio PC are also on one Tailscale network, for access from home: [edge-node.md → The lab router network](edge-node.md#the-lab-router-network-since-2026-09-24).
 
 ## Keeping the project alive, and backups
 
@@ -160,10 +165,14 @@ Run it after schema changes: Supabase dashboard → Advisors, or `GET https://ap
 | `sqltest.py` says "Cannot read migration history" | no or expired Supabase login | run `supabase login` again |
 | The office says "Could not start" | the build is missing `SUPABASE_URL` or `SUPABASE_ANON_KEY` | check the GitHub variables |
 | A sign-in link opens the office but stays on the login page | a different browser, or an expired link (1 h) | open the link in the same browser; send a new one |
+| The office TV screen is red: "TV not updating" | the edge node is off, or `tv.py` fails (the error is shown) | check the node; `cat ~/tv.log` |
+| A TV page says FILE MISSING | its file was renamed or deleted in the shared folder | put the file back (same name), or pick another file |
+| The TV goes full screen or stays on one page at the wrong time | a takeover page is on; the office shows "Takeover: … until …" | switch that page off, or fix its dates and times |
+| Videos stutter on the TV | the TV computer is slow | the TV steps down to lighter copies by itself (footer: "video 480p"); see [edge-node.md → The TV computer](edge-node.md#the-tv-computer-raspberry-pi) |
 
 ## The old site
 
-`iade-lab-schedule` (https://berlogabob.github.io/iade-lab-schedule/) still runs on its own 6-hourly workflow and feeds the TV until the TV is switched to the new `/tv/` URL. After that:
+`iade-lab-schedule` (https://berlogabob.github.io/iade-lab-schedule/) still runs on its own 6-hourly workflow until the TV computer is set to the showcase TV address for good (a [roadmap](ROADMAP.md) item). After that:
 - replace its `docs/index.html` with a link to the new site;
 - tell `lab.ics` subscribers the new address;
 - archive the repo.

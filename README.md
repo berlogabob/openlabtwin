@@ -5,8 +5,8 @@ The IADE game lab's system of record: rooms, storage, equipment, people, booking
 | | URL |
 |---|---|
 | Schedule (public) | https://berlogabob.github.io/openlabtwin/ |
-| Lab TV (showcase, lab network) | http://192.168.1.131/tv/?room=Lab.+e+Estudo+de+Jogos+-+Tech+Lab+(Oriente) |
-| Lab TV (schedule only, anywhere) | https://berlogabob.github.io/openlabtwin/tv/?room=Lab.+e+Estudo+de+Jogos+-+Tech+Lab+(Oriente) |
+| Lab TV (showcase: videos, bios, event takeovers; lab network or Tailscale) | http://192.168.1.131/tv/?room=Lab.+e+Estudo+de+Jogos+-+Tech+Lab+(Oriente) |
+| Lab TV (same layout, QR codes and events only; anywhere) | https://berlogabob.github.io/openlabtwin/tv/?room=Lab.+e+Estudo+de+Jogos+-+Tech+Lab+(Oriente) |
 | Calendar feed | https://berlogabob.github.io/openlabtwin/calendar/lab.ics |
 | Book a consultation (QR) | https://berlogabob.github.io/openlabtwin/book/ |
 | Share an idea (QR) | https://berlogabob.github.io/openlabtwin/ideas/ |
@@ -17,7 +17,8 @@ The IADE game lab's system of record: rooms, storage, equipment, people, booking
 - [Architecture](docs/ARCHITECTURE.md): the parts, how data flows, the three privacy layers, and why each decision was made.
 - [Operations](docs/OPERATIONS.md): the runbook. Publishing, secrets, staff and rooms, migrations, tests, troubleshooting.
 - [Staff guide](docs/STAFF-GUIDE.md): for lab technicians using the back office, the TV and the public site.
-- [Edge node](docs/edge-node.md): setting up the always-on lab machine that publishes bookings.
+- [Edge node](docs/edge-node.md): the always-on lab machine (TechLAB-01): publishing, idea AI, the showcase TV, backups; the lab network, Tailscale, the TV computer.
+- [Roadmap](docs/ROADMAP.md): what's next.
 - History: the design spec and the per-milestone implementation plans in [`docs/superpowers/`](docs/superpowers/).
 
 ## Repo map
@@ -30,7 +31,7 @@ scripts/               timetable.py (scrape), export.py (public JSON + lab.ics),
 tests/                 Python tests (plain asserts: uv run python tests/test_x.py)
 apps/site/             public site + TV (Jaspr, static)                 apps/office/  back office (Flutter web)
 apps/tv/               showcase TV (plain HTML, served by the edge node)
-.github/workflows/     sync.yml (scrape, export, build, deploy)          test.yml (Python, site, office tests)
+.github/workflows/     sync.yml (scrape, export, build, deploy)          test.yml (Python, TV page, site, office tests)
 ```
 
 ## Quick start (development)
@@ -41,6 +42,7 @@ for t in tests/test_*.py; do uv run python "$t"; done       # Python
 uv run python scripts/sqltest.py                             # DB migrations + pgTAP (needs `supabase login` + link)
 (cd apps/site && dart test)                                  # site logic
 (cd apps/office && flutter test)                             # office logic
+uv run --with playwright python tests/check_tv_page.py      # showcase TV page in Chrome
 ```
 
 Everything database-side goes over HTTPS, so there's no Docker and no Postgres port. The reason is in [Operations → Network](docs/OPERATIONS.md#network).
