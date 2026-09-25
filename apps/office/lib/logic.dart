@@ -319,3 +319,26 @@ class TvSlide {
     ok: true,
   );
 }
+
+/// Warnings per slide id, for the office list: takeover pages whose dates and times overlap, and pages that use the same file.
+/// (Drafted by a local model, Qwen3-Coder on Unsloth Studio, then corrected.)
+Map<int, String> tvWarnings(List<TvSlide> slides) {
+  final on = [for (final s in slides) if (s.active && s.id != null) s];
+  String name(TvSlide s) => s.title.isNotEmpty ? s.title : s.mediaName ?? s.kind;
+  String day(DateTime? d, String open) => d == null ? open : isoDate(d);
+  bool overlap(TvSlide a, TvSlide b) =>
+      a.takeover &&
+      b.takeover &&
+      day(a.startsOn, '0000-01-01').compareTo(day(b.endsOn, '9999-12-31')) <= 0 &&
+      day(b.startsOn, '0000-01-01').compareTo(day(a.endsOn, '9999-12-31')) <= 0 &&
+      (a.fromTime ?? '00:00').compareTo(b.toTime ?? '24:00') < 0 &&
+      (b.fromTime ?? '00:00').compareTo(a.toTime ?? '24:00') < 0;
+  return {
+    for (final s in on)
+      if ([
+        for (final o in on) if (o != s && overlap(s, o)) 'overlaps takeover "${name(o)}"',
+        for (final o in on) if (o != s && s.mediaName != null && o.mediaName == s.mediaName) 'same file as "${name(o)}"',
+      ] case final m when m.isNotEmpty)
+        s.id!: m.join('; '),
+  };
+}

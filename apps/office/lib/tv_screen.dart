@@ -296,6 +296,7 @@ class _TvScreenState extends State<TvScreen> {
   @override
   Widget build(BuildContext context) {
     final list = slides;
+    final warnings = tvWarnings(list ?? []);
     return Scaffold(
       appBar: AppBar(
         title: const Text('TV'),
@@ -347,7 +348,18 @@ class _TvScreenState extends State<TvScreen> {
                                   onChanged: (v) => _run(() => saveTvSlide(s..active = v)),
                                 ),
                                 title: Text(s.title.isNotEmpty ? s.title : s.mediaName ?? slideKinds[s.kind]!),
-                                subtitle: Text(_subtitle(s)),
+                                subtitle: Text.rich(
+                                  TextSpan(
+                                    text: _subtitle(s),
+                                    children: [
+                                      if (warnings[s.id] != null)
+                                        TextSpan(
+                                          text: '\n⚠ ${warnings[s.id]}',
+                                          style: const TextStyle(color: Colors.red),
+                                        ),
+                                    ],
+                                  ),
+                                ),
                                 onTap: () => _edit(s),
                               ),
                           ],
