@@ -67,6 +67,16 @@ assert out["ideas"] == [{"title": "Micro robot arm", "summary": "An ESP32 arm."}
 assert tv.build([base | {"id": 1, "position": 0, "kind": "media", "media_name": "a b.mp4"}],
                 [tv.media_row("a b.mp4", 1, h264)], [], [], day, "")["slides"][0]["src"] == "media/a%20b.mp4"
 
+# event mode: times of day, full screen, takeover
+moda = base | {"id": 20, "position": 9, "kind": "text", "title": "Moda show", "from_time": "17:00:00", "to_time": "20:00:00",
+               "fullscreen": True, "takeover": True}
+assert tv.in_window(moda, day, "17:00") and tv.in_window(moda, day, "19:59") and not tv.in_window(moda, day, "20:00")
+assert not tv.in_window(moda, day, "16:59") and tv.in_window(moda, day), "no clock: times are not checked"
+before = tv.build(slides + [moda], media, events, ideas, day, "", "16:30")
+assert not before["takeover"] and "Moda show" not in [s["title"] for s in before["slides"]], "not yet"
+during = tv.build(slides + [moda], media, events, ideas, day, "17:05")
+assert during["takeover"] and during["slides"] == [{"kind": "text", "title": "Moda show", "body": "", "seconds": 10, "full": True}], during
+tv.assert_public(during)
 tv.assert_public(out)
 try:
     tv.assert_public(out | {"ideas": [{"title": "x", "summary": "y", "name": "Ana"}]})

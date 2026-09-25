@@ -48,6 +48,10 @@ article.now { outline: 2px solid var(--c); outline-offset: -1px; }
 #frame .place { font-size: 1.3em; color: var(--muted); }
 #frame.idea .when { color: var(--accent); }
 #caption { position: absolute; bottom: 1.2rem; left: 0; right: 0; text-align: center; font-size: 1.3rem; color: var(--muted); }
+body.full { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+body.full #top, body.full #schedule, body.full footer { display: none; }
+body.full #frame h1 { font-size: 4.5em; }
+body.full #frame .body, body.full #frame .when { font-size: 2.4em; }
 footer { grid-column: 1 / -1; padding: .2rem 1.4rem; font-size: .75rem; color: var(--muted); border-top: 1px solid var(--line); }
 </style>
 </head>
@@ -60,7 +64,7 @@ footer { grid-column: 1 / -1; padding: .2rem 1.4rem; font-size: .75rem; color: v
 const DEFAULT_ROOM = 'Lab. e Estudo de Jogos - Tech Lab (Oriente)';
 const rooms = new URLSearchParams(location.search).getAll('room');
 if (!rooms.length) rooms.push(DEFAULT_ROOM);
-let lessons = [], tv = { slides: [], ideas: [] }, updated = null, queue = [], timer = null, current = null;
+let lessons = [], tv = { slides: [], ideas: [] }, updated = null, queue = [], timer = null, current = null, mode = null;
 
 const pad = n => String(n).padStart(2, '0');
 const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -81,6 +85,7 @@ async function load() {  // keep the last good copy when a reload fails
   try { lessons = await get('data/all.json'); updated = new Date(); } catch (e) { console.warn(e); }
   try { tv = await get('tv.json'); updated = new Date(); } catch (e) { console.warn(e); }
   schedule();
+  if (tv.takeover !== mode) { mode = tv.takeover; queue = []; next(); }  // an event takes over (or ends): switch now
 }
 
 function schedule() {
@@ -122,7 +127,8 @@ function fit() {  // the frame's opening takes the slide's shape, as large as th
   if (!current) return;
   const stage = document.getElementById('stage'), frame = document.getElementById('frame');
   const ratio = current.kind === 'media' && current.w && current.h ? current.w / current.h : 16 / 9;
-  const W = stage.clientWidth * 0.86, H = stage.clientHeight * 0.8;
+  const k = document.body.classList.contains('full') ? 0.94 : 0.86;
+  const W = stage.clientWidth * k, H = stage.clientHeight * (k - 0.06);
   const w = W / H > ratio ? H * ratio : W;
   frame.style.width = `${w}px`;
   frame.style.height = `${w / ratio}px`;
@@ -142,6 +148,7 @@ function next() {
   const s = queue.shift();
   if (!s) { timer = setTimeout(next, 5000); return; }
   current = s;
+  document.body.classList.toggle('full', !!s.full);  // full screen: the page alone, schedule hidden
   const frame = document.getElementById('frame');
   frame.className = s.kind;
   frame.replaceChildren();
@@ -175,7 +182,7 @@ function next() {
 }
 
 addEventListener('resize', () => { fit(); fitText(document.querySelector('#frame .text')); });
-load().then(next);
+load();
 setInterval(load, 60 * 1000);
 </script>
 </body>

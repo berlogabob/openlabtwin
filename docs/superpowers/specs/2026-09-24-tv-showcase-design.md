@@ -29,6 +29,8 @@ The page is one plain file, `apps/tv/index.html` (HTML, CSS and JavaScript, no b
 
 ## Slides
 
+> Added 2026-09-25 (Andrey): event mode per page: `from_time`/`to_time` (times of day), `fullscreen` (schedule hidden while it plays) and `takeover` (while any takeover page is on, only takeover pages play). `tv.json` carries `takeover` and a slide's `full`; the TV restarts its loop when `takeover` changes.
+
 > Changed 2026-09-25 (Andrey): every page, the automatic ones included, is a row in the office list to reorder, edit or hide. Kinds `events` and `ideas` mark where the events and the 3 random ideas play; the Book me and Idea hub QR codes are ordinary QR rows. Nothing is appended automatically.
 
 The playlist loops in this order:

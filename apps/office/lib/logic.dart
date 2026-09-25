@@ -222,6 +222,10 @@ class TvSlide {
     this.startsOn,
     this.endsOn,
     this.active = true,
+    this.fromTime,
+    this.toTime,
+    this.fullscreen = false,
+    this.takeover = false,
   });
 
   factory TvSlide.fromRow(Map<String, dynamic> r) => TvSlide(
@@ -236,10 +240,16 @@ class TvSlide {
         startsOn: r['starts_on'] == null ? null : DateTime.parse(r['starts_on'] as String),
         endsOn: r['ends_on'] == null ? null : DateTime.parse(r['ends_on'] as String),
         active: r['active'] as bool? ?? true,
+        fromTime: (r['from_time'] as String?)?.substring(0, 5),
+        toTime: (r['to_time'] as String?)?.substring(0, 5),
+        fullscreen: r['fullscreen'] as bool? ?? false,
+        takeover: r['takeover'] as bool? ?? false,
       );
 
   int? id;
   String kind, title, body, url;
+  String? fromTime, toTime; // HH:MM, times of day the page plays; null: all day
+  bool fullscreen, takeover; // takeover: while on, the TV plays only takeover pages
   String? mediaName;
   int? seconds; // null: play the video to its end
   int position;
@@ -257,6 +267,10 @@ class TvSlide {
         'starts_on': startsOn == null ? null : isoDate(startsOn!),
         'ends_on': endsOn == null ? null : isoDate(endsOn!),
         'active': active,
+        'from_time': fromTime,
+        'to_time': toTime,
+        'fullscreen': fullscreen,
+        'takeover': takeover,
       };
 
   bool showsOn(DateTime day) {
@@ -276,6 +290,9 @@ class TvSlide {
       return 'The link must start with http:// or https://.';
     }
     if (seconds != null && seconds! < 1) return 'Seconds must be at least 1.';
+    if (fromTime != null && toTime != null && toTime!.compareTo(fromTime!) <= 0) {
+      return 'The end time is before the start time.';
+    }
     if (startsOn != null && endsOn != null && endsOn!.isBefore(startsOn!)) {
       return 'The end date is before the start date.';
     }

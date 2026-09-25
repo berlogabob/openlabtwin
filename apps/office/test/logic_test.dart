@@ -114,11 +114,14 @@ void main() {
     final s = TvSlide.fromRow({
       'id': 3, 'kind': 'qr', 'title': 'Instagram', 'body': null, 'media_name': null, 'url': 'https://instagram.com/x',
       'seconds': 8, 'position': 2, 'starts_on': '2026-10-01', 'ends_on': '2026-10-31', 'active': true,
+      'from_time': '17:00:00', 'to_time': '20:00:00', 'fullscreen': true, 'takeover': true,
     });
     expect(s.toRow(), {
       'kind': 'qr', 'title': 'Instagram', 'body': null, 'media_name': null, 'url': 'https://instagram.com/x',
       'seconds': 8, 'position': 2, 'starts_on': '2026-10-01', 'ends_on': '2026-10-31', 'active': true,
+      'from_time': '17:00', 'to_time': '20:00', 'fullscreen': true, 'takeover': true,
     });
+    expect(TvSlide(kind: 'text', title: 'x', fromTime: '20:00', toTime: '17:00').problem(), contains('end time'));
     expect(s.showsOn(DateTime(2026, 10, 1)), isTrue);
     expect(s.showsOn(DateTime(2026, 11, 1)), isFalse);
     expect((s..active = false).showsOn(DateTime(2026, 10, 5)), isFalse);

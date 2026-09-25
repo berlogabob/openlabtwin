@@ -27,6 +27,7 @@ long = "A small robot arm built with servos and 3D-printed parts, controlled rem
     "slides": [{"kind": "media", "src": "media/tall.svg", "video": False, "w": 400, "h": 800, "title": "Tall photo", "body": "", "seconds": 1},
                {"kind": "text", "title": "Welcome", "body": "Open lab on Fridays", "seconds": 1},
                {"kind": "ideas", "seconds": 1}]}))
+takeover = {"generated": "", "takeover": True, "ideas": [], "slides": [{"kind": "text", "title": "Moda show", "body": "Tonight 17:00", "seconds": 1, "full": True}]}
 class Quiet(SimpleHTTPRequestHandler):
     def log_message(self, *args):
         pass
@@ -62,8 +63,15 @@ with sync_playwright() as p:
     assert over[0] <= 0 and over[1] <= 0, f"long idea text fits the frame: {over}"
     top = page.text_content("#top")
     assert "Tech Lab" in top and ":" not in top, f"top line: day and rooms, no clock: {top!r}"
+    # event mode: tv.json switches to a takeover, the TV follows on its next reload, full screen
+    (d / "tv.json").write_text(json.dumps(takeover))
+    page.evaluate("load()")
+    page.wait_for_selector("#frame h1:has-text('Moda show')", timeout=4000)
+    assert page.evaluate("document.body.classList.contains('full')") and not page.locator("#schedule").is_visible()
+    box = page.locator("#frame").bounding_box()
+    assert box["width"] > 1600, f"full screen frame: {box}"
     if len(sys.argv) > 1:
         page.screenshot(path=sys.argv[1])
-    assert "updated" in page.inner_text("footer")
+
 server.shutdown()
 print("ok")

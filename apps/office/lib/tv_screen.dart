@@ -73,12 +73,16 @@ class _TvScreenState extends State<TvScreen> {
     s.seconds == null ? 'whole video' : '${s.seconds} s',
     if (s.startsOn != null || s.endsOn != null)
       '${s.startsOn == null ? '…' : isoDate(s.startsOn!)} – ${s.endsOn == null ? '…' : isoDate(s.endsOn!)}',
+    if (s.fromTime != null || s.toTime != null) '${s.fromTime ?? '…'}–${s.toTime ?? '…'}',
+    if (s.fullscreen) 'full screen',
+    if (s.takeover) 'takeover',
     if (!s.showsOn(DateTime.now())) 'not showing today',
   ].join(' · ');
 
   Rec? _file(String? name) => media.where((m) => m['name'] == name).firstOrNull;
   bool _video(String kind, String? name) => kind == 'media' && _file(name)?['kind'] == 'video';
-  String _length(String? name) => _file(name)?['seconds'] == null ? 'full length' : mmss(_file(name)!['seconds'] as num);
+  String _length(String? name) =>
+      _file(name)?['seconds'] == null ? 'full length' : mmss(_file(name)!['seconds'] as num);
 
   Future<void> _edit(TvSlide s) async {
     final title = TextEditingController(text: s.title), body = TextEditingController(text: s.body);
@@ -87,6 +91,18 @@ class _TvScreenState extends State<TvScreen> {
     var kind = s.kind;
     String? mediaName = s.mediaName;
     DateTime? from = s.startsOn, to = s.endsOn;
+    String? fromTime = s.fromTime, toTime = s.toTime;
+    var fullscreen = s.fullscreen, takeover = s.takeover;
+    Future<String?> pickTime(String? t) async {
+      final v = await showTimePicker(
+        context: context,
+        initialTime: t == null
+            ? const TimeOfDay(hour: 17, minute: 0)
+            : TimeOfDay(hour: int.parse(t.substring(0, 2)), minute: int.parse(t.substring(3))),
+      );
+      return v == null ? null : '${v.hour.toString().padLeft(2, '0')}:${v.minute.toString().padLeft(2, '0')}';
+    }
+
     Future<DateTime?> pick(DateTime? d) => showDatePicker(
       context: context,
       initialDate: d ?? DateTime.now(),
@@ -196,6 +212,46 @@ class _TvScreenState extends State<TvScreen> {
                       TextButton(onPressed: () => set(() => from = to = null), child: const Text('Clear dates')),
                   ],
                 ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    OutlinedButton(
+                      onPressed: () async {
+                        final t = await pickTime(fromTime);
+                        if (t != null) set(() => fromTime = t);
+                      },
+                      child: Text(fromTime == null ? 'Time from: any' : 'From $fromTime'),
+                    ),
+                    OutlinedButton(
+                      onPressed: () async {
+                        final t = await pickTime(toTime);
+                        if (t != null) set(() => toTime = t);
+                      },
+                      child: Text(toTime == null ? 'Time until: any' : 'Until $toTime'),
+                    ),
+                    if (fromTime != null || toTime != null)
+                      TextButton(
+                        onPressed: () => set(() => fromTime = toTime = null),
+                        child: const Text('Clear times'),
+                      ),
+                  ],
+                ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Full screen'),
+                  subtitle: const Text('The page fills the TV; the schedule hides while it plays'),
+                  value: fullscreen,
+                  onChanged: (v) => set(() => fullscreen = v),
+                ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Takeover'),
+                  subtitle: const Text('During its dates and times the TV plays only takeover pages, in a loop'),
+                  value: takeover,
+                  onChanged: (v) => set(() => takeover = v),
+                ),
               ],
             ),
           ),
@@ -222,6 +278,10 @@ class _TvScreenState extends State<TvScreen> {
       startsOn: from,
       endsOn: to,
       active: s.active,
+      fromTime: fromTime,
+      toTime: toTime,
+      fullscreen: fullscreen,
+      takeover: takeover,
     );
     final problem = slide.problem();
     if (problem != null) {

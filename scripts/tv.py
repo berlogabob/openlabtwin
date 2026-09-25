@@ -22,7 +22,7 @@ PHOTO = {".jpg", ".jpeg", ".png", ".webp"}
 VIDEO = {".mp4", ".m4v", ".webm"}
 CODECS = {"h264", "vp8", "vp9", "av1"}  # what Chromium on Linux plays without licensed decoders
 EVENT_DAYS = 14
-SLIDE_KEYS = {"kind", "title", "body", "seconds", "src", "video", "w", "h", "when", "place", "length"}
+SLIDE_KEYS = {"kind", "title", "body", "seconds", "src", "video", "w", "h", "when", "place", "length", "full"}
 
 
 def media_row(name, size, info):
@@ -36,9 +36,13 @@ def media_row(name, size, info):
             "seconds": round(float(dur), 1) if kind == "video" and dur else None, "bytes": size, "playable": playable}
 
 
-def in_window(s, day):
+def in_window(s, day, clock=None):
+    """Active, inside its dates, and (given the clock, HH:MM) inside its times of day."""
     d = day.isoformat()
-    return s["active"] and (not s["starts_on"] or s["starts_on"] <= d) and (not s["ends_on"] or s["ends_on"] >= d)
+    if not (s["active"] and (not s["starts_on"] or s["starts_on"] <= d) and (not s["ends_on"] or s["ends_on"] >= d)):
+        return False
+    start, end = (s.get("from_time") or "")[:5], (s.get("to_time") or "")[:5]
+    return clock is None or ((not start or start <= clock) and (not end or clock < end))
 
 
 def event_slides(activities, places, today):
@@ -52,26 +56,32 @@ def event_slides(activities, places, today):
     return [slide for _s, slide in sorted(out, key=lambda x: x[0])]
 
 
-def build(slides, media, events, ideas, day, generated):
+def build(slides, media, events, ideas, day, generated, clock=None):
     """The playlist in the staff's order. An 'events' row expands into the events at its place; an 'ideas' row
-    stays a marker the TV fills with 3 random ideas each loop."""
+    stays a marker the TV fills with 3 random ideas each loop. While a takeover page is on (dates and times),
+    only the takeover pages play."""
     files = {m["name"]: m for m in media if m["playable"]}
+    live = [s for s in sorted(slides, key=lambda s: (s["position"], s["id"])) if in_window(s, day, clock)
+            and not (s["kind"] == "media" and not files.get(s["media_name"] or ""))]
+    takeover = any(s.get("takeover") for s in live)
     out = []
-    for s in sorted(slides, key=lambda s: (s["position"], s["id"])):
+    for s in live:
         m = files.get(s["media_name"] or "")
-        if not in_window(s, day) or (s["kind"] == "media" and not m):
+        if takeover and not s.get("takeover"):
             continue
         if s["kind"] == "events":
             out += [e | {"seconds": s["seconds"] or 10} for e in events]
             continue
         slide = {"kind": s["kind"], "title": s["title"] or "", "body": s["body"] or "", "seconds": s["seconds"]}
+        if s.get("fullscreen"):
+            slide["full"] = True
         if m:
             slide |= {"src": "media/" + quote(m["name"]), "video": m["kind"] == "video", "w": m["width"], "h": m["height"],
                       "length": m["seconds"]}  # seconds None on a video: play it to the end
         if s["kind"] == "qr":
             slide["src"] = f"qr/{s['id']}.svg"
         out.append(slide)
-    return {"generated": generated, "slides": out,
+    return {"generated": generated, "takeover": takeover, "slides": out,
             "ideas": [{"title": i["ai_title"], "summary": i["ai_summary"]} for i in ideas if i["ai_title"] and i["ai_summary"]]}
 
 
@@ -107,14 +117,16 @@ def main():
                 {"Prefer": "resolution=merge-duplicates,return=minimal"})
     for name in known - {m["name"] for m in media}:
         request(db, "DELETE", "tv_media", {"name": f"eq.{name}"}, headers={"Prefer": "return=minimal"})
-    slides = select(db, "tv_slides", {"select": "id,kind,title,body,media_name,url,seconds,position,starts_on,ends_on,active",
+    slides = select(db, "tv_slides", {"select": "id,kind,title,body,media_name,url,seconds,position,starts_on,ends_on,active,"
+                                      "from_time,to_time,fullscreen,takeover",
                                       "order": "position,id"})
     activities = select(db, "activities", {"select": "id,title,place_ids,location_text,starts_at,ends_at,rrule,exdates,public_note",
                                            "status": "eq.approved", "layer": "eq.event", "order": "id"})
     places = select(db, "places", {"select": "id,name,iade_name,public", "order": "id"})
     ideas = select(db, "ideas", {"select": "ai_title,ai_summary", "status": "eq.approved", "ai_title": "not.is.null",
                                  "order": "id"})
-    tv = build(slides, media, event_slides(activities, places, now.date()), ideas, now.date(), now.isoformat(timespec="seconds"))
+    tv = build(slides, media, event_slides(activities, places, now.date()), ideas, now.date(), now.isoformat(timespec="seconds"),
+               now.strftime("%H:%M"))
     assert_public(tv)
     write_qr([s for s in slides if s["kind"] == "qr" and s["url"]])
     tmp = OUT / "tv.json.tmp"
