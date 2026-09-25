@@ -85,3 +85,13 @@ except AssertionError:
 else:
     raise SystemExit("assert_public let a name through")
 print("ok")
+
+# what the TV is playing, for the office (heartbeat)
+reel = base | {"id": 30, "kind": "media", "title": None, "media_name": "reel.m4v"}
+assert tv.describe_playing([moda], True, 1) == "Takeover: Moda show until 20:00"
+assert tv.describe_playing([moda | {"to_time": None, "ends_on": "2026-10-01"}], True, 1) == "Takeover: Moda show until 2026-10-01"
+assert tv.describe_playing([moda | {"title": None, "media_name": "proto.mp4"}, moda | {"title": "Poster"}], True, 2) == \
+    "Takeover: proto.mp4, Poster until 20:00"
+assert tv.describe_playing([reel], False, 7) == "Normal loop: 7 pages"
+assert tv.describe_playing([], False, 0) == "Nothing to play"
+print("ok playing")
