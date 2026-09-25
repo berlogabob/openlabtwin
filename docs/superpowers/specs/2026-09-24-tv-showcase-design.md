@@ -82,7 +82,7 @@ Nothing private goes into `tv.json`: no emails, names of students, purposes or c
 Migration `…_tv_showcase.sql`, staff only (RLS through `is_staff()`, audit trigger, no anon grants), like the other tables:
 
 - `tv_media`: `name text primary key`, `kind` (`video`/`photo`), `width`, `height`, `seconds numeric`, `bytes bigint`, `playable boolean`, `seen_at timestamptz`. Written by the node.
-- `tv_slides`: `id`, `kind` (`media`/`bio`/`qr`/`text`), `title`, `body`, `media_name` (references `tv_media`, `on delete set null`), `url`, `seconds int default 10 check (seconds > 0)`, `position int`, `starts_on date`, `ends_on date`, `active boolean default true`, `created_at`.
+- `tv_slides`: `id`, `kind` (`media`/`bio`/`qr`/`text`), `title`, `body`, `media_name` (a file name; no foreign key since 2026-09-25, so a page survives its file being briefly missing), `url`, `seconds int default 10 check (seconds > 0)`, `position int`, `starts_on date`, `ends_on date`, `active boolean default true`, `created_at`.
 
 ## Office
 
@@ -125,7 +125,7 @@ A **TV** icon in the top bar opens the slide list:
 ## Tests
 
 - `tests/test_tv.py`: playlist building (dates, active, missing or unplayable files, events window, no private keys, ideas without names) and the playable check, as pure functions.
-- `supabase/tests/database/06_tv.sql`: RLS (staff only, anon denied), `on delete set null`.
+- `supabase/tests/database/06_tv.sql`: RLS (staff only, anon denied), a page keeping its file name while the file is gone.
 - Office: logic tests for slide ordering and the date window; `flutter analyze`.
 - Playwright: `apps/tv/index.html` with a sample `tv.json` and `all.json`: two room columns, the frame's aspect ratio follows the slide, the carousel advances.
 

@@ -112,3 +112,19 @@ withr = tv.build([base | {"id": 1, "position": 0, "kind": "media", "media_name":
 assert withr["slides"][0]["renditions"] == {"480": "media/.tv/arm.x.480p.mp4", "720": "media/.tv/arm.x.720p.mp4"}
 tv.assert_public(withr)
 print("ok renditions")
+
+# probe only new or changed files (by size and modification time); the cache is a plain dict saved as JSON
+calls = []
+tv.probe = lambda p: calls.append(p.name) or {"streams": [], "format": {"n": len(calls)}}
+class F:  # a stand-in for a Path: name and stat()
+    def __init__(self, name, size, mtime): self.name, self._s = name, type("S", (), {"st_size": size, "st_mtime": mtime})
+    def stat(self): return self._s
+cache = {}
+first = tv.probe_cached(F("a.mp4", 10, 1.0), cache)
+again = tv.probe_cached(F("a.mp4", 10, 1.0), cache)
+assert calls == ["a.mp4"] and first == again, "unchanged: probed once"
+tv.probe_cached(F("a.mp4", 11, 1.0), cache)
+tv.probe_cached(F("a.mp4", 11, 2.0), cache)
+assert calls == ["a.mp4"] * 3, "a new size or time probes again"
+assert cache["a.mp4"] == {"size": 11, "mtime": 2.0, "info": {"streams": [], "format": {"n": 3}}}, cache
+print("ok probe cache")

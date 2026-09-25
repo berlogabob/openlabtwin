@@ -72,6 +72,7 @@ class _TvScreenState extends State<TvScreen> {
   String _subtitle(TvSlide s) => [
     slideKinds[s.kind]!,
     if (s.mediaName != null) s.mediaName!,
+    if (s.mediaName != null && _file(s.mediaName) == null) 'FILE MISSING: skipped until it is back in the folder',
     s.seconds == null ? 'whole video' : '${s.seconds} s',
     if (s.startsOn != null || s.endsOn != null)
       '${s.startsOn == null ? '…' : isoDate(s.startsOn!)} – ${s.endsOn == null ? '…' : isoDate(s.endsOn!)}',

@@ -84,6 +84,10 @@ if ! grep -q '^\[tv\]' /etc/samba/smb.conf 2>/dev/null; then
   run sh -c "printf '\n[tv]\n   path = $HOME/tv-media\n   valid users = $USER\n   read only = no\n   create mask = 0644\n   directory mask = 0755\n' | sudo tee -a /etc/samba/smb.conf >/dev/null"
   run sudo service smbd restart
 fi
+if ! grep -q 'veto files = /._\*/.DS_Store/' /etc/samba/smb.conf 2>/dev/null; then  # no Mac litter (._name, .DS_Store) in the share
+  run sudo sed -i '/^\[tv\]/a\   veto files = /._*/.DS_Store/\n   delete veto files = yes' /etc/samba/smb.conf
+  run sudo service smbd restart
+fi
 if [ "$DRY" = 0 ] && ! sudo pdbedit -L 2>/dev/null | grep -q "^$USER:"; then
   echo "  Samba password for $USER (used to connect to smb://<ip>/tv):"; sudo smbpasswd -a "$USER" </dev/tty
 fi

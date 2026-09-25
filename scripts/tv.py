@@ -128,6 +128,20 @@ def probe(path):
     return json.loads(r.stdout or "{}")
 
 
+# Drafted by a local model (Qwen3-Coder 30B on Unsloth Studio).
+def probe_cached(path, cache):
+    """ffprobe's JSON for a file, re-probed only when its size or modification time changed.
+    cache: dict name -> {"size", "mtime", "info"}, updated in place (main saves it as JSON between runs)."""
+    name = path.name
+    stat = path.stat()
+    size, mtime = stat.st_size, stat.st_mtime
+    if name not in cache or cache[name]["size"] != size or cache[name]["mtime"] != mtime:
+        info = probe(path)
+        cache[name] = {"size": size, "mtime": mtime, "info": info}
+    return cache[name]["info"]
+
+
+
 def write_qr(qr_slides):
     import segno
     (OUT / "qr").mkdir(parents=True, exist_ok=True)
@@ -139,8 +153,14 @@ def main():
     db = connect()
     now = datetime.now(TZ)
     REND.mkdir(parents=True, exist_ok=True)
+    for junk in [*MEDIA.glob("._*"), *MEDIA.glob(".DS_Store")]:  # what a Mac leaves on a network share
+        junk.unlink(missing_ok=True)
     files = [p for p in sorted(MEDIA.iterdir()) if p.is_file() and not p.name.startswith(".")]
-    media = [media_row(p.name, p.stat().st_size, probe(p)) for p in files]
+    cache_file = OUT / "probe.json"
+    cache = json.loads(cache_file.read_text()) if cache_file.exists() else {}
+    media = [media_row(p.name, p.stat().st_size, probe_cached(p, cache)) for p in files]
+    OUT.mkdir(parents=True, exist_ok=True)
+    cache_file.write_text(json.dumps({p.name: cache[p.name] for p in files}))  # forget deleted files
     mtimes = {p.name: p.stat().st_mtime for p in files}
     wanted = {m["name"]: rendition_names(m, mtimes[m["name"]]) for m in media if m["kind"] == "video" and m["height"]}
     ready = {name: {h: f for h, f in r.items() if (REND / f).exists()} for name, r in wanted.items()}

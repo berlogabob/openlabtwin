@@ -59,6 +59,7 @@ Step 9 of `edge-setup.sh` installs nginx, Samba and ffmpeg, and cron runs `scrip
 - **Playlist:** `~/tv-out/tv.json` and `~/tv-out/qr/`, written atomically by `tv.py`. Only public fields go in; ideas only as the AI title and summary.
 - **Firewall:** ports 80 and 445 are open to `192.168.1.0/24` and `10.208.16.0/23`.
 - **Lighter video copies:** for every video, `tv.py` makes 480p, 720p and 1080p H.264 copies without sound (never above the source's height, 480p always) in `~/tv-media/.tv/` (hidden in the shared folder), one run at a time under a lock, after the playlist is written. A 6-minute 1080p video takes a few minutes. Copies of deleted or replaced files are removed. This also makes iPhone `.mov`/HEVC files playable.
+- **Probe cache and Mac clutter:** `tv.py` re-reads a file's details only when its size or time changed (`~/tv-out/probe.json`), and deletes the `._*` and `.DS_Store` files a Mac leaves in the share; Samba is also set to refuse them (`veto files`, from `edge-setup.sh`).
 - **Heartbeat:** every run writes `tv_status` (last build, pages, files, takeover, or the last error), which the office TV screen shows.
 - **Checks:** `cat ~/tv.log` is empty when all is well; `head -c 300 ~/tv-out/tv.json`; `curl -sI localhost/tv/` returns 200.
 - **The TV itself:** Chromium full screen (kiosk) on the address above; videos autoplay because they're muted.
