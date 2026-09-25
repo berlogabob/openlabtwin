@@ -58,6 +58,7 @@ Step 9 of `edge-setup.sh` installs nginx, Samba and ffmpeg, and cron runs `scrip
 - **Shared folder:** `~/tv-media`, shared as `smb://192.168.1.131/tv` (user `TechLAB`, Samba password set by `sudo smbpasswd -a TechLAB`). Flat: subfolders and dot-files are ignored.
 - **Playlist:** `~/tv-out/tv.json` and `~/tv-out/qr/`, written atomically by `tv.py`. Only public fields go in; ideas only as the AI title and summary.
 - **Firewall:** ports 80 and 445 are open to `192.168.1.0/24` and `10.208.16.0/23`.
+- **Heartbeat:** every run writes `tv_status` (last build, pages, files, takeover, or the last error), which the office TV screen shows.
 - **Checks:** `cat ~/tv.log` is empty when all is well; `head -c 300 ~/tv-out/tv.json`; `curl -sI localhost/tv/` returns 200.
 - **The TV itself:** Chromium full screen (kiosk) on the address above; videos autoplay because they're muted.
 

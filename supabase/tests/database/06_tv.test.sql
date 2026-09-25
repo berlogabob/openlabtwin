@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(9);
+select plan(10);
 
 select ok((select bool_and(relrowsecurity) from pg_class where relname in ('tv_media', 'tv_slides')), 'RLS on both TV tables');
 select ok(not has_table_privilege('anon', 'tv_media', 'select') and not has_table_privilege('anon', 'tv_slides', 'select'),
@@ -22,4 +22,6 @@ select lives_ok($$ insert into tv_slides (kind, title) values ('events', 'Upcomi
 select lives_ok($$ insert into tv_slides (kind, title, seconds) values ('text', 'whole', null) $$, 'seconds may be empty (whole video)');
 select throws_like($$ insert into tv_slides (kind, title, from_time, to_time) values ('text', 'x', '20:00', '17:00') $$,
                    '%tv_slides_time_order%', 'the end time is after the start time');
+select ok(not has_table_privilege('anon', 'tv_status', 'select') and not has_table_privilege('authenticated', 'tv_status', 'update'),
+          'only the node writes the TV heartbeat; anon cannot read it');
 select * from finish();

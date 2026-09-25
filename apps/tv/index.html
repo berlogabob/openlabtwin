@@ -18,19 +18,20 @@ body { margin: 0; height: 100vh; display: grid; grid-template-columns: 1fr 2fr; 
        padding: .7rem 1.4rem; border-bottom: 1px solid var(--line); font-size: 1.2rem; font-weight: 600; white-space: nowrap; }
 #top .rooms { overflow: hidden; text-overflow: ellipsis; letter-spacing: .04em; text-transform: uppercase; font-size: 1rem; }
 #schedule { padding: .8rem 1.2rem; border-right: 1px solid var(--line); overflow: hidden; display: flex; flex-direction: column; gap: .6rem; }
-#schedule section { flex: 1; min-height: 0; overflow: hidden; }
-#schedule h2 { margin: 0 0 .3rem; font-size: .8rem; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+/* sizes in em below: fitSchedule() shrinks the whole column until a busy day fits */
+#schedule section { flex: none; }
+#schedule h2 { margin: 0 0 .3em; font-size: .8em; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
 /* one colour per card (--c): the left stripe, and the outline of the slot running now. Outlines take no space: nothing shifts. */
-article { --c: var(--accent); margin: 0 0 .3rem; padding: .25rem .55rem; font-size: .9rem; line-height: 1.25; background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--c); border-radius: 6px; }
+article { --c: var(--accent); margin: 0 0 .3em; padding: .25em .6em; font-size: .9em; line-height: 1.25; background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--c); border-radius: 6px; }
 article p { margin: 0; }
-article .time { font-weight: 600; font-variant-numeric: tabular-nums; margin-right: .35rem; }
-article .who { color: var(--muted); font-size: .8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+article .time { font-weight: 600; font-variant-numeric: tabular-nums; margin-right: .35em; white-space: nowrap; }
+article .who { color: var(--muted); font-size: .89em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 article.booking { --c: var(--booking); }
 article.event { --c: var(--event); }
 article.past { opacity: .4; }
 article.now { outline: 2px solid var(--c); outline-offset: -1px; }
 .empty { color: var(--muted); }
-.now-line { display: flex; align-items: center; gap: .4rem; margin: .1rem 0 .45rem; color: var(--accent); font-size: .8rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.now-line { display: flex; align-items: center; gap: .4em; margin: .1em 0 .45em; color: var(--accent); font-size: .8em; font-weight: 600; font-variant-numeric: tabular-nums; }
 .now-line::after { content: ""; flex: 1; border-top: 2px solid var(--accent); }
 #stage { position: relative; background: var(--mat); display: flex; align-items: center; justify-content: center; }
 /* passe-partout: the mat is the stage, the frame's opening takes the slide's shape */
@@ -52,6 +53,7 @@ body.full { grid-template-columns: 1fr; grid-template-rows: 1fr; }
 body.full #top, body.full #schedule, body.full footer { display: none; }
 body.full #frame h1 { font-size: 4.5em; }
 body.full #frame .body, body.full #frame .when { font-size: 2.4em; }
+footer .stale { color: var(--accent); font-weight: 600; }
 footer { grid-column: 1 / -1; padding: .2rem 1.4rem; font-size: .75rem; color: var(--muted); border-top: 1px solid var(--line); }
 </style>
 </head>
@@ -115,7 +117,12 @@ function schedule() {
     if (items.length && line === items.length) nowLine();
     aside.append(sec);
   }
-  document.querySelector('footer').textContent = updated ? `updated ${hm(updated)}` : '';
+  const foot = document.querySelector('footer'), built = Date.parse(tv.generated || '');
+  foot.textContent = updated ? `updated ${hm(updated)}` : '';
+  if (built && Date.now() - built > 5 * 60 * 1000) {  // the node stopped rebuilding: say so instead of playing old content quietly
+    foot.append(' · ', el('span', 'stale', `playlist from ${hm(new Date(built))}: the lab node is not updating it`));
+  }
+  fitSchedule();
 }
 
 function playlist() {  // an 'ideas' page becomes 3 random ideas each loop: the AI's anonymous version only
@@ -132,6 +139,14 @@ function fit() {  // the frame's opening takes the slide's shape, as large as th
   const w = W / H > ratio ? H * ratio : W;
   frame.style.width = `${w}px`;
   frame.style.height = `${w / ratio}px`;
+}
+
+function fitSchedule() {  // a busy day: shrink the column's text until every card fits, down to 55%
+  const aside = document.getElementById('schedule');
+  for (let size = 100; size >= 55; size -= 5) {
+    aside.style.fontSize = `${size}%`;
+    if (aside.scrollHeight <= aside.clientHeight) return;
+  }
 }
 
 function fitText(box) {  // shrink the slide's text until it fits inside the frame, down to 40%
@@ -181,7 +196,7 @@ function next() {
   timer = setTimeout(next, (s.seconds || 10) * 1000);
 }
 
-addEventListener('resize', () => { fit(); fitText(document.querySelector('#frame .text')); });
+addEventListener('resize', () => { fit(); fitText(document.querySelector('#frame .text')); fitSchedule(); });
 load();
 setInterval(load, 60 * 1000);
 </script>

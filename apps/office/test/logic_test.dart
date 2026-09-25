@@ -110,6 +110,18 @@ void main() {
     expect(a.toRow().containsKey('status_token'), isFalse);
   });
 
+  test('TV status line from the node heartbeat', () {
+    final now = DateTime.parse('2026-09-25T14:03:00Z');
+    final good = {'built_at': '2026-09-25T14:02:00Z', 'pages': 4, 'media': 2, 'takeover': true, 'error': null, 'error_at': null};
+    expect(tvStatusLine(good, now).ok, isTrue);
+    expect(tvStatusLine(good, now).text, contains('4 pages · 2 files · takeover on'));
+    expect(tvStatusLine(good, DateTime.parse('2026-09-25T14:10:00Z')).ok, isFalse, reason: 'stale after 5 minutes');
+    final failing = {...good, 'error': 'OSError: disk full', 'error_at': '2026-09-25T14:02:30Z'};
+    expect(tvStatusLine(failing, now).text, contains('disk full'));
+    expect(tvStatusLine(failing, now).ok, isFalse);
+    expect(tvStatusLine(null, now).ok, isFalse);
+  });
+
   test('TV slide: row round trip, date window, problems', () {
     final s = TvSlide.fromRow({
       'id': 3, 'kind': 'qr', 'title': 'Instagram', 'body': null, 'media_name': null, 'url': 'https://instagram.com/x',

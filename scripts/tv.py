@@ -132,8 +132,22 @@ def main():
     tmp = OUT / "tv.json.tmp"
     tmp.write_text(json.dumps(tv, ensure_ascii=False), encoding="utf-8")
     tmp.replace(OUT / "tv.json")  # atomic: the TV never reads half a file
+    heartbeat(db, {"built_at": now.isoformat(), "pages": len(tv["slides"]), "media": len(media), "takeover": tv["takeover"],
+                   "error": None, "error_at": None})
     print(f"media {len(media)}, slides {len(tv['slides'])}, ideas {len(tv['ideas'])}")
 
 
+def heartbeat(db, fields):
+    """The office's view of the TV (tv_status, one row): last good build, or the last error."""
+    request(db, "POST", "tv_status", {"on_conflict": "id"}, [{"id": 1, **fields}],
+            {"Prefer": "resolution=merge-duplicates,return=minimal"})
+
+
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:  # noqa: BLE001 - report it to the office, then fail as before (cron logs it)
+        try:
+            heartbeat(connect(), {"error": f"{type(e).__name__}: {e}"[:500], "error_at": datetime.now(TZ).isoformat()})
+        finally:
+            raise

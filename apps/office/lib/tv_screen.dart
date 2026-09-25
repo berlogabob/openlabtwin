@@ -30,6 +30,7 @@ class TvScreen extends StatefulWidget {
 class _TvScreenState extends State<TvScreen> {
   List<TvSlide>? slides;
   List<Rec> media = [];
+  Rec? status;
   String? error;
 
   @override
@@ -40,10 +41,11 @@ class _TvScreenState extends State<TvScreen> {
 
   Future<void> _load() async {
     try {
-      final r = await Future.wait([tvSlides(), tvMedia()]);
+      final r = await Future.wait([tvSlides(), tvMedia(), tvStatus()]);
       setState(() {
         slides = r[0] as List<TvSlide>;
         media = r[1] as List<Rec>;
+        status = r[2] as Rec?;
         error = null;
       });
     } catch (e) {
@@ -310,8 +312,18 @@ class _TvScreenState extends State<TvScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
+                Builder(
+                  builder: (context) {
+                    final st = tvStatusLine(status, DateTime.now());
+                    return ListTile(
+                      dense: true,
+                      leading: Icon(st.ok ? Icons.check_circle : Icons.warning, color: st.ok ? Colors.green : Colors.red),
+                      title: Text(st.text, style: TextStyle(color: st.ok ? null : Colors.red)),
+                    );
+                  },
+                ),
                 const Padding(
-                  padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
+                  padding: EdgeInsets.fromLTRB(16, 0, 16, 4),
                   child: SelectionArea(
                     child: Text(
                       'The TV plays these pages in this order, then starts again. '

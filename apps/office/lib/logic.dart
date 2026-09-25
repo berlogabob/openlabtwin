@@ -299,3 +299,20 @@ class TvSlide {
     return null;
   }
 }
+
+/// The office's line about the TV, from the node's heartbeat (tv_status): what it plays, or why it is stale.
+/// ok is false when the last build is more than 5 minutes old, never happened, or the last run failed.
+({String text, bool ok}) tvStatusLine(Map<String, dynamic>? r, DateTime now) {
+  String hm(DateTime d) => '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+  final built = r?['built_at'] == null ? null : DateTime.parse(r!['built_at'] as String).toLocal();
+  final errorAt = r?['error_at'] == null ? null : DateTime.parse(r!['error_at'] as String).toLocal();
+  if (built == null) return (text: 'TV: the lab node has not built a playlist yet.${r?['error'] == null ? '' : ' ${r!['error']}'}', ok: false);
+  final failing = errorAt != null && errorAt.isAfter(built);
+  if (failing || now.difference(built).inMinutes >= 5) {
+    return (text: 'TV not updating since ${hm(built)}${failing ? ': ${r!['error']}' : ': is the lab node on?'}', ok: false);
+  }
+  return (
+    text: 'TV playlist built ${hm(built)} · ${r!['pages']} pages · ${r['media']} files${r['takeover'] == true ? ' · takeover on' : ''}',
+    ok: true,
+  );
+}

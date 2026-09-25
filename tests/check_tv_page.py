@@ -21,9 +21,10 @@ shutil.copy(ROOT / "apps/tv/index.html", d / "index.html")
 today = date.today().isoformat()
 lesson = {"date": today, "start": "00:00", "end": "23:59", "course": "VR Development", "groups": [], "teachers": ["José"],
           "type": "P", "rooms": [LAB], "programmes": [], "degrees": [], "layer": "lesson", "note": ""}
-(d / "data/all.json").write_text(json.dumps([lesson, lesson | {"course": "Mac lab", "rooms": [MAC], "layer": "booking"}]))
+busy = [lesson | {"start": f"{h:02}:00", "end": f"{h:02}:50", "course": f"Busy lesson {h}", "teachers": ["A Teacher"]} for h in range(8, 21)]
+(d / "data/all.json").write_text(json.dumps([lesson, lesson | {"course": "Mac lab", "rooms": [MAC], "layer": "booking"}] + busy))
 long = "A small robot arm built with servos and 3D-printed parts, controlled remotely from a smartphone. " * 6
-(d / "tv.json").write_text(json.dumps({"generated": "", "ideas": [{"title": "Micro robot arm with a very long descriptive title", "summary": long}],
+(d / "tv.json").write_text(json.dumps({"generated": "2026-01-01T10:00:00+00:00", "ideas": [{"title": "Micro robot arm with a very long descriptive title", "summary": long}],
     "slides": [{"kind": "media", "src": "media/tall.svg", "video": False, "w": 400, "h": 800, "title": "Tall photo", "body": "", "seconds": 1},
                {"kind": "text", "title": "Welcome", "body": "Open lab on Fridays", "seconds": 1},
                {"kind": "ideas", "seconds": 1}]}))
@@ -45,12 +46,15 @@ with sync_playwright() as p:
     assert heads == ["Lab. e Estudo de Jogos - Tech Lab", "Sala 017 Mac 1"], heads
     assert "VR Development" in page.inner_text("#schedule") and page.locator("#schedule article.booking.now").count() == 1
     assert page.locator("#schedule .now-line").count() == 2, "a now line in each room"
+    fits = page.eval_on_selector("#schedule", "a => [a.scrollHeight, a.clientHeight, a.style.fontSize]")
+    assert fits[0] <= fits[1] and fits[2] != "100%", f"a busy day shrinks to fit the column: {fits}"
+    assert "not updating" in page.inner_text("footer"), "an old playlist is flagged on the TV"
     edges = page.eval_on_selector_all("#schedule article", "a => a.map(e => getComputedStyle(e).borderLeftColor)")
-    assert edges == ["rgb(179, 38, 30)", "rgb(30, 92, 179)"], f"lessons red, bookings blue: {edges}"
+    assert edges[0] == "rgb(179, 38, 30)" and edges[-1] == "rgb(30, 92, 179)", f"lessons red, bookings blue: {edges}"
     look = page.eval_on_selector_all("#schedule article", "a => a.map(e => [getComputedStyle(e).boxShadow, getComputedStyle(e).outlineColor, e.getBoundingClientRect().height])")
     assert all(x[0] == "none" for x in look), f"no glow: {look}"
-    assert look[1][1] == "rgb(30, 92, 179)", f"the running booking is outlined in its own blue: {look}"
-    assert look[0][2] == look[1][2], "outline adds no height"
+    assert look[-1][1] == "rgb(30, 92, 179)", f"the running booking is outlined in its own blue: {look}"
+    assert look[0][2] == look[1][2], "outline adds no height (running lesson vs a finished one)"
     box = page.locator("#frame").bounding_box()
     assert abs(box["width"] / box["height"] - 0.5) < 0.02, f"frame follows the photo's 1:2 shape: {box}"
     aside = page.locator("#schedule").bounding_box()
