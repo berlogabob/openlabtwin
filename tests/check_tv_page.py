@@ -24,7 +24,8 @@ lesson = {"date": today, "start": "00:00", "end": "23:59", "course": "VR Develop
 (d / "data/all.json").write_text(json.dumps([lesson, lesson | {"course": "Mac lab", "rooms": [MAC], "layer": "booking"}]))
 (d / "tv.json").write_text(json.dumps({"generated": "", "ideas": [{"title": "Micro robot arm", "summary": "An ESP32 arm."}],
     "slides": [{"kind": "media", "src": "media/tall.svg", "video": False, "w": 400, "h": 800, "title": "Tall photo", "body": "", "seconds": 1},
-               {"kind": "text", "title": "Welcome", "body": "Open lab on Fridays", "seconds": 1}]}))
+               {"kind": "text", "title": "Welcome", "body": "Open lab on Fridays", "seconds": 1},
+               {"kind": "ideas", "seconds": 1}]}))
 class Quiet(SimpleHTTPRequestHandler):
     def log_message(self, *args):
         pass
@@ -41,6 +42,8 @@ with sync_playwright() as p:
     heads = page.locator("#schedule h2").all_text_contents()
     assert heads == ["Lab. e Estudo de Jogos - Tech Lab", "Sala 017 Mac 1"], heads
     assert "VR Development" in page.inner_text("#schedule") and page.locator("#schedule article.booking.now").count() == 1
+    edges = page.eval_on_selector_all("#schedule article", "a => a.map(e => getComputedStyle(e).borderLeftColor)")
+    assert edges == ["rgb(179, 38, 30)", "rgb(30, 92, 179)"], f"lessons red, bookings blue: {edges}"
     box = page.locator("#frame").bounding_box()
     assert abs(box["width"] / box["height"] - 0.5) < 0.02, f"frame follows the photo's 1:2 shape: {box}"
     aside = page.locator("#schedule").bounding_box()

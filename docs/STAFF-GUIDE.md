@@ -83,13 +83,15 @@ Students drop project ideas at https://berlogabob.github.io/openlabtwin/ideas/. 
 ## The TV slides
 
 - **Files:** copy videos and photos into the shared folder `smb://192.168.1.131/tv` (Finder: Go → Connect to Server; Windows: `\\192.168.1.131\tv`), user `TechLAB` with its Samba password, from the lab network. Within a minute they appear in the office. The TV plays MP4 or WebM (H.264, VP8, VP9 or AV1) and JPG, PNG or WebP. Other files, such as iPhone `.mov` or HEVC video, show as "won't play on the TV": export them as MP4 (H.264) first.
-- **The office:** the TV icon in the top bar opens the slide list. **Add slide** makes:
+- **The office:** the TV icon in the top bar opens the list of every page the TV plays, in order; the TV loops through it. **Add page** makes:
   - **Video or photo:** a file from the folder, with an optional caption. The frame takes the file's shape. Videos play once, muted, to the end.
   - **Bio:** a name, role and short bio, with an optional photo.
   - **QR code:** a link and a caption; the node draws the code.
   - **Text:** a title and text.
+  - **Upcoming events (automatic):** each approved event of the next 14 days, one page each, at this place in the loop.
+  - **3 random student ideas (automatic):** a new random pick each loop, in the AI's version, with no names.
 
   Each slide has its seconds on screen (default 10), optional start and end dates, and an on/off switch. Drag to reorder. Deleting a file from the folder leaves its slide without media, and the TV skips it.
-- **Automatic slides,** after yours: approved events of the next 14 days, the Book me and Idea hub QR codes, and 3 random approved ideas per loop, shown only in the AI's version, with no names.
+- **Starting pages:** the Book me QR code, the Idea hub QR code, Upcoming events and 3 random student ideas. Reorder, edit, hide or delete them like any other page.
 - The TV reloads every minute. If the internet drops it keeps playing what it has; if the edge node is off, the showcase TV is dark and the schedule-only TV still works.
 - **Calendar:** `…/calendar/lab.ics` subscribes in Google Calendar, Apple Calendar or Outlook.

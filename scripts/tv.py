@@ -7,7 +7,6 @@ the TV shows only public fields, and ideas only as the AI's anonymous title and 
 """
 import json
 import os
-import shutil
 import subprocess
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -17,7 +16,6 @@ from db import connect, request, select
 from export import occurrences
 from timetable_parse import TZ
 
-ROOT = Path(__file__).resolve().parent.parent
 MEDIA = Path(os.environ.get("TV_MEDIA", Path.home() / "tv-media"))
 OUT = Path(os.environ.get("TV_OUT", Path.home() / "tv-out"))
 PHOTO = {".jpg", ".jpeg", ".png", ".webp"}
@@ -55,11 +53,16 @@ def event_slides(activities, places, today):
 
 
 def build(slides, media, events, ideas, day, generated):
+    """The playlist in the staff's order. An 'events' row expands into the events at its place; an 'ideas' row
+    stays a marker the TV fills with 3 random ideas each loop."""
     files = {m["name"]: m for m in media if m["playable"]}
     out = []
     for s in sorted(slides, key=lambda s: (s["position"], s["id"])):
         m = files.get(s["media_name"] or "")
         if not in_window(s, day) or (s["kind"] == "media" and not m):
+            continue
+        if s["kind"] == "events":
+            out += [e | {"seconds": s["seconds"]} for e in events]
             continue
         slide = {"kind": s["kind"], "title": s["title"] or "", "body": s["body"] or "", "seconds": s["seconds"]}
         if m:
@@ -67,9 +70,6 @@ def build(slides, media, events, ideas, day, generated):
         if s["kind"] == "qr":
             slide["src"] = f"qr/{s['id']}.svg"
         out.append(slide)
-    out += events
-    out += [{"kind": "qr", "src": "qr/book.svg", "title": "Book a consultation", "body": "", "seconds": 10},
-            {"kind": "qr", "src": "qr/ideas.svg", "title": "Share a project idea", "body": "", "seconds": 10}]
     return {"generated": generated, "slides": out,
             "ideas": [{"title": i["ai_title"], "summary": i["ai_summary"]} for i in ideas if i["ai_title"] and i["ai_summary"]]}
 
@@ -90,8 +90,6 @@ def probe(path):
 def write_qr(qr_slides):
     import segno
     (OUT / "qr").mkdir(parents=True, exist_ok=True)
-    for f in (ROOT / "apps/site/web/qr").glob("*.svg"):
-        shutil.copy(f, OUT / "qr" / f.name)
     for s in qr_slides:
         segno.make(s["url"], error="m").save(OUT / "qr" / f"{s['id']}.svg", kind="svg", scale=10, border=2)
 

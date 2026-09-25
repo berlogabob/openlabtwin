@@ -18,12 +18,12 @@ body { margin: 0; height: 100vh; display: grid; grid-template-columns: 1fr 2fr; 
 #schedule .clock { font-size: 2rem; font-weight: 600; color: var(--fg); font-variant-numeric: tabular-nums; }
 #schedule section { flex: 1; min-height: 0; overflow: hidden; }
 #schedule h2 { margin: 0 0 .5rem; font-size: 1.1rem; letter-spacing: .04em; text-transform: uppercase; }
-article { margin: 0 0 .45rem; padding: .45rem .7rem; background: var(--card); border: 1px solid var(--line); border-radius: 8px; }
+article { margin: 0 0 .45rem; padding: .45rem .7rem; background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; }
 article p { margin: 0; }
 article .time { font-weight: 600; font-variant-numeric: tabular-nums; }
 article .who { color: var(--muted); font-size: .85rem; }
-article.booking { border-left: 4px solid var(--booking); }
-article.event { border-left: 4px solid var(--event); }
+article.booking { border-left-color: var(--booking); }
+article.event { border-left-color: var(--event); }
 article.past { opacity: .4; }
 article.now { box-shadow: 0 0 0 2px var(--accent); }
 .empty { color: var(--muted); }
@@ -99,10 +99,9 @@ function schedule() {
   document.querySelector('footer').textContent = updated ? `updated ${hm(updated)}` : '';
 }
 
-function playlist() {  // 3 random ideas per loop: the AI's anonymous version only
-  const ideas = [...tv.ideas].sort(() => Math.random() - 0.5).slice(0, 3)
-    .map(i => ({ kind: 'idea', when: 'Student idea', title: i.title, body: i.summary, seconds: 12 }));
-  return [...tv.slides, ...ideas];
+function playlist() {  // an 'ideas' page becomes 3 random ideas each loop: the AI's anonymous version only
+  return tv.slides.flatMap(s => s.kind !== 'ideas' ? [s] : [...tv.ideas].sort(() => Math.random() - 0.5).slice(0, 3)
+    .map(i => ({ kind: 'idea', when: 'Student idea', title: i.title, body: i.summary, seconds: s.seconds || 12 })));
 }
 
 function fit() {  // the frame's opening takes the slide's shape, as large as the mat allows

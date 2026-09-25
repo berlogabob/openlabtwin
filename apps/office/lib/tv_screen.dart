@@ -6,7 +6,14 @@ import 'logic.dart';
 
 const tvAddress = 'http://192.168.1.131/tv/';
 const tvFolder = 'smb://192.168.1.131/tv';
-const slideKinds = {'media': 'Video or photo', 'bio': 'Bio', 'qr': 'QR code', 'text': 'Text'};
+const slideKinds = {
+  'media': 'Video or photo',
+  'bio': 'Bio',
+  'qr': 'QR code',
+  'text': 'Text',
+  'events': 'Upcoming events (automatic)',
+  'ideas': '3 random student ideas (automatic)',
+};
 
 String mediaLabel(Rec m) => '${m['name']}${m['playable'] == true ? '' : " (won't play on the TV)"}';
 
@@ -93,16 +100,24 @@ class _TvScreenState extends State<TvScreen> {
                   items: [for (final e in slideKinds.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
                   onChanged: (v) => set(() => kind = v!),
                 ),
-                TextField(
-                  controller: title,
-                  decoration: InputDecoration(
-                    labelText: kind == 'bio'
-                        ? 'Name'
-                        : kind == 'media'
-                        ? 'Caption (optional)'
-                        : 'Title',
+                if (kind == 'events' || kind == 'ideas')
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      kind == 'events' ? 'Plays each approved event of the next 14 days here, one page each.' : "Plays 3 random approved ideas here, in the AI's version, with no names. A new pick every loop.",
+                    ),
+                  )
+                else
+                  TextField(
+                    controller: title,
+                    decoration: InputDecoration(
+                      labelText: kind == 'bio'
+                          ? 'Name'
+                          : kind == 'media'
+                          ? 'Caption (optional)'
+                          : 'Title',
+                    ),
                   ),
-                ),
                 if (kind == 'bio' || kind == 'text')
                   TextField(
                     controller: body,
@@ -137,7 +152,11 @@ class _TvScreenState extends State<TvScreen> {
                 TextField(
                   controller: seconds,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Seconds on screen (videos play to the end)'),
+                  decoration: InputDecoration(
+                    labelText: kind == 'events' || kind == 'ideas'
+                        ? 'Seconds per page'
+                        : 'Seconds on screen (videos play to the end)',
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Wrap(
@@ -179,7 +198,7 @@ class _TvScreenState extends State<TvScreen> {
     final slide = TvSlide(
       id: s.id,
       kind: kind,
-      title: title.text,
+      title: kind == 'events' || kind == 'ideas' ? slideKinds[kind]! : title.text,
       body: kind == 'bio' || kind == 'text' ? body.text : '',
       mediaName: kind == 'media' || kind == 'bio' ? mediaName : null,
       url: kind == 'qr' ? url.text.trim() : '',
@@ -208,7 +227,7 @@ class _TvScreenState extends State<TvScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: list == null ? null : () => _edit(TvSlide(position: list.length)),
         icon: const Icon(Icons.add),
-        label: const Text('Add slide'),
+        label: const Text('Add page'),
       ),
       body: error != null
           ? Center(child: Text(error!))
@@ -220,16 +239,15 @@ class _TvScreenState extends State<TvScreen> {
                   padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
                   child: SelectionArea(
                     child: Text(
-                      'TV: $tvAddress?room=…&room=…   ·   Files: $tvFolder (lab network)\n'
-                      'After your slides the TV adds, by itself: events of the next 14 days, the Book me and '
-                      'Idea hub QR codes, and 3 random approved ideas (AI version, no names). '
-                      'Drag to reorder; the switch turns a slide on or off.',
+                      'The TV plays these pages in this order, then starts again. '
+                      'Drag to reorder, tap to edit, the switch hides a page.\n'
+                      'TV: $tvAddress?room=…&room=…   ·   Files: $tvFolder (lab network)',
                     ),
                   ),
                 ),
                 Expanded(
                   child: list.isEmpty
-                      ? const Center(child: Text('No slides yet.'))
+                      ? const Center(child: Text('No pages yet.'))
                       : ReorderableListView(
                           padding: const EdgeInsets.only(bottom: 88),
                           onReorderItem: _reorder,

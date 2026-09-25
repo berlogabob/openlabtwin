@@ -38,6 +38,9 @@ slides = [
     base | {"id": 7, "position": 4, "kind": "media", "media_name": None},            # file deleted: skipped
     base | {"id": 8, "position": 5, "kind": "qr", "title": "Instagram", "url": "https://instagram.com/x"},
     base | {"id": 9, "position": 6, "kind": "text", "title": "Old", "ends_on": "2026-09-01"},  # expired: skipped
+    base | {"id": 10, "position": 0, "kind": "events", "title": "Upcoming events", "seconds": 8},
+    base | {"id": 11, "position": 7, "kind": "ideas", "title": "Student ideas", "seconds": 12},
+    base | {"id": 12, "position": 8, "kind": "ideas", "title": "Off", "active": False},
 ]
 places = [{"id": 1, "name": "Tech Lab", "iade_name": "Lab. e Estudo de Jogos - Tech Lab (Oriente)", "public": True}]
 fair = {"id": 2, "title": "Open day", "layer": "event", "place_ids": [1], "location_text": None,
@@ -50,12 +53,14 @@ assert events == [{"kind": "event", "title": "Open day", "when": "Fri 2 Oct · 1
 ideas = [{"ai_title": "Micro robot arm", "ai_summary": "An ESP32 arm."}, {"ai_title": None, "ai_summary": None}]
 out = tv.build(slides, media, events, ideas, day, "2026-10-01T10:00:00+01:00")
 kinds = [(s["kind"], s["title"]) for s in out["slides"]]
-assert kinds == [("media", "Robot arm"), ("bio", "Andrey Dyakov"), ("text", "Welcome"), ("qr", "Instagram"),
-                 ("event", "Open day"), ("qr", "Book a consultation"), ("qr", "Share a project idea")], kinds
-arm, bio = out["slides"][0], out["slides"][1]
+assert kinds == [("event", "Open day"), ("media", "Robot arm"), ("bio", "Andrey Dyakov"), ("text", "Welcome"),
+                 ("qr", "Instagram"), ("ideas", "Student ideas")], kinds
+assert out["slides"][0]["seconds"] == 8, "events take their row's seconds"
+assert out["slides"][-1]["seconds"] == 12
+arm, bio = out["slides"][1], out["slides"][2]
 assert arm["src"] == "media/arm.mp4" and arm["video"] and (arm["w"], arm["h"]) == (1920, 1080)
 assert bio["src"] == "media/me.jpg" and not bio["video"]
-assert out["slides"][3]["src"] == "qr/8.svg"
+assert out["slides"][4]["src"] == "qr/8.svg"
 assert out["ideas"] == [{"title": "Micro robot arm", "summary": "An ESP32 arm."}], "normalised ideas only, no names"
 assert tv.build([base | {"id": 1, "position": 0, "kind": "media", "media_name": "a b.mp4"}],
                 [tv.media_row("a b.mp4", 1, h264)], [], [], day, "")["slides"][0]["src"] == "media/a%20b.mp4"

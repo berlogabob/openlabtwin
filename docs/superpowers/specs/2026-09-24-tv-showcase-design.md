@@ -29,6 +29,8 @@ The page is one plain file, `apps/tv/index.html` (HTML, CSS and JavaScript, no b
 
 ## Slides
 
+> Changed 2026-09-25 (Andrey): every page, the automatic ones included, is a row in the office list to reorder, edit or hide. Kinds `events` and `ideas` mark where the events and the 3 random ideas play; the Book me and Idea hub QR codes are ordinary QR rows. Nothing is appended automatically.
+
 The playlist loops in this order:
 
 1. **Manual slides** from the office, by `position`: only active ones, inside their start and end dates, and (for media and bios with a photo) only when the file exists and plays on the TV.

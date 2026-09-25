@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(6);
+select plan(7);
 
 select ok((select bool_and(relrowsecurity) from pg_class where relname in ('tv_media', 'tv_slides')), 'RLS on both TV tables');
 select ok(not has_table_privilege('anon', 'tv_media', 'select') and not has_table_privilege('anon', 'tv_slides', 'select'),
@@ -17,4 +17,6 @@ select throws_like($$ insert into tv_slides (kind, title) values ('qr', 'No link
 select throws_like($$ insert into tv_slides (kind, title, starts_on, ends_on) values ('text', 'x', '2026-10-02', '2026-10-01') $$,
                    '%tv_slides%check%', 'the end date is not before the start date');
 
+select lives_ok($$ insert into tv_slides (kind, title) values ('events', 'Upcoming events'), ('ideas', 'Student ideas') $$,
+                'the automatic pages are rows too');
 select * from finish();
