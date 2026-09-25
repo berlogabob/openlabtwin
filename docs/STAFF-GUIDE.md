@@ -91,7 +91,7 @@ Students drop project ideas at https://berlogabob.github.io/openlabtwin/ideas/. 
   - **Upcoming events (automatic):** each approved event of the next 14 days, one page each, at this place in the loop.
   - **3 random student ideas (automatic):** a new random pick each loop, in the AI's version, with no names.
 
-  - **Event mode**, on any page: **times** (for example 17:00–20:00, on top of the dates), **Full screen** (the page fills the TV and the schedule hides while it plays) and **Takeover** (during its dates and times the TV plays only takeover pages, in a loop, and switches back by itself afterwards; it switches within about a minute of the start and end).
+  - **Event mode**, on any page: **times** (for example 17:00–20:00, on top of the dates), **Full screen** (the page fills the TV and the schedule hides while it plays) and **Takeover** (during its dates and times the TV plays only takeover pages, in a loop, and switches back by itself afterwards; it switches within about a minute of the start and end). A takeover must have an end ("Until" date or time), otherwise it would hold the TV for good.
 
   Each slide has its seconds on screen (default 10), optional start and end dates, and an on/off switch. Drag to reorder. Deleting a file from the folder leaves its slide without media, and the TV skips it.
 - **Starting pages:** the Book me QR code, the Idea hub QR code, Upcoming events and 3 random student ideas. Reorder, edit, hide or delete them like any other page.

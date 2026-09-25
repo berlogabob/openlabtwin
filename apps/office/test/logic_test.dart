@@ -134,6 +134,8 @@ void main() {
       'from_time': '17:00', 'to_time': '20:00', 'fullscreen': true, 'takeover': true,
     });
     expect(TvSlide(kind: 'text', title: 'x', fromTime: '20:00', toTime: '17:00').problem(), contains('end time'));
+    expect(TvSlide(kind: 'text', title: 'x', takeover: true).problem(), contains('needs an end'));
+    expect(TvSlide(kind: 'text', title: 'x', takeover: true, toTime: '20:00').problem(), isNull);
     expect(s.showsOn(DateTime(2026, 10, 1)), isTrue);
     expect(s.showsOn(DateTime(2026, 11, 1)), isFalse);
     expect((s..active = false).showsOn(DateTime(2026, 10, 5)), isFalse);

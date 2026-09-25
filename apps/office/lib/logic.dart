@@ -290,6 +290,9 @@ class TvSlide {
       return 'The link must start with http:// or https://.';
     }
     if (seconds != null && seconds! < 1) return 'Seconds must be at least 1.';
+    if (takeover && endsOn == null && toTime == null) {
+      return 'A takeover needs an end: set "Until" (a date or a time), or it takes over the TV for good.';
+    }
     if (fromTime != null && toTime != null && toTime!.compareTo(fromTime!) <= 0) {
       return 'The end time is before the start time.';
     }
