@@ -81,7 +81,7 @@ def build(slides, media, events, ideas, day, generated, clock=None):
         if s["kind"] == "qr":
             slide["src"] = f"qr/{s['id']}.svg"
         out.append(slide)
-    return {"generated": generated, "takeover": takeover, "slides": out,
+    return {"generated": generated, "takeover": takeover, "playing": describe_playing(live, takeover, len(out)), "slides": out,
             "ideas": [{"title": i["ai_title"], "summary": i["ai_summary"]} for i in ideas if i["ai_title"] and i["ai_summary"]]}
 
 
@@ -90,6 +90,17 @@ def assert_public(tv):
         assert set(s) <= SLIDE_KEYS, f"slide has forbidden keys: {sorted(set(s) - SLIDE_KEYS)}"
     for i in tv["ideas"]:
         assert set(i) == {"title", "summary"}, f"idea has forbidden keys: {sorted(set(i) - {'title', 'summary'})}"
+
+
+def describe_playing(slides, takeover, pages):
+    """What the TV plays now, for the office's status line."""
+    if not takeover:
+        return f"Normal loop: {pages} pages" if pages else "Nothing to play"
+    on = [s for s in slides if s.get("takeover")]
+    names = ", ".join(s["title"] or s["media_name"] or s["kind"] for s in on)
+    until = min((s["to_time"][:5] for s in on if s.get("to_time")), default=None) or \
+        min((s["ends_on"] for s in on if s.get("ends_on")), default=None)
+    return f"Takeover: {names}" + (f" until {until}" if until else "")
 
 
 def probe(path):
@@ -133,7 +144,7 @@ def main():
     tmp.write_text(json.dumps(tv, ensure_ascii=False), encoding="utf-8")
     tmp.replace(OUT / "tv.json")  # atomic: the TV never reads half a file
     heartbeat(db, {"built_at": now.isoformat(), "pages": len(tv["slides"]), "media": len(media), "takeover": tv["takeover"],
-                   "error": None, "error_at": None})
+                   "playing": tv["playing"], "error": None, "error_at": None})
     print(f"media {len(media)}, slides {len(tv['slides'])}, ideas {len(tv['ideas'])}")
 
 

@@ -75,6 +75,7 @@ assert not tv.in_window(moda, day, "16:59") and tv.in_window(moda, day), "no clo
 before = tv.build(slides + [moda], media, events, ideas, day, "", "16:30")
 assert not before["takeover"] and "Moda show" not in [s["title"] for s in before["slides"]], "not yet"
 during = tv.build(slides + [moda], media, events, ideas, day, "17:05")
+assert during["playing"] == "Takeover: Moda show until 20:00" and before["playing"].startswith("Normal loop")
 assert during["takeover"] and during["slides"] == [{"kind": "text", "title": "Moda show", "body": "", "seconds": 10, "full": True}], during
 tv.assert_public(during)
 tv.assert_public(out)
@@ -94,4 +95,6 @@ assert tv.describe_playing([moda | {"title": None, "media_name": "proto.mp4"}, m
     "Takeover: proto.mp4, Poster until 20:00"
 assert tv.describe_playing([reel], False, 7) == "Normal loop: 7 pages"
 assert tv.describe_playing([], False, 0) == "Nothing to play"
+assert tv.describe_playing([moda | {"to_time": None, "ends_on": "2026-10-09"}, moda | {"to_time": None, "ends_on": "2026-10-02"}],
+                           True, 2).endswith("until 2026-10-02"), "the earliest end"
 print("ok playing")

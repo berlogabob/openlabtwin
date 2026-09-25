@@ -315,7 +315,7 @@ class TvSlide {
     return (text: 'TV not updating since ${hm(built)}${failing ? ': ${r!['error']}' : ': is the lab node on?'}', ok: false);
   }
   return (
-    text: 'TV playlist built ${hm(built)} · ${r!['pages']} pages · ${r['media']} files${r['takeover'] == true ? ' · takeover on' : ''}',
+    text: '${r!['playing'] ?? 'TV playlist built'} · built ${hm(built)} · ${r['media']} files',
     ok: true,
   );
 }
