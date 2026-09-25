@@ -1,4 +1,5 @@
-// Lab TV: the lab rooms side by side for today, plus upcoming events. Rooms come from the URL
+// Lab TV (GitHub Pages): the same layout as the edge node's showcase TV. Day and rooms on a top line, today's rooms
+// stacked in the left third, and on the right the Book me and Idea hub QR codes and upcoming events in turn. Rooms come from the URL
 // (?room=A&room=B), default the Tech Lab. Reloads the data every 5 minutes; keeps the last good copy on failure.
 import 'dart:async';
 import 'dart:convert';
@@ -25,6 +26,7 @@ class TvPageState extends State<TvPage> {
   DateTime now = DateTime.now();
   DateTime? loaded;
   Timer? timer;
+  int slide = 0;
 
   @override
   void initState() {
@@ -32,10 +34,13 @@ class TvPageState extends State<TvPage> {
     if (!kIsWeb) return;
     final picked = Filters.parse(web.window.location.search).values['room'] ?? const [];
     if (picked.isNotEmpty) rooms = picked;
-    // Timer starts after the first load: the clock ticks every minute, data reloads every 5.
-    _load().whenComplete(() => timer = Timer.periodic(const Duration(minutes: 1), (t) {
-          setState(() => now = DateTime.now());
-          if (t.tick % 5 == 0) _load();
+    // Timer starts after the first load: a new slide every 10 s, data reloads every 5 minutes.
+    _load().whenComplete(() => timer = Timer.periodic(const Duration(seconds: 10), (t) {
+          setState(() {
+            now = DateTime.now();
+            slide++;
+          });
+          if (t.tick % 30 == 0) _load();
         }));
   }
 
@@ -60,30 +65,39 @@ class TvPageState extends State<TvPage> {
   Component build(BuildContext context) {
     final day = iso(now);
     final clock = '${'${now.hour}'.padLeft(2, '0')}:${'${now.minute}'.padLeft(2, '0')}';
-    final events = lessons
-        .where((l) => l.layer == 'event' && l.date.compareTo(day) >= 0 && l.date.compareTo(shift('day', day, 14)) <= 0)
-        .take(6)
-        .toList();
+    String short(String room) => room.replaceFirst(RegExp(r' \(Oriente\)$'), '');
+    final slides = <({String? src, String when, String title, String body})>[
+      (src: 'qr/book.svg', when: '', title: 'Book time in the lab', body: ''),
+      (src: 'qr/ideas.svg', when: '', title: 'Share a project idea', body: ''),
+      for (final e in lessons.where((l) => l.layer == 'event' && l.date.compareTo(day) >= 0 && l.date.compareTo(shift('day', day, 14)) <= 0))
+        (src: null, when: '${dayName(e.date)} · ${e.start}–${e.end}', title: e.course,
+         body: [e.rooms.join(', '), e.note].where((x) => x.isNotEmpty).join(' · ')),
+    ];
+    final s = slides[slide % slides.length];
     return div(classes: 'tv', [
       header([
-        h1([.text(dayName(day))]),
-        span(classes: 'tv-clock', [.text(clock)]),
+        span(classes: 'tv-day', [.text(dayName(day))]),
+        span(classes: 'tv-room-names', [.text(rooms.map(short).join(' · '))]),
       ]),
-      div(classes: 'tv-rooms', attributes: {'style': '--cols:${rooms.length}'}, [
+      div(classes: 'tv-schedule', [
         for (final room in rooms)
           section([
-            h2([.text(room)]),
+            if (rooms.length > 1) h2([.text(short(room))]), // one room: its name is already on the top line
             ..._today(room, day, clock),
           ]),
       ]),
-      if (events.isNotEmpty)
-        section(classes: 'tv-events', [
-          h2([.text('Upcoming events')]),
-          for (final e in events)
-            p(classes: 'event', [.text('${dayName(e.date)} · ${e.start}–${e.end} · ${e.course}${e.rooms.isEmpty ? '' : ' · ${e.rooms.join(', ')}'}')]),
+      div(classes: 'tv-stage', [
+        div(classes: 'tv-frame', [
+          if (s.src != null) img(src: s.src!, alt: s.title),
+          div(classes: 'text', [
+            if (s.when.isNotEmpty) p(classes: 'when', [.text(s.when)]),
+            h1([.text(s.title)]),
+            if (s.body.isNotEmpty) p(classes: 'body', [.text(s.body)]),
+          ]),
         ]),
+      ]),
       footer([
-        p([.text(loaded == null ? 'Loading…' : 'Updated ${iso(loaded!)} ${'${loaded!.hour}'.padLeft(2, '0')}:${'${loaded!.minute}'.padLeft(2, '0')}')]),
+        p([.text(loaded == null ? 'Loading…' : 'updated ${'${loaded!.hour}'.padLeft(2, '0')}:${'${loaded!.minute}'.padLeft(2, '0')}')]),
       ]),
     ]);
   }
@@ -103,10 +117,9 @@ class TvPageState extends State<TvPage> {
             if (l.start.compareTo(clock) <= 0 && l.end.compareTo(clock) > 0) 'now',
           ].join(' '),
           [
-            p(classes: 'time', [.text('${l.start}–${l.end}')]),
-            p(classes: 'course', [.text(l.course)]),
+            p(classes: 'course', [span(classes: 'time', [.text('${l.start}–${l.end}')]), .text(l.course)]),
             if (l.teachers.isNotEmpty || l.groups.isNotEmpty)
-              p([.text([l.teachers.join(', '), l.groups.join(', ')].where((x) => x.isNotEmpty).join(' · '))]),
+              p(classes: 'who', [.text([l.teachers.join(', '), l.groups.join(', ')].where((x) => x.isNotEmpty).join(' · '))]),
           ],
         ),
       ],

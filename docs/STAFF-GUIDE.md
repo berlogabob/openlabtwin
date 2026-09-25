@@ -78,7 +78,7 @@ Students drop project ideas at https://berlogabob.github.io/openlabtwin/ideas/. 
 
 - **Public schedule:** https://berlogabob.github.io/openlabtwin/. Every filter takes several values (two professors, two rooms). Bookings are blue and events green. A red line marks the current time in the list, day and week views.
 - **Lab TV (showcase):** `http://192.168.1.131/tv/?room=<room>&room=<room>`, on the lab network only (served by the edge node). A top line shows the day (left) and the room names (right); the left third shows the rooms stacked for today, as compact cards (finished items dimmed, the current one outlined, a red line at the current time); the right two thirds play the slides. Room names are the full IADE names from the schedule's Room filter, with spaces as `%20`.
-- **Schedule-only TV:** `…/tv/?room=<room>&room=<room>` on GitHub Pages works on any network, without slides.
+- **Public TV:** `…/tv/?room=<room>&room=<room>` on GitHub Pages works on any network, in the same layout. Its right side cycles only the Book me and Idea hub QR codes and upcoming events (your videos, photos, bios and the ideas live on the node). On a phone it shows the schedule only.
 
 ## The TV slides
 
