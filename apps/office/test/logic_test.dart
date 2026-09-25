@@ -110,6 +110,22 @@ void main() {
     expect(a.toRow().containsKey('status_token'), isFalse);
   });
 
+  test('TV warnings: overlapping takeovers and the same file twice', () {
+    final a = TvSlide(id: 1, kind: 'media', title: 'PROTO26', mediaName: 'proto.mp4', startsOn: DateTime(2026, 9, 25),
+        endsOn: DateTime(2026, 9, 25), fromTime: '17:00', toTime: '20:00', takeover: true);
+    final b = TvSlide(id: 2, kind: 'media', title: 'PROTO26 copy', mediaName: 'proto.mp4', takeover: true); // no window: always
+    final c = TvSlide(id: 3, kind: 'text', title: 'Late', fromTime: '20:00', toTime: '22:00', takeover: true);
+    final d = TvSlide(id: 4, kind: 'text', title: 'Off', takeover: true, active: false);
+    final e = TvSlide(id: 5, kind: 'text', title: 'Tomorrow', startsOn: DateTime(2026, 9, 26), endsOn: DateTime(2026, 9, 26), takeover: true);
+    final w = tvWarnings([a, b, c, d]);
+    expect(w[1], 'overlaps takeover "PROTO26 copy"; same file as "PROTO26 copy"');
+    expect(w[2], 'overlaps takeover "PROTO26"; overlaps takeover "Late"; same file as "PROTO26"');
+    expect(w[3], 'overlaps takeover "PROTO26 copy"', reason: '20:00 end and 20:00 start do not overlap');
+    expect(w.containsKey(4), isFalse, reason: 'a page that is off is ignored');
+    expect(tvWarnings([a, e]), isEmpty, reason: 'different days');
+    expect(tvWarnings([a]), isEmpty);
+  });
+
   test('TV status line from the node heartbeat', () {
     final now = DateTime.parse('2026-09-25T14:03:00Z');
     final good = {'built_at': '2026-09-25T14:02:00Z', 'pages': 1, 'media': 2, 'takeover': true, 'error': null, 'error_at': null,
