@@ -46,6 +46,10 @@ with sync_playwright() as p:
     assert page.locator("#schedule .now-line").count() == 2, "a now line in each room"
     edges = page.eval_on_selector_all("#schedule article", "a => a.map(e => getComputedStyle(e).borderLeftColor)")
     assert edges == ["rgb(179, 38, 30)", "rgb(30, 92, 179)"], f"lessons red, bookings blue: {edges}"
+    look = page.eval_on_selector_all("#schedule article", "a => a.map(e => [getComputedStyle(e).boxShadow, getComputedStyle(e).outlineColor, e.getBoundingClientRect().height])")
+    assert all(x[0] == "none" for x in look), f"no glow: {look}"
+    assert look[1][1] == "rgb(30, 92, 179)", f"the running booking is outlined in its own blue: {look}"
+    assert look[0][2] == look[1][2], "outline adds no height"
     box = page.locator("#frame").bounding_box()
     assert abs(box["width"] / box["height"] - 0.5) < 0.02, f"frame follows the photo's 1:2 shape: {box}"
     aside = page.locator("#schedule").bounding_box()
