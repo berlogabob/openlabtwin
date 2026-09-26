@@ -214,3 +214,310 @@ where key not in (select key from issue_waivers);
 - [ ] **Commit:** "Equipment requests: public catalogue, request and status functions, overdue kits in Needs attention"
 
 ---
+
+### Task 2: The /kit/ request form
+
+- [ ] **Step 1 (pi): create `apps/site/lib/kit.dart`**
+
+```dart
+// Equipment requests (/kit/): the catalogue search, the form's checks (mirroring request_equipment()) and what it sends.
+import 'book.dart';
+import 'schedule.dart' show plain;
+
+const uses = {'class': 'For my class', 'lab': 'Lab work in the Tech Lab', 'home': 'To take home'};
+
+typedef Item = ({int id, String name});
+
+List<Item> catalogue(List<Object?> rows) =>
+    [for (final r in rows.cast<Map<String, dynamic>>()) (id: r['id'] as int, name: r['name'] as String)];
+
+/// Items whose name holds every typed word, ignoring case and accents: "esp dev" finds "ESP32 DevKit".
+List<Item> search(List<Item> items, String q) {
+  final words = [for (final w in plain(q).split(RegExp(r'\s+'))) if (w.isNotEmpty) w];
+  return [for (final i in items) if (words.every(plain(i.name).contains)) i];
+}
+
+/// A local date ("2026-10-20") and time ("14:00") as an instant, or null when either is missing.
+DateTime? localAt(String date, String time) => date.isEmpty || time.isEmpty ? null : DateTime.tryParse('${date}T$time');
+
+/// The first problem with the form, or null. Same rules as request_equipment() in the database.
+String? kitProblem({
+  required String name,
+  required String email,
+  String number = '',
+  required String use,
+  DateTime? start,
+  DateTime? end,
+  String repeatUntil = '',
+  required Map<int, int> picked,
+  String other = '',
+  String course = '',
+}) {
+  final contact = contactProblem(name: name, email: email, number: number);
+  if (contact != null) return contact;
+  if (!uses.containsKey(use)) return 'Say what it is for: a class, lab work or taking it home.';
+  if (start == null || end == null) return 'Pick the date and times.';
+  if (!end.isAfter(start)) return 'The end must be after the start.';
+  if (end.difference(start).inDays > 90) return 'Ask for at most 90 days at a time.';
+  if (repeatUntil.isNotEmpty && use != 'class') return 'Weekly repeats are for classes, up to 6 months.';
+  if (picked.length > 20) return 'At most 20 different items per request.';
+  if (picked.isEmpty && other.trim().length < 3) return 'Pick at least one item, or say what you need.';
+  if (picked.values.any((q) => q < 1 || q > 100)) return 'Quantities are 1–100.';
+  if (other.trim().length > 500 || course.trim().length > 100) {
+    return 'Keep "something else" under 500 characters and the course under 100.';
+  }
+  return null;
+}
+
+/// The arguments of request_equipment().
+Map<String, Object?> requestArgs({
+  required String name,
+  required String email,
+  String number = '',
+  required String use,
+  String course = '',
+  required DateTime start,
+  required DateTime end,
+  String repeatUntil = '',
+  required Map<int, int> picked,
+  String other = '',
+  String website = '',
+}) =>
+    {
+      'p_name': name,
+      'p_email': email,
+      'p_student_number': number,
+      'p_use': use,
+      'p_course': course,
+      'p_starts_at': start.toUtc().toIso8601String(),
+      'p_ends_at': end.toUtc().toIso8601String(),
+      'p_repeat_until': repeatUntil.isEmpty ? null : repeatUntil,
+      'p_items': [for (final e in picked.entries) {'item_id': e.key, 'qty': e.value}],
+      'p_other': other,
+      'p_website': website,
+    };
+```
+
+- [ ] **Step 2 (pi): create `apps/site/lib/pages/kit_page.dart`**
+
+```dart
+// Equipment request form (/kit/): who, what for (class, lab work, take home), when, and a checklist from the lab's
+// catalogue. Optional everywhere else: a booking never needs one. Ends with the private status link, as Book me does.
+import 'package:jaspr/dom.dart';
+import 'package:jaspr/jaspr.dart';
+
+import '../book.dart';
+import '../calendar.dart';
+import '../kit.dart';
+
+@client
+class KitPage extends StatefulComponent {
+  const KitPage({super.key});
+
+  @override
+  State<KitPage> createState() => KitPageState();
+}
+
+class KitPageState extends State<KitPage> {
+  List<Item>? items;
+  final picked = <int, int>{};
+  String name = '', email = '', number = '', use = 'class', course = '', other = '', website = '', q = '';
+  String day = iso(DateTime.now().add(const Duration(days: 1))), from = '10:00', to = '12:00', backDay = '', until = '';
+  String? error, token;
+  bool sending = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (kIsWeb) _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final rows = await rpc('equipment_catalogue', {}) as List;
+      setState(() => items = catalogue(rows));
+    } catch (e) {
+      setState(() => error = 'Could not load the equipment list: $e');
+    }
+  }
+
+  // a take-home loan is picked up and brought back on two days; a class or lab work is one time slot
+  DateTime? get _start => use == 'home' ? localAt(day, '10:00') : localAt(day, from);
+  DateTime? get _end => use == 'home' ? localAt(backDay, '18:00') : localAt(day, to);
+
+  Future<void> _send() async {
+    final problem = kitProblem(
+        name: name, email: email, number: number, use: use, start: _start, end: _end,
+        repeatUntil: use == 'class' ? until : '', picked: picked, other: other, course: course);
+    if (problem != null) return setState(() => error = problem);
+    setState(() {
+      sending = true;
+      error = null;
+    });
+    try {
+      final t = await rpc('request_equipment', requestArgs(
+          name: name, email: email, number: number, use: use, course: course, start: _start!, end: _end!,
+          repeatUntil: use == 'class' ? until : '', picked: picked, other: other, website: website));
+      setState(() => token = t as String);
+    } catch (e) {
+      setState(() => error = '$e'.replaceFirst('Exception: ', ''));
+    } finally {
+      setState(() => sending = false);
+    }
+  }
+
+  Component _field(String caption, String value, void Function(String) set, {InputType type = InputType.text}) =>
+      label([.text(caption), input<String>(type: type, value: value, onInput: (v) => setState(() => set(v)))]);
+
+  Component _item(Item i) {
+    final n = picked[i.id];
+    return div(classes: 'kit-item', [
+      button(
+        type: ButtonType.button,
+        classes: n == null ? 'slot' : 'slot on',
+        onClick: () => setState(() => n == null ? picked[i.id] = 1 : picked.remove(i.id)),
+        [.text(i.name)],
+      ),
+      if (n != null)
+        label([
+          .text('How many'),
+          input<String>(
+            type: InputType.text,
+            value: '$n',
+            attributes: {'inputmode': 'numeric', 'size': '3'},
+            onInput: (v) => setState(() => picked[i.id] = int.tryParse(v.trim()) ?? 0),
+          ),
+        ]),
+    ]);
+  }
+
+  @override
+  Component build(BuildContext context) {
+    final link = token == null ? '' : Uri.base.resolve('status/?t=$token').toString();
+    final shown = items == null ? const <Item>[] : search(items!, q);
+    return div(classes: 'book', [
+      header([
+        h1([a(href: './', [.text('Ask for equipment')])]),
+        nav([a(href: '../', [.text('Schedule')])]),
+      ]),
+      main_([
+        if (token != null)
+          section(classes: 'done', [
+            h2([.text('Request sent')]),
+            p([.text('The lab prepares it once approved. Bookmark this private link to follow it:')]),
+            p([a(href: link, [.text(link)])]),
+          ])
+        else ...[
+          p([.text('Tell the Tech Lab what you need for a class, for lab work, or to take home for a project.')]),
+          div(classes: 'slots', [
+            for (final e in uses.entries)
+              button(type: ButtonType.button, classes: use == e.key ? 'slot on' : 'slot', onClick: () => setState(() => use = e.key),
+                  [.text(e.value)]),
+          ]),
+          div(classes: 'form', [
+            if (use == 'home') ...[
+              _field('Pick up on', day, (v) => day = v, type: InputType.date),
+              _field('Bring back on', backDay, (v) => backDay = v, type: InputType.date),
+            ] else ...[
+              _field('Day', day, (v) => day = v, type: InputType.date),
+              _field('From', from, (v) => from = v, type: InputType.time),
+              _field('To', to, (v) => to = v, type: InputType.time),
+              if (use == 'class') _field('Every week until (optional)', until, (v) => until = v, type: InputType.date),
+            ],
+            _field(use == 'class' ? 'Class or course' : 'Course or project (optional)', course, (v) => course = v),
+          ]),
+          h2([.text('What you need')]),
+          if (items == null && error == null) p(classes: 'empty', [.text('Loading the equipment list…')]),
+          if (items != null) ...[
+            div(classes: 'form', [_field('Search', q, (v) => q = v)]),
+            div(classes: 'kit-list', [for (final i in shown) _item(i)]),
+            if (shown.isEmpty) p(classes: 'empty', [.text('Nothing by that name. Describe it below.')]),
+          ],
+          div(classes: 'form', [
+            label([.text('Something else, or details (optional)'), textarea(rows: 3, onInput: (v) => other = v, [.text(other)])]),
+            _field('Name', name, (v) => name = v),
+            _field('Email', email, (v) => email = v, type: InputType.email),
+            _field('Student number (optional)', number, (v) => number = v),
+            // honeypot: hidden from people, bots fill it in
+            label(classes: 'hp', attributes: {'aria-hidden': 'true'}, [
+              .text('Website'),
+              input<String>(type: InputType.text, value: website, attributes: {'tabindex': '-1', 'autocomplete': 'off'}, onInput: (v) => website = v),
+            ]),
+            p(classes: 'note', [.text('${picked.length} item${picked.length == 1 ? '' : 's'} picked.')]),
+            button(type: ButtonType.button, disabled: sending, onClick: _send, [.text(sending ? 'Sending…' : 'Send request')]),
+            if (error != null) p(classes: 'error', [.text(error!)]),
+            p(classes: 'note', [.text('Your request is saved in your lab history, visible to lab staff only.')]),
+          ]),
+        ],
+      ]),
+    ]);
+  }
+}
+```
+
+- [ ] **Step 3 (pi): create `apps/site/lib/pages/kit_status_page.dart`**
+
+```dart
+// Equipment request status (/kit/status/?t=…): what the private link shows. Its own file: one @client component per file.
+import 'package:jaspr/dom.dart';
+import 'package:jaspr/jaspr.dart';
+import 'package:universal_web/web.dart' as web;
+
+import '../book.dart';
+import '../calendar.dart';
+
+String _time(DateTime d) => '${'${d.hour}'.padLeft(2, '0')}:${'${d.minute}'.padLeft(2, '0')}';
+
+@client
+class KitStatusPage extends StatefulComponent {
+  const KitStatusPage({super.key});
+
+  @override
+  State<KitStatusPage> createState() => KitStatusPageState();
+}
+
+class KitStatusPageState extends State<KitStatusPage> {
+  String? message;
+  List<String> lines = [];
+
+  @override
+  void initState() {
+    super.initState();
+    if (kIsWeb) _load();
+  }
+
+  Future<void> _load() async {
+    final t = Uri.parse(web.window.location.href).queryParameters['t'] ?? '';
+    try {
+      final rows = t.isEmpty ? const [] : await rpc('equipment_status', {'p_token': t}) as List;
+      if (rows.isEmpty) return setState(() => message = 'No request found for this link.');
+      final r = rows.first as Map<String, dynamic>;
+      final start = DateTime.parse(r['starts_at'] as String).toLocal(), end = DateTime.parse(r['ends_at'] as String).toLocal();
+      final when = iso(start) == iso(end)
+          ? '${dayName(iso(start))}, ${_time(start)}–${_time(end)}'
+          : '${dayName(iso(start))} to ${dayName(iso(end))}';
+      setState(() {
+        message = '${statusLabels[r['status']] ?? r['status']} · $when${r['rrule'] == null ? '' : ' · every week'}';
+        lines = [for (final i in (r['items'] as List).cast<Map<String, dynamic>>()) '${i['qty']} × ${i['name']}'];
+      });
+    } catch (e) {
+      setState(() => message = 'Could not load the status: $e');
+    }
+  }
+
+  @override
+  Component build(BuildContext context) => div(classes: 'book', [
+        header([h1([a(href: '../', [.text('Your equipment request')])])]),
+        main_([
+          p(classes: 'status', [.text(message ?? 'Loading…')]),
+          if (lines.isNotEmpty) ul([for (final l in lines) li([.text(l)])]),
+        ]),
+      ]);
+}
+```
+
+- [ ] **Step 4 (controller):** routes `/kit` and `/kit/status` in `apps/site/lib/app.dart`, a "Need equipment?" link on the Book me page, `.kit-list` styles, the QR `apps/site/web/qr/kit.svg` (segno), and tests in `apps/site/test/logic_test.dart`. Then `cd apps/site && dart analyze && dart test && jaspr build`.
+
+- [ ] **Commit:** "Site: /kit/ equipment request form and its private status page"
+
+---

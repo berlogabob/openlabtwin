@@ -2,6 +2,7 @@
 import 'package:site/book.dart';
 import 'package:site/calendar.dart';
 import 'package:site/ideas.dart';
+import 'package:site/kit.dart';
 import 'package:site/schedule.dart';
 import 'package:test/test.dart';
 
@@ -142,5 +143,37 @@ void main() {
     expect(nowIndex(day, '12:10'), 2, reason: 'after the lesson in progress');
     expect(nowIndex(day, '14:00'), 3, reason: 'a lesson starting now has started');
     expect(nowIndex([], '12:00'), 0);
+  });
+
+  test('kit: catalogue search ignores case and accents, every word must match', () {
+    final items = [(id: 1, name: 'ESP32 DevKit'), (id: 2, name: 'Cabo HDMI'), (id: 3, name: 'Ecrãs Samsung')];
+    expect([for (final i in search(items, 'esp dev')) i.id], [1]);
+    expect([for (final i in search(items, 'ecras')) i.id], [3]);
+    expect(search(items, '').length, 3);
+  });
+
+  test('kit: form checks mirror request_equipment()', () {
+    final s = DateTime(2026, 10, 20, 10), e = DateTime(2026, 10, 20, 12);
+    String? check({String use = 'class', DateTime? start, DateTime? end, String until = '', Map<int, int>? picked, String other = ''}) =>
+        kitProblem(name: 'Ana', email: 'ana@example.com', use: use, start: start ?? s, end: end ?? e, repeatUntil: until,
+            picked: picked ?? {1: 12}, other: other);
+    expect(check(), isNull);
+    expect(check(picked: {}, other: 'a soldering station'), isNull);
+    expect(check(picked: {}), contains('at least one'));
+    expect(check(use: 'party'), contains('class, lab work'));
+    expect(check(end: s), contains('after the start'));
+    expect(check(use: 'home', until: '2026-12-01'), contains('Weekly repeats'));
+    expect(check(picked: {1: 0}), contains('1–100'));
+    expect(check(picked: {for (var i = 0; i < 21; i++) i: 1}), contains('20'));
+    expect(localAt('2026-10-20', ''), isNull);
+    expect(localAt('2026-10-20', '14:30'), DateTime(2026, 10, 20, 14, 30));
+  });
+
+  test('kit: the request sends UTC times, the lines and no repeat unless asked', () {
+    final args = requestArgs(name: 'Ana', email: 'a@b.pt', use: 'lab', start: DateTime.utc(2026, 10, 20, 9), end: DateTime.utc(2026, 10, 20, 11),
+        picked: {7: 3});
+    expect(args['p_starts_at'], '2026-10-20T09:00:00.000Z');
+    expect(args['p_items'], [{'item_id': 7, 'qty': 3}]);
+    expect(args['p_repeat_until'], isNull);
   });
 }

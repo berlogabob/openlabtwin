@@ -116,6 +116,7 @@ class BookPageState extends State<BookPage> {
             button(type: ButtonType.button, disabled: sending, onClick: _send, [.text(sending ? 'Sending…' : 'Send request')]),
             if (error != null) p(classes: 'error', [.text(error!)]),
             p(classes: 'note', [.text('Your request is saved in your lab history, visible to lab staff only.')]),
+            p(classes: 'note', [.text('Need equipment for a class, lab work or a project? '), a(href: '../kit/', [.text('Ask for it here')])]),
           ]),
         ],
       ]),

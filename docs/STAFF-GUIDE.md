@@ -82,6 +82,16 @@ The top of the Inventory page lists what to sort out: places never counted (or n
 
 From the Mac, in the repo: `uv run python scripts/labels.py --root R15` (one room and everything in it) or `--assets` for tagged items. It writes `~/Downloads/labels.html`; open it and print at 100 % on A4 (3 × 8 labels).
 
+## Equipment requests (by QR or link)
+
+Anyone with an email can ask for equipment at https://berlogabob.github.io/openlabtwin/kit/ (QR: `apps/site/web/qr/kit.svg`), **for a class** (with "every week until" for a course), **for lab work** in the Tech Lab, or **to take home** for a project. They tick items from the list and quantities, and can describe anything else. It's optional: nothing else in the lab needs it.
+
+- The request arrives in the bookings list as **Equipment**, *requested*, titled Class kit, Lab work or Take-home kit, with the kit already listed and what it's for in **Purpose and notes**. Approve, prepare the lines, then **Issue kit** / **Return kit** as usual.
+- The list only shows items marked **can be requested**: portable items start ticked. Change it on the Inventory page: tap an item.
+- Only lab work appears on the public schedule (it uses the lab). Class kits and take-home kits stay private.
+- A kit still out a day after its booking ended shows in **Needs attention** as *kit not returned*.
+- The requester's private link shows the status, the dates and the items.
+
 ## "Book me": students request consultations by QR
 
 Students scan the QR code (`apps/site/web/qr/book.svg`, served at `…/openlabtwin/qr/book.svg`, ready to print) or open https://berlogabob.github.io/openlabtwin/book/. Students and professors see your free slots for the next 7 days, pick one, and send their name, email and one line saying what they need (3–300 characters). That line lands in **Purpose and notes (private)**; add your own notes there, and a link or student number if it matters.

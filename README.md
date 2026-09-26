@@ -10,6 +10,7 @@ The IADE game lab's system of record: rooms, storage, equipment, people, booking
 | Calendar feed | https://berlogabob.github.io/openlabtwin/calendar/lab.ics |
 | Book a consultation (QR) | https://berlogabob.github.io/openlabtwin/book/ |
 | Share an idea (QR) | https://berlogabob.github.io/openlabtwin/ideas/ |
+| Ask for equipment: class, lab work, take home (QR) | https://berlogabob.github.io/openlabtwin/kit/ |
 | Back office (staff) | https://berlogabob.github.io/openlabtwin/office/ |
 | A storage place (its QR label; staff) | https://berlogabob.github.io/openlabtwin/office/?place=R15-L-S3 |
 

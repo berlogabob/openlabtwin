@@ -61,6 +61,10 @@ The site calls the functions with the anon key, which the Pages build gets from 
 
 To regenerate the printable QR code: `uv run --with segno python -c "import segno; segno.make('https://berlogabob.github.io/openlabtwin/book/', error='m').save('apps/site/web/qr/book.svg', scale=8, border=2)"`.
 
+## Equipment requests
+
+The public `/kit/` form calls `equipment_catalogue()` (names of lendable items only), `request_equipment()` and `equipment_status()`, all security definer and granted to anon, like Book me. Limits: 3 open requests per email, 30 open in total, 1–20 lines, 1–100 each, up to 6 months ahead, at most 90 days, weekly repeats for classes only; a filled honeypot gets a token and stores nothing. `export.py` skips approved equipment bookings with no room (`private_kit`).
+
 ## Idea hub AI
 
 `scripts/ideas_ai.py` runs on the edge node every 15 minutes, as a cron line from `edge-setup.sh`.
