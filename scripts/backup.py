@@ -12,8 +12,9 @@ from pathlib import Path
 
 from db import connect, select
 
-TABLES = ["places", "items", "people", "organizations", "consultation_hours", "activities", "activity_items", "assets", "movements", "lessons",
-          "audit_log"]  # parents before children
+TABLES = ["places", "items", "people", "organizations", "consultation_hours", "activities", "activity_items", "assets", "movements",
+          "issue_waivers", "lessons", "audit_log"]  # parents before children
+ORDER = {"activity_items": "activity_id,item_id", "issue_waivers": "key"}  # tables without an id column
 KEEP = 30
 
 
@@ -29,7 +30,7 @@ def main():
     os.chmod(root, 0o700)
     db = connect()
     for t in TABLES:
-        rows = select(db, t, {"select": "*", "order": "id" if t != "activity_items" else "activity_id,item_id"})
+        rows = select(db, t, {"select": "*", "order": ORDER.get(t, "id")})
         (out / f"{t}.json").write_text(json.dumps(rows, ensure_ascii=False), encoding="utf-8")
         print(f"{t}: {len(rows)}")
     for old in prune([p.name for p in root.iterdir() if p.is_dir() and len(p.name) == 10], KEEP):
