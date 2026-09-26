@@ -40,4 +40,22 @@ for n in range(3):
 inv.asset("Consola PS4 Slim", "LAB-VIT", serial="S0", note="seen twice")
 assert inv.receives() == [("Consola PS4 Slim", "LAB-VIT", 7)], "assets are taken out of the counted line"
 assert len(inv.assets) == 3 and inv.assets["S0"]["note"] == "seen twice", "one asset per serial"
+assert imp.norm("Cabos Ethernet") == imp.norm("cabos  ethernet") == "cabos ethernet" and imp.norm("Ecrãs") == "ecras"
+inv = imp.Inventory()
+inv.line("Cabos ethernet", "LAB-VIT", 22)
+inv.line("Cabos Ethernet", "R15-L-S2", 10)
+assert {l["item"] for l in inv.lines} == {"Cabos ethernet"}, "case-only spellings are one item, the first spelling kept"
+
+inv = imp.Inventory()
+inv.line("Ecrãs Samsung", "R15", 3)
+inv.asset("Ecrãs Samsung", "R15", tag="GS-031")
+inv.asset("Consola PS4 Slim", "LAB-VIT", serial="15-1-2")
+inv.line("Consola PS4 Slim", "LAB-VIT", 1)
+sql = imp.apply_sql(inv)
+assert sql.startswith("do $$ begin if exists"), "the already-imported guard runs first, inside the same transaction"
+assert sql.count("insert into places") == len(imp.PLACES) and sql.count("insert into assets") == 2
+assert sql.count("'receive'") == 3, "one receive per asset plus the 2 untagged screens"
+assert "a.tag = 'GS-031'" in sql and "a.serial = '15-1-2'" in sql, "a TL-numbered asset is found again by its serial"
+assert "insert into assets (item_id, serial," in sql, "no tag column when the database picks the TL number"
+assert imp.lit("O'Neil") == "'O''Neil'" and imp.lit(None) == "null"
 print("ok")

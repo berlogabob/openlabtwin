@@ -1,7 +1,9 @@
 """One-off import of the previous team's spreadsheet (Inventario Tech Lab.xlsx) into places, items, assets and movements.
 
 Usage: uv run python scripts/import_inventory.py <xlsx>            dry run: prints what it would write
-       uv run python scripts/import_inventory.py <xlsx> --apply    writes it (service key); refuses a second run
+       uv run python scripts/import_inventory.py <xlsx> --sql      prints the one transaction --apply would run
+       uv run python scripts/import_inventory.py <xlsx> --apply    runs it (Management API, like sqltest.py); refuses a second run
+Everything is written in one transaction: a dropped connection leaves nothing half-imported.
 The spreadsheet isn't trusted: every place starts with counted_at empty, so it shows as "never counted" in the office
 until someone counts it. Student loan records (PlayStation sheet) are listed, not imported: check them first.
 """
@@ -87,6 +89,12 @@ def tags(identifier):
     return out
 
 
+def norm(name):
+    """The database's items.name_norm rule: lowercase, accents and punctuation gone, so 'Cabos ethernet' == 'Cabos Ethernet'."""
+    t = str(name).lower().translate(str.maketrans("áàâãäéèêëíìîïóòôõöúùûüç", "aaaaaeeeeiiiiooooouuuuc"))
+    return re.sub(r"[^a-z0-9]+", " ", t).strip()
+
+
 def blank(v):
     return v is None or str(v).strip() in {"", "-", "- ", ".-"}
 
@@ -99,15 +107,21 @@ class Inventory:
         self.assets = {}     # tag or serial -> dict(item, place, tag, serial, condition, note)
         self.notes = defaultdict(list)
         self.skipped = []
+        self.spelling = {}   # norm(name) -> the first spelling seen, used for every later one
+
+    def name(self, item):
+        item = re.sub(r"\s+", " ", item).strip()
+        return self.spelling.setdefault(norm(item), item)
 
     def line(self, item, place, n, note=None):
-        item = re.sub(r"\s+", " ", item).strip()
+        item = self.name(item)
         self.lines.append({"item": item, "place": place, "qty": n})
         if note:
             self.notes[item].append(note)
 
     def asset(self, item, place, tag=None, serial=None, condition="ok", note=None):
-        key = tag or serial
+        item, key = self.name(item), tag or serial
+        assert key, f"an asset of {item} needs a tag or a serial"
         a = self.assets.setdefault(key, {"item": item, "place": place, "tag": tag, "serial": None, "condition": condition, "note": None})
         a["serial"] = a["serial"] or serial
         a["note"] = "; ".join(x for x in (a["note"], note) if x) or None
@@ -227,38 +241,54 @@ def report(inv):
             print("  " + s)
 
 
-def apply(inv):
-    from db import connect, request, select
-    db = connect()
-    if select(db, "movements", {"select": "id", "note": f"eq.{NOTE}", "order": "id", "limit": "1"}):
-        sys.exit("Already imported: movements with the import note exist.")
-    back = {"Prefer": "return=representation"}
-    places = {p["code"]: p["id"] for p in select(db, "places", {"select": "id,code", "order": "id"}) if p["code"]}
+def lit(v):
+    return "null" if v is None else "'" + str(v).replace("'", "''") + "'"
+
+
+def apply_sql(inv):
+    """The whole import as one SQL script. Assets without a legacy tag get their TL number from the table default,
+    so their movement finds them again by serial."""
+    out = [f"do $$ begin if exists (select 1 from movements where note = {lit(NOTE)}) then "
+           f"raise exception 'Already imported: movements with the import note exist.'; end if; end $$;"]
     for code, name, tier, parent in PLACES:
-        if code not in places:
-            row = {"code": code, "name": name, "kind": "storage", "tier": tier, "parent_id": places.get(parent)}
-            places[code] = request(db, "POST", "places", {"select": "id"}, row, back)[0]["id"]
+        out.append(f"insert into places (code, name, kind, tier, parent_id) select {lit(code)}, {lit(name)}, 'storage', {lit(tier)}, "
+                   f"(select id from places where code = {lit(parent)}) on conflict (code) do nothing;")
     notes = {i: "; ".join(dict.fromkeys(n)) for i, n in inv.notes.items()}
-    rows = [{"name": i, "kind": k, "note": notes.get(i)} for i, k in inv.kinds().items()]
-    request(db, "POST", "items", {"on_conflict": "name"}, rows, {"Prefer": "resolution=ignore-duplicates"})
-    items = {i["name"]: i["id"] for i in select(db, "items", {"select": "id,name", "order": "id"})}
-    moves = []
+    out.append("insert into items (name, kind, note) values " + ", ".join(
+        f"({lit(i)}, {lit(k)}, {lit(notes.get(i))})" for i, k in inv.kinds().items()) + " on conflict (name) do nothing;")
     for a in inv.assets.values():
-        row = {"item_id": items[a["item"]], "serial": a["serial"], "condition": a["condition"], "note": a["note"]}
-        if a["tag"]:
-            row["tag"] = a["tag"]
-        aid = request(db, "POST", "assets", {"select": "id"}, row, back)[0]["id"]
-        moves.append({"item_id": items[a["item"]], "asset_id": aid, "qty": 1, "to_place": places[a["place"]], "kind": "receive", "note": NOTE})
+        cols, vals = ("tag, ", f"{lit(a['tag'])}, ") if a["tag"] else ("", "")
+        out.append(f"insert into assets (item_id, {cols}serial, condition, note) select id, {vals}{lit(a['serial'])}, "
+                   f"{lit(a['condition'])}, {lit(a['note'])} from items where name = {lit(a['item'])};")
+        find = f"a.tag = {lit(a['tag'])}" if a["tag"] else f"a.serial = {lit(a['serial'])}"
+        out.append(f"insert into movements (item_id, asset_id, qty, to_place, kind, note) select a.item_id, a.id, 1, p.id, 'receive', "
+                   f"{lit(NOTE)} from assets a, places p where {find} and p.code = {lit(a['place'])};")
     for i, p, n in inv.receives():
-        moves.append({"item_id": items[i], "asset_id": None, "qty": n, "to_place": places[p], "kind": "receive", "note": NOTE})
-    request(db, "POST", "movements", None, moves)
-    print(f"wrote {len(moves)} movements")
+        out.append(f"insert into movements (item_id, qty, to_place, kind, note) select i.id, {n}, p.id, 'receive', {lit(NOTE)} "
+                   f"from items i, places p where i.name = {lit(i)} and p.code = {lit(p)};")
+    out.append(f"select (select count(*) from movements where note = {lit(NOTE)}) as movements, "
+               f"(select count(*) from assets) as assets, (select count(*) from places where code is not null) as places;")
+    return "\n".join(out)
+
+
+def apply(inv):
+    import sqltest  # Supabase login (access token), like the migrations
+    rows, err = sqltest.query(apply_sql(inv))
+    if err:
+        sys.exit(f"Nothing written: {err}")
+    want = len(inv.assets) + len(inv.receives())
+    got = rows[0]["movements"]
+    print(f"wrote {got} movements (expected {want}); {rows[0]['assets']} assets, {rows[0]['places']} coded places")
+    if got != want:
+        sys.exit("movement count differs: check the import")
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         sys.exit(__doc__)
     inventory = read_workbook(sys.argv[1])
+    if "--sql" in sys.argv:
+        sys.exit(print(apply_sql(inventory)))
     report(inventory)
     if "--apply" in sys.argv:
         apply(inventory)

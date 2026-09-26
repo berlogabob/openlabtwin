@@ -65,7 +65,7 @@ How the cells are read:
 - Quantities: "11 + 10" → 21, "Varios (100+)" → 100, other text → 1. The original text is kept in the item's note.
 - When a row has more tags than items (device and box tags mixed together), the tags go into the note, to be sorted out at the stocktake.
 
-It runs as a dry run by default. `--apply` writes one receive per asset plus the untagged remainder, and refuses to run a second time.
+It runs as a dry run by default. `--apply` writes one receive per asset plus the untagged remainder, all in one transaction, and refuses to run a second time. Names that differ only in case, accents or punctuation become one item.
 
 **Every place starts uncounted,** so the whole store appears as `never_counted` until someone counts it. That is how the untrusted spreadsheet gets replaced by real counts.
 
