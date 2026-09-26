@@ -31,8 +31,8 @@ Later: **Reject**, **Cancel booking** (removes it from the site), or **Mark done
 
 Save the booking first. Then:
 - **Add equipment:** pick an item, or type a new one, and set the quantity. Tick each line as you prepare it.
-- **Issue kit:** hands the whole list out, from a place (default: fast storage) to a person (default: the requester). If the place doesn't hold enough, you're told what's short and can still go ahead.
-- **Return kit:** takes the whole list back into a place.
+- **Issue kit:** hands the whole list out, from a place (default: Room 15) to a person (default: the requester). Tagged units on that shelf go first, and the office shows which tags before recording anything. If the place doesn't hold enough, you're told what's short and can still go ahead.
+- **Return kit:** takes the whole list back into a place, starting with the tags that person holds.
 
 ## Inventory
 
@@ -55,7 +55,7 @@ For a tagged item (a console, a headset, a lab PC), pick it in **Tagged one** af
 
 ### Places and QR labels
 
-**Places** (tree icon on the Inventory page) lists every room, cabinet, shelf and box, indented, with its code, how many items it holds and when it was last counted. Every place has a QR label. Scanning it with your phone opens that place in the office. Sign in once on the phone; if you scan while signed out, you land on Bookings after signing in, so scan again.
+**Places** (tree icon on the Inventory page) lists every room, cabinet, shelf and box, indented, with its code, how many items it holds and when it was last counted. Every place has a QR label. Scanning it with your phone opens that place in the office. If you're signed out, sign in: the email link opens that same place.
 
 On a place's screen:
 - **what should be here:** each item's quantity (and how many of those are untagged), then the tagged items with their condition. Tap a tagged item to mark it ok, broken or missing;
@@ -69,7 +69,8 @@ On a place's screen:
 The spreadsheet from the previous team isn't trusted, so every place starts as **never counted**. To count one, open it (scan its label) and tap **Count**:
 1. Type how many of each untagged item are really there.
 2. Tick every tagged item you can see. Unticked ones are marked **missing**.
-3. **Save count.** The differences are recorded as adjust movements (marked "stocktake"), and the place shows today's date.
+3. A tagged item that's here but not on the list (recorded on another shelf, still marked as lent, or never placed): type its tag or serial under **Found a tagged item that is not listed?** and tap **Found here**. It's moved here and ticked.
+4. **Save count.** The differences are recorded as adjust movements (marked "stocktake"), and the place shows today's date. A tagged item you didn't find stays in the stock, marked missing, until a later count ticks it.
 
 Something that's here but not on the list: cancel the count, **Record movement** → receive, then count.
 

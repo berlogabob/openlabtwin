@@ -36,7 +36,7 @@ class OfficeApp extends StatelessWidget {
             MediaQuery(data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true), child: child!),
         home: StreamBuilder<AuthState>(
           stream: db.auth.onAuthStateChange,
-          // a QR label opens office/?place=CODE. ponytail: signing in drops the query, so staff stay signed in on their phones
+          // a QR label opens office/?place=CODE (kept through sign-in: the email link returns to it)
           builder: (context, _) => db.auth.currentSession == null
               ? const LoginPage()
               : Uri.base.queryParameters['place'] == null
@@ -63,7 +63,11 @@ class _LoginPageState extends State<LoginPage> {
       await db.auth.signInWithOtp(
         email: email.text.trim().toLowerCase(),
         shouldCreateUser: false, // staff accounts are created by an admin; nobody signs up here
-        emailRedirectTo: Uri.base.replace(query: '', fragment: '').toString().replaceAll(RegExp(r'[?#]+$'), ''),
+        // back to this page, keeping only a scanned ?place= so the email link opens that place
+        emailRedirectTo: Uri.base
+            .replace(queryParameters: {if (Uri.base.queryParameters['place'] != null) 'place': Uri.base.queryParameters['place']!}, fragment: '')
+            .toString()
+            .replaceAll(RegExp(r'[?#]+$'), ''),
       );
       setState(() => message = 'Check your inbox: the link signs you in on this browser.');
     } on AuthException catch (e) {

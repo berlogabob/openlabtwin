@@ -170,6 +170,8 @@ class _PlacePageState extends State<PlacePage> {
   bool counting = false;
   final counts = <int, TextEditingController>{};
   final seen = <int>{};
+  final found = TextEditingController();
+  var _untagged = <int, num>{}; // last computed, for tagging
 
   int get id => place['id'] as int;
 
@@ -297,17 +299,32 @@ class _PlacePageState extends State<PlacePage> {
     );
     if (ok != true || itemId == null) return;
     try {
-      // a new tag for something already counted here: the tag is received, and the untagged count drops by one
       final a = await addAsset(itemId!, tag.text.toUpperCase(), serial.text);
-      await addMovements([
-        movementRow(kind: 'receive', itemId: itemId!, qty: 1, to: id, assetId: a['id'] as int, byStaff: refs.me, note: 'tagged'),
-        movementRow(kind: 'adjust', itemId: itemId!, qty: -1, to: id, byStaff: refs.me, note: 'tagged'),
-      ]);
+      await addMovements(tagRows(itemId!, a['id'] as int, id, _untagged[itemId] ?? 0, byStaff: refs.me));
       refs.assets.add(a);
       if (mounted) say(context, 'Tagged ${a['tag']}. Print its label with scripts/labels.py --assets.');
       _reload();
     } catch (e) {
       if (mounted) say(context, 'Could not tag: $e');
+    }
+  }
+
+  /// Count mode: a tagged unit that is here but recorded elsewhere (or on loan, or nowhere) is brought here and ticked.
+  Future<void> _found(List<Rec> where) async {
+    final typed = found.text.trim();
+    final a = refs.assets.where((a) => a['tag'] == typed.toUpperCase() || a['serial'] == typed).firstOrNull;
+    if (a == null) return say(context, 'No tagged item "$typed". Tag it first (QR button at the top).');
+    try {
+      final rows = foundRows(a, where.where((w) => w['asset_id'] == a['id']).firstOrNull, id, byStaff: refs.me);
+      if (rows.isNotEmpty) await addMovements(rows);
+      found.clear();
+      setState(() {
+        seen.add(a['id'] as int);
+        data = _load();
+      });
+      if (mounted) say(context, rows.isEmpty ? '${a['tag']} is listed here: ticked.' : '${a['tag']} recorded as here (${rows.single['kind']}), ticked.');
+    } catch (e) {
+      if (mounted) say(context, 'Could not record: $e');
     }
   }
 
@@ -358,6 +375,7 @@ class _PlacePageState extends State<PlacePage> {
           final loaded = snap.data;
           if (loaded == null) return const Center(child: CircularProgressIndicator());
           final (total, untagged, tagged) = _here(loaded.$1, loaded.$2);
+          _untagged = untagged;
           return ListView(
             padding: const EdgeInsets.only(bottom: 80),
             children: [
@@ -381,6 +399,15 @@ class _PlacePageState extends State<PlacePage> {
                 const ListTile(
                   dense: true,
                   title: Text('Type what is really here. Tick each tagged item you see; unticked ones are marked missing.'),
+                ),
+              if (counting)
+                ListTile(
+                  title: TextField(
+                    controller: found,
+                    decoration: const InputDecoration(labelText: 'Found a tagged item that is not listed? Its tag or serial'),
+                    onSubmitted: (_) => _found(loaded.$2),
+                  ),
+                  trailing: TextButton(onPressed: () => _found(loaded.$2), child: const Text('Found here')),
                 ),
               if (total.isEmpty && !counting) const ListTile(title: Text('Nothing recorded here.')),
               for (final e in (counting ? untagged : total).entries)

@@ -390,3 +390,59 @@ List<Map<String, dynamic>> countAdjustments(Map<int, num> expected, Map<int, num
         if (e.value != (expected[e.key] ?? 0))
           movementRow(kind: 'adjust', itemId: e.key, qty: e.value - (expected[e.key] ?? 0), to: placeId, byStaff: byStaff, note: 'stocktake')
     ];
+
+/// Tagging one unit here: the tag's receive, plus an untagged −1 only when an untagged one was recorded here.
+/// Otherwise the unit was never recorded, and the receive alone adds it.
+List<Map<String, dynamic>> tagRows(int itemId, int assetId, int placeId, num untaggedHere, {int? byStaff}) => [
+      movementRow(kind: 'receive', itemId: itemId, qty: 1, to: placeId, assetId: assetId, byStaff: byStaff, note: 'tagged'),
+      if (untaggedHere > 0) movementRow(kind: 'adjust', itemId: itemId, qty: -1, to: placeId, byStaff: byStaff, note: 'tagged'),
+    ];
+
+/// A booking's kit, tagged units first: an issue takes the tags on that shelf, a return brings back the tags the person holds;
+/// untagged units make up the rest. assets: id, item_id, tag. where (asset_place): asset_id, place_id, person_id.
+/// Returns the rows and the picked tags, to show before anything is written.
+(List<Map<String, dynamic>>, List<String>) kitRows(String kind, List<Map<String, dynamic>> kit, int? placeId, int? personId,
+    List<Map<String, dynamic>> assets, List<Map<String, dynamic>> where,
+    {int? activityId, int? byStaff}) {
+  final pool = {
+    for (final w in where)
+      if (kind == 'issue' ? placeId != null && w['place_id'] == placeId : personId != null && w['person_id'] == personId) w['asset_id']
+  };
+  final rows = <Map<String, dynamic>>[];
+  final picked = <String>[];
+  for (final k in kit) {
+    final item = k['item_id'] as int;
+    var left = k['qty'] as num;
+    for (final a in assets) {
+      if (left < 1) break;
+      if (a['item_id'] != item || !pool.remove(a['id'])) continue;
+      left -= 1;
+      picked.add(a['tag'] as String);
+      rows.add(movementRow(
+          kind: kind, itemId: item, qty: 1, from: placeId, to: placeId, personId: personId, activityId: activityId, byStaff: byStaff, assetId: a['id'] as int));
+    }
+    if (left > 0) {
+      rows.add(movementRow(kind: kind, itemId: item, qty: left, from: placeId, to: placeId, personId: personId, activityId: activityId, byStaff: byStaff));
+    }
+  }
+  return (rows, picked);
+}
+
+/// Stocktake "found here": a tagged unit seen here but recorded elsewhere comes here. A move from its place, a return from whoever
+/// holds it, or a receive if it was nowhere. Nothing when it is already here. where: its asset_place row, or null.
+List<Map<String, dynamic>> foundRows(Map<String, dynamic> asset, Map<String, dynamic>? where, int placeId, {int? byStaff}) {
+  final from = where?['place_id'] as int?, person = where?['person_id'] as int?;
+  if (from == placeId) return [];
+  return [
+    movementRow(
+        kind: from != null ? 'move' : (person != null ? 'return' : 'receive'),
+        itemId: asset['item_id'] as int,
+        qty: 1,
+        from: from,
+        to: placeId,
+        personId: person,
+        assetId: asset['id'] as int,
+        byStaff: byStaff,
+        note: 'stocktake')
+  ];
+}

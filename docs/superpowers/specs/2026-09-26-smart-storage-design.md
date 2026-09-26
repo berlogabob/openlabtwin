@@ -83,7 +83,7 @@ The PlayStation sheet's student loan records (12 rows) and the one console outsi
   - **Count**: type the real untagged counts and tick each tagged item seen. Saving writes `adjust` rows for the differences (note `stocktake`), marks unticked tagged items missing, and sets `counted_at`;
   - Edit (name, code, parent, tier), add a place inside, tag an item (the next TL number or a legacy tag, with a serial);
   - Record movement, prefilled with this place.
-- **QR link:** `office/?place=CODE` opens that place's screen when signed in. Signing in through the email link drops the query, so a first scan while signed out lands on Bookings. Staff stay signed in on their phones.
+- **QR link:** `office/?place=CODE` opens that place's screen when signed in. Signed out, the sign-in email link returns to the same `?place=`.
 
 ## Labels
 

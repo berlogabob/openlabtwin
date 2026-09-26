@@ -206,4 +206,45 @@ void main() {
     expect(rows.first['note'], 'stocktake');
     expect(rows.first['by_staff'], 5);
   });
+
+  test('tagging: an untagged unit here becomes the tag; nothing untagged here means a new unit', () {
+    expect([for (final r in tagRows(1, 40, 9, 3)) '${r['kind']}:${r['qty']}:${r['asset_id']}'], ['receive:1:40', 'adjust:-1:null']);
+    expect([for (final r in tagRows(1, 40, 9, 0)) r['kind']], ['receive']);
+  });
+
+  test('kit: tagged units on the shelf go first, untagged make up the rest; a return brings back the held tags', () {
+    final assets = [
+      {'id': 1, 'item_id': 7, 'tag': 'TL-0001'},
+      {'id': 2, 'item_id': 7, 'tag': 'TL-0002'},
+      {'id': 3, 'item_id': 7, 'tag': 'TL-0003'},
+      {'id': 4, 'item_id': 7, 'tag': 'TL-0004'},
+    ];
+    final where = [
+      {'asset_id': 1, 'place_id': 9, 'person_id': null},
+      {'asset_id': 2, 'place_id': 9, 'person_id': null},
+      {'asset_id': 3, 'place_id': 9, 'person_id': null},
+      {'asset_id': 4, 'place_id': 5, 'person_id': null}, // on another shelf: not picked
+    ];
+    final (rows, tags) = kitRows('issue', [{'item_id': 7, 'qty': 5}], 9, 20, assets, where, activityId: 3);
+    expect(tags, ['TL-0001', 'TL-0002', 'TL-0003']);
+    expect([for (final r in rows) '${r['qty']}:${r['asset_id']}:${r['from_place']}'], ['1:1:9', '1:2:9', '1:3:9', '2:null:9']);
+    expect(rows.every((r) => r['activity_id'] == 3 && r['person_id'] == 20), isTrue);
+
+    final held = [
+      {'asset_id': 2, 'place_id': null, 'person_id': 20},
+    ];
+    final (back, backTags) = kitRows('return', [{'item_id': 7, 'qty': 2}], 9, 20, assets, held);
+    expect(backTags, ['TL-0002']);
+    expect([for (final r in back) '${r['kind']}:${r['qty']}:${r['asset_id']}:${r['to_place']}'], ['return:1:2:9', 'return:1:null:9']);
+  });
+
+  test('found here: moved from its shelf, returned from a person, received from nowhere, nothing when already here', () {
+    final a = {'id': 40, 'item_id': 7};
+    String kind(Map<String, dynamic>? w) => foundRows(a, w, 9).map((r) => '${r['kind']}:${r['from_place']}:${r['person_id']}').join();
+    expect(kind({'place_id': 5, 'person_id': null}), 'move:5:null');
+    expect(kind({'place_id': null, 'person_id': 20}), 'return:null:20');
+    expect(kind(null), 'receive:null:null');
+    expect(kind({'place_id': 9, 'person_id': null}), '');
+    expect(foundRows(a, null, 9).single['note'], 'stocktake');
+  });
 }

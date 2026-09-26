@@ -23,7 +23,9 @@ The office side is built (2026-09-26); what's left is walking the store with a p
 3. -2 floor: add the racks and shelves from the office (`B2-R1`, `B2-R1-S1`, …), print their labels, count them.
 4. Classroom cupboards `CUP1`–`CUP8`: set each one's room (Edit → Inside) and name.
 5. PlayStation loans: the import listed 12 student loan records and one console outside IADE. Record the ones still out as issue movements (tagged console to the student).
-6. Godot: name each storage node after its place code and read `stock` and `asset_place`.
+6. Godot: name each storage node after its place code and read `stock` and `asset_place`. Staff sign-in is awkward from Godot; the likely route is a node-written LAN JSON of place codes and counts, like `tv.json`.
+7. A tagged item's own QR (`office/?asset=TL-0003`): where it is, who has it, its history, with issue and return from there.
+8. After the first counts, re-tune the duplicate threshold (0.5 flags 21 pairs in the import, about 6 real; 0.6 would flag 14).
 
 ## TV showcase, later
 

@@ -300,7 +300,7 @@ class _BookingFormState extends State<BookingForm> {
 
   /// Issue or return the whole equipment list in one go, as movements linked to this booking.
   Future<void> _kit(String kind) async {
-    int? placeId = [for (final p in refs.places) if (p['tier'] == 'fast') p['id'] as int].firstOrNull;
+    int? placeId = refs.placeByCode('R15')?['id'] as int? ?? [for (final p in refs.places) if (p['tier'] == 'fast') p['id'] as int].firstOrNull;
     int? personId = a.requesterId;
     final ok = await showDialog<bool>(
       context: context,
@@ -312,7 +312,10 @@ class _BookingFormState extends State<BookingForm> {
               value: placeId,
               isExpanded: true,
               hint: Text(kind == 'issue' ? 'From' : 'Back to'),
-              items: [for (final p in refs.places) DropdownMenuItem(value: p['id'] as int, child: Text(p['name'] as String))],
+              items: [
+                for (final (p, depth) in placeTree(refs.places))
+                  DropdownMenuItem(value: p['id'] as int, child: Text('${'  ' * depth}${refs.placeName(p['id'] as int)}')),
+              ],
               onChanged: (v) => set(() => placeId = v),
             ),
             DropdownButton<int?>(
@@ -332,11 +335,22 @@ class _BookingFormState extends State<BookingForm> {
     );
     if (ok != true) return;
     try {
-      final rows = [
-        for (final k in kit)
-          movementRow(
-              kind: kind, itemId: k['item_id'] as int, qty: k['qty'] as num, from: placeId, to: placeId, personId: personId, activityId: a.id, byStaff: refs.me),
-      ];
+      // tagged units first (the ones on that shelf, or the ones this person holds), untagged for the rest
+      final (rows, tags) = kitRows(kind, kit, placeId, personId, refs.assets, await assetPlaces(), activityId: a.id, byStaff: refs.me);
+      if (tags.isNotEmpty && mounted) {
+        final go = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(kind == 'issue' ? 'These tagged units go out' : 'These tagged units come back'),
+            content: Text(tags.join(', ')),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+              FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('OK')),
+            ],
+          ),
+        );
+        if (go != true) return;
+      }
       if (kind == 'issue') {
         final short = shortages(kit, placeId!, await stock(), refs.itemNames);
         if (short.isNotEmpty && mounted) {
