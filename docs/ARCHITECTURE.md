@@ -99,6 +99,7 @@ This follows UNIDCOM RIMS, which learned the hard way that row-level security ha
 | 2 Public site, multi-select filters, lab TV, lab.ics | live |
 | 3 Back office: bookings, approval, equipment, clash warnings | live |
 | 4 Inventory: movements, stock, loans, kit issue/return, stationary clashes | live |
+| Paper loan archive: shared folder on the node, sheets read by a vision model on Studio, staff review in the office, usage and buy-list views, CSV export | built 2026-09-26; waiting for the first sheet photos to tune the prompts |
 | Equipment requests: public /kit/ form (class, lab work, take home), kits filled in, demand warnings, overdue kits in Needs attention | built 2026-09-26 |
 | Smart storage: place codes and QR labels, tagged items, stocktake, Needs attention with merge, spreadsheet import, read-only mirror on the node | built 2026-09-26; first stocktake next ([ROADMAP](ROADMAP.md)) |
 | Book me: consultation requests by QR, private status link, consultation hours, student history | live |

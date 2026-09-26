@@ -93,6 +93,22 @@ Anyone with an email can ask for equipment at https://berlogabob.github.io/openl
 - A kit still out a day after its booking ended shows in **Needs attention** as *kit not returned*.
 - The requester's private link shows the status, the dates and the items.
 
+## The paper loan archive
+
+The old A4 sheets of what students took home become data for statistics, in three steps:
+
+1. **Photograph** each sheet flat, in good light, and drop the photos into the shared folder `smb://192.168.1.131/archive` (on the lab network; Finder → Go → Connect to Server on a Mac, or the Files app on a phone). The same photo twice is read once.
+2. **Wait** up to 15 minutes: the lab computer reads each sheet with the AI on the big PC (about 1–2 minutes a sheet) and fills in its fields.
+3. **Check**: Inventory → **Archive** (scroll icon) lists the sheets to check. Open one: the photo on one side (pinch or scroll to zoom), the fields on the other. Fix what the AI got wrong:
+   - **Student:** picked by student number or name when they're already known; otherwise **New student**.
+   - **Course**, **Out on**, **Back on** (dates as 2019-03-12).
+   - **Lines:** the item as written, the quantity, and the lab item it is (suggested when the name is close). Leave "No item (keep the text)" when it matches nothing: the text is kept, and you can match it later.
+   - **Approve** saves the loans; **Reject** keeps the sheet out of the statistics.
+
+The AI's version is never used without your check. Historic loans don't change today's stock.
+
+**Usage** (chart icon on the Inventory page) shows what was used most (archive and today's loans), what ran out (the most out at once reached what the lab owns: a candidate to buy more of), and use by course.
+
 ## "Book me": students request consultations by QR
 
 Students scan the QR code (`apps/site/web/qr/book.svg`, served at `…/openlabtwin/qr/book.svg`, ready to print) or open https://berlogabob.github.io/openlabtwin/book/. Students and professors see your free slots for the next 7 days, pick one, and send their name, email and one line saying what they need (3–300 characters). That line lands in **Purpose and notes (private)**; add your own notes there, and a link or student number if it matters.

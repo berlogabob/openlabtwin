@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'data.dart';
 import 'logic.dart';
 import 'places.dart';
+import 'archive_screen.dart';
+import 'usage_screen.dart';
 
 void say(BuildContext context, String text) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
 
@@ -268,6 +270,16 @@ class _InventoryPageState extends State<InventoryPage> {
     appBar: AppBar(
       title: const Text('Inventory'),
       actions: [
+        IconButton(
+          tooltip: 'Archive',
+          icon: const Icon(Icons.history_edu),
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => ArchiveScreen(refs: refs))),
+        ),
+        IconButton(
+          tooltip: 'Usage',
+          icon: const Icon(Icons.insights),
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => UsageScreen(refs: refs))),
+        ),
         IconButton(
           tooltip: 'Places',
           icon: const Icon(Icons.account_tree_outlined),

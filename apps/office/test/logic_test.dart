@@ -3,6 +3,40 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:office/logic.dart';
 
 void main() {
+  test('archive person matching prefers student number, then trimmed case-insensitive name', () {
+    final people = [
+      {'id': 1, 'name': 'Ana Silva', 'student_number': 'A-1'},
+      {'id': 2, 'name': 'João Costa', 'student_number': null},
+    ];
+    expect(personFor({'student_number': 'A-1', 'name': 'other'}, people), 1);
+    expect(personFor({'name': '  JOÃO COSTA '}, people), 2);
+    expect(personFor({'name': 'Nobody'}, people), isNull);
+  });
+
+  test('archive loan rows skip blanks, clamp quantity, and validate dates', () {
+    expect(sheetLoans(personId: 4, course: ' Maths ', outOn: '2026-01-02', backOn: '2026-01-03', lines: [
+      {'item_text': ' Arduino ', 'item_id': 8, 'qty': 0},
+      {'item_text': ' ', 'item_id': 9, 'qty': 2},
+    ]), [
+      {'person_id': 4, 'course': 'Maths', 'item_id': 8, 'item_text': 'Arduino', 'qty': 1, 'out_on': '2026-01-02', 'back_on': '2026-01-03'},
+    ]);
+    expect(() => sheetLoans(personId: null, lines: [], outOn: '02/01/2026'), throwsArgumentError);
+    expect(() => sheetLoans(personId: null, lines: [], outOn: '2026-01-03', backOn: '2026-01-02'), throwsArgumentError);
+  });
+
+  test('archive usage totals and buy list sort predictably', () {
+    expect(topItems([
+      {'name': 'A', 'source': 'archive', 'units': 2},
+      {'name': 'A', 'source': 'live', 'units': 3},
+      {'name': 'B', 'source': 'archive', 'units': 4},
+    ]), [(name: 'A', units: 5, archive: 2, live: 3), (name: 'B', units: 4, archive: 4, live: 0)]);
+    expect([for (final r in buyList([
+      {'name': 'B', 'peak': 5, 'owned': 2},
+      {'name': 'A', 'peak': 4, 'owned': 1},
+      {'name': 'C', 'peak': 1, 'owned': 2},
+    ])) r['name']], ['A', 'B']);
+  });
+
   test('weekly rrule round-trips its until date in the local form the export reads', () {
     expect(weeklyRrule(null), isNull);
     expect(weeklyRrule(DateTime(2026, 12, 31)), 'FREQ=WEEKLY;UNTIL=20261231T235959');

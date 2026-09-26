@@ -476,3 +476,75 @@ List<String> demandWarnings(
   }
   return out;
 }
+
+/// Matches an extracted student number first, then the extracted name.
+int? personFor(Map extracted, List<Map<String, dynamic>> people) {
+  final number = extracted['student_number']?.toString().trim();
+  if (number != null && number.isNotEmpty) {
+    for (final p in people) {
+      if (p['student_number']?.toString() == number) return p['id'] as int;
+    }
+  }
+  final name = extracted['name']?.toString().trim().toLowerCase();
+  if (name == null || name.isEmpty) return null;
+  for (final p in people) {
+    if (p['name']?.toString().trim().toLowerCase() == name) return p['id'] as int;
+  }
+  return null;
+}
+
+/// Converts edited sheet lines to the JSON shape accepted by approve_sheet.
+List<Map<String, dynamic>> sheetLoans({required int? personId, String? course, String? outOn, String? backOn, required List<Map<String, dynamic>> lines}) {
+  final out = _archiveDate(outOn, 'Out on');
+  final back = _archiveDate(backOn, 'Back on');
+  if (out != null && back != null && back.compareTo(out) < 0) throw ArgumentError('Back on must not be before out on.');
+  return [
+    for (final line in lines)
+      if (line['item_text']?.toString().trim().isNotEmpty == true)
+        {
+          'person_id': personId,
+          'course': course?.trim(),
+          'item_id': line['item_id'],
+          'item_text': line['item_text'].toString().trim(),
+          'qty': _quantity(line['qty']),
+          'out_on': out,
+          'back_on': back,
+        },
+  ];
+}
+
+num _quantity(Object? value) {
+  final n = value is num ? value : num.tryParse('$value') ?? 1;
+  return n < 1 ? 1 : n;
+}
+
+String? _archiveDate(String? value, String label) {
+  final s = value?.trim() ?? '';
+  if (s.isEmpty) return null;
+  final parsed = DateTime.tryParse(s);
+  if (parsed == null || !RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(s) || isoDate(parsed) != s) {
+    throw ArgumentError('$label must be a real date in YYYY-MM-DD format.');
+  }
+  return s;
+}
+
+/// Totals usage by item, retaining archive and live units separately.
+List<({String name, num units, num archive, num live})> topItems(List<Map<String, dynamic>> usageRows, {int n = 10}) {
+  final totals = <String, ({num units, num archive, num live})>{};
+  for (final row in usageRows) {
+    final name = row['name'].toString(), units = row['units'] as num;
+    final old = totals[name] ?? (units: 0, archive: 0, live: 0);
+    totals[name] = (units: old.units + units, archive: old.archive + (row['source'] == 'archive' ? units : 0), live: old.live + (row['source'] == 'live' ? units : 0));
+  }
+  final rows = [for (final e in totals.entries) (name: e.key, units: e.value.units, archive: e.value.archive, live: e.value.live)];
+  rows.sort((a, b) => b.units == a.units ? a.name.compareTo(b.name) : b.units.compareTo(a.units));
+  return rows.take(n < 0 ? 0 : n).toList();
+}
+
+/// Returns items whose recorded peak reached the current owned quantity.
+List<Map<String, dynamic>> buyList(List<Map<String, dynamic>> peaks) => [...peaks.where((r) => (r['peak'] as num) >= (r['owned'] as num))]
+  ..sort((a, b) {
+    final left = (a['peak'] as num) - (a['owned'] as num);
+    final right = (b['peak'] as num) - (b['owned'] as num);
+    return right == left ? a['name'].toString().compareTo(b['name'].toString()) : right.compareTo(left);
+  });

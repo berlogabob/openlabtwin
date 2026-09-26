@@ -27,6 +27,13 @@ The office side is built (2026-09-26); what's left is walking the store with a p
 7. A tagged item's own QR (`office/?asset=TL-0003`): where it is, who has it, its history, with issue and return from there.
 8. After the first counts, re-tune the duplicate threshold (0.5 flags 21 pairs in the import, about 6 real; 0.6 would flag 14).
 
+## Paper loan archive: first sheets
+
+1. Photograph 3–5 real sheets and read them with `scripts/archive_ocr.py --file` (from the Mac with the Studio settings, or on the node). Compare field by field with the paper, tune `PROMPT_READ` / `PROMPT_FIELDS`, and note the accuracy for the thesis.
+2. On the node: `git pull`, run `edge-setup.sh` (the `archive` share and the 15-minute job), then drop the photos in.
+3. Check the first sheets in the office; match unmatched lines to items as the catalogue grows.
+4. Export the statistics for the thesis: `scripts/usage_export.py`.
+
 ## TV showcase, later
 
 - **"Play now" button in the office:** tell the TV to reload within seconds after a change (today: within a minute).

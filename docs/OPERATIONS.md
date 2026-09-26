@@ -136,6 +136,7 @@ Anything new that must be public goes through `export.py`: add it to the explici
 | Site logic (filters, calendar maths) | `cd apps/site && dart analyze && dart test` | yes |
 | Office logic (repeats, clashes, movements, place codes and tree, stocktake) | `cd apps/office && flutter analyze && flutter test` | yes |
 | Browser, end to end | Playwright with system Chrome: `uv run --with playwright python …` | no |
+| Paper archive in the office (a fictional sheet → Archive → approve → loans → Usage) | the same office build and server, then `set -a; . ./.env; set +a; uv run --with playwright python tests/e2e_archive.py` (throwaway rows and photo, removed at the end) | no |
 | Smart storage in the office (QR link through sign-in, count, found here, kit with a tag, merge) | office built with `E2E=true` and served at `127.0.0.1:8765/openlabtwin/office/`, then `set -a; . ./.env; set +a; uv run --with playwright python tests/e2e_storage.py` (throwaway rows, removed at the end) | no |
 
 For browser tests of the office, build it with `--dart-define=E2E=true`. To open a place's screen, give the admin link a `redirect_to` ending in `?place=CODE`; the stocktake's count boxes are named "Count of <item>". That turns on Flutter's accessibility tree, which Playwright reads. Sign in with an admin-generated link (`POST /auth/v1/admin/generate_link`, type `magiclink`), so no email is needed. Wait about 400 ms after focusing a field before typing: Flutter drops keys typed too early.

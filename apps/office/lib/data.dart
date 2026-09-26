@@ -189,6 +189,27 @@ Future<void> waiveIssue(String key, int? staffId) => db.from('issue_waivers').in
 /// Soft merge (merge_items): the losers' stock, tagged items and kit lines move to the survivor; the losers stay, hidden.
 Future<void> mergeItems(int survivor, List<int> losers) => db.rpc('merge_items', params: {'p_survivor': survivor, 'p_losers': losers});
 
+// ---------- paper loan archive ----------
+
+Future<List<Rec>> archiveSheets() => db
+    .from('archive_sheets')
+    .select('id,file_name,image_path,photo_at,raw_text,extracted,status,error,created_at')
+    .order('id');
+
+Future<String> archiveImageUrl(String path) => db.storage.from('archive').createSignedUrl(path, 3600);
+
+Future<List<Rec>> matchItem(String text) async => [for (final r in await db.rpc('match_item', params: {'p_text': text}) as List) r as Rec];
+
+Future<void> approveSheet(int id, List<Rec> loans) => db.rpc('approve_sheet', params: {'p_sheet': id, 'p_loans': loans});
+
+Future<void> setStudentNumber(int personId, String number) => db.from('people').update({'student_number': number}).eq('id', personId);
+
+Future<void> rejectSheet(int id) => db.from('archive_sheets').update({'status': 'rejected'}).eq('id', id);
+
+Future<List<Rec>> usageByItem() => db.from('usage_by_item').select();
+Future<List<Rec>> usageByCourse() => db.from('usage_by_course').select();
+Future<List<Rec>> peakOnLoan() => db.from('peak_on_loan').select();
+
 // ---------- book me ----------
 
 Future<List<Rec>> consultationHours() =>
