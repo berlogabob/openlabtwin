@@ -152,6 +152,8 @@ Map<String, dynamic> movementRow({
   int? personId,
   int? activityId,
   int? byStaff,
+  int? assetId,
+  String? note,
 }) {
   var problem = switch (kind) {
     'receive' => to == null ? 'Pick where it goes.' : null,
@@ -164,6 +166,7 @@ Map<String, dynamic> movementRow({
   };
   if (problem == null && kind == 'adjust' && qty == 0) problem = 'A correction of 0 changes nothing.';
   if (problem == null && kind != 'adjust' && qty <= 0) problem = 'Quantity must be more than 0.';
+  if (problem == null && assetId != null && qty.abs() != 1) problem = 'A tagged item moves one at a time (quantity 1).';
   if (problem != null) throw ArgumentError(problem);
   return {
     'kind': kind,
@@ -174,6 +177,8 @@ Map<String, dynamic> movementRow({
     'person_id': const {'issue', 'return'}.contains(kind) ? personId : null,
     'activity_id': activityId,
     'by_staff': byStaff,
+    'asset_id': assetId,
+    'note': note,
   };
 }
 
@@ -346,3 +351,42 @@ Map<int, String> tvWarnings(List<TvSlide> slides) {
         s.id!: m.join('; '),
   };
 }
+
+// ---------- smart storage ----------
+
+final _code = RegExp(r'^[A-Z0-9]+(-[A-Z0-9]+)*$');
+
+/// Place codes are capitals, digits and dashes (R15-L-S3): the database's check, before the round trip.
+bool validCode(String code) => _code.hasMatch(code);
+
+/// Places parents first, each with its depth; siblings by code, then name. A place whose parent is missing is a root.
+List<(Map<String, dynamic>, int)> placeTree(List<Map<String, dynamic>> places) {
+  final ids = {for (final p in places) p['id']};
+  final kids = <Object?, List<Map<String, dynamic>>>{};
+  for (final p in places) {
+    kids.putIfAbsent(ids.contains(p['parent_id']) ? p['parent_id'] : null, () => []).add(p);
+  }
+  String key(Map<String, dynamic> p) => '${p['code'] ?? '~'} ${p['name']}';
+  final out = <(Map<String, dynamic>, int)>[];
+  final seen = <Object?>{};
+  void walk(Object? parent, int depth) {
+    for (final p in (kids[parent] ?? <Map<String, dynamic>>[])..sort((a, b) => key(a).compareTo(key(b)))) {
+      if (!seen.add(p['id'])) continue;
+      out.add((p, depth));
+      walk(p['id'], depth + 1);
+    }
+  }
+
+  walk(null, 0);
+  // a parent loop: show those places at the top rather than lose them
+  out.addAll([for (final p in places) if (!seen.contains(p['id'])) (p, 0)]);
+  return out;
+}
+
+/// Stocktake: one 'adjust' row per counted item whose count differs from what the place should hold.
+/// expected and counted map item id -> quantity (untagged only; tagged items are ticked one by one).
+List<Map<String, dynamic>> countAdjustments(Map<int, num> expected, Map<int, num> counted, int placeId, {int? byStaff}) => [
+      for (final e in counted.entries)
+        if (e.value != (expected[e.key] ?? 0))
+          movementRow(kind: 'adjust', itemId: e.key, qty: e.value - (expected[e.key] ?? 0), to: placeId, byStaff: byStaff, note: 'stocktake')
+    ];

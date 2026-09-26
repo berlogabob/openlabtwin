@@ -2231,10 +2231,13 @@ class _PlacePageState extends State<PlacePage> {
                   trailing: counting
                       ? SizedBox(
                           width: 80,
-                          child: TextField(
-                            controller: counts[e.key],
-                            textAlign: TextAlign.end,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          child: Semantics(
+                            label: 'Count of ${refs.itemNames[e.key] ?? 'item ${e.key}'}',
+                            child: TextField(
+                              controller: counts[e.key],
+                              textAlign: TextAlign.end,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            ),
                           ),
                         )
                       : Text('${e.value}', style: Theme.of(context).textTheme.titleMedium),

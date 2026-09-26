@@ -51,6 +51,36 @@ The **Inventory** button (box icon, top bar) shows every item: how many are in e
 
 Movements are never edited or deleted. Fix a mistake with an **adjust**, so the history stays true. It's also what the thesis measures.
 
+For a tagged item (a console, a headset, a lab PC), pick it in **Tagged one** after the item: it moves on its own, quantity 1, and the office then knows exactly where that one is or who has it.
+
+### Places and QR labels
+
+**Places** (tree icon on the Inventory page) lists every room, cabinet, shelf and box, indented, with its code, how many items it holds and when it was last counted. Every place has a QR label. Scanning it with your phone opens that place in the office. Sign in once on the phone; if you scan while signed out, you land on Bookings after signing in, so scan again.
+
+On a place's screen:
+- **what should be here:** each item's quantity (and how many of those are untagged), then the tagged items with their condition. Tap a tagged item to mark it ok, broken or missing;
+- **Record movement** starts from this place;
+- **Edit** (pencil) changes the name, code, tier or where it sits. Don't change a code once its label is printed: the label and the Godot twin both use it;
+- **Add a place inside** (folder icon), for example the racks and shelves on the -2 floor: `B2-R1`, then `B2-R1-S1`;
+- **Tag an item** (QR icon): give one of the items here a tag. Leave the tag empty for the next `TL-` number, or type its old tag (`GS-031`). Then print its label.
+
+### Stocktake: count a place
+
+The spreadsheet from the previous team isn't trusted, so every place starts as **never counted**. To count one, open it (scan its label) and tap **Count**:
+1. Type how many of each untagged item are really there.
+2. Tick every tagged item you can see. Unticked ones are marked **missing**.
+3. **Save count.** The differences are recorded as adjust movements (marked "stocktake"), and the place shows today's date.
+
+Something that's here but not on the list: cancel the count, **Record movement** → receive, then count.
+
+### Needs attention
+
+The top of the Inventory page lists what to sort out: places never counted (or not for 6 months), stock below zero, broken or missing tagged items, and items that look like the same thing under two names ("Cabo HDMI" / "Cabos HDMI"). Tap a place issue to open the place. For a pair of names, **Merge** keeps the name you pick and moves everything to it; **Not the same** hides the pair. **Dismiss** hides any other issue.
+
+### Printing labels
+
+From the Mac, in the repo: `uv run python scripts/labels.py --root R15` (one room and everything in it) or `--assets` for tagged items. It writes `~/Downloads/labels.html`; open it and print at 100 % on A4 (3 × 8 labels).
+
 ## "Book me": students request consultations by QR
 
 Students scan the QR code (`apps/site/web/qr/book.svg`, served at `…/openlabtwin/qr/book.svg`, ready to print) or open https://berlogabob.github.io/openlabtwin/book/. Students and professors see your free slots for the next 7 days, pick one, and send their name, email and one line saying what they need (3–300 characters). That line lands in **Purpose and notes (private)**; add your own notes there, and a link or student number if it matters.

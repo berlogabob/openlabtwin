@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'bookings.dart';
 import 'data.dart';
+import 'places.dart';
 
 const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
 const supabaseKey = String.fromEnvironment('SUPABASE_ANON_KEY'); // public by design: anon has no grants, RLS decides
@@ -35,7 +36,12 @@ class OfficeApp extends StatelessWidget {
             MediaQuery(data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true), child: child!),
         home: StreamBuilder<AuthState>(
           stream: db.auth.onAuthStateChange,
-          builder: (context, _) => db.auth.currentSession == null ? const LoginPage() : const BookingsPage(),
+          // a QR label opens office/?place=CODE. ponytail: signing in drops the query, so staff stay signed in on their phones
+          builder: (context, _) => db.auth.currentSession == null
+              ? const LoginPage()
+              : Uri.base.queryParameters['place'] == null
+                  ? const BookingsPage()
+                  : PlaceLinkPage(code: Uri.base.queryParameters['place']!),
         ),
       );
 }

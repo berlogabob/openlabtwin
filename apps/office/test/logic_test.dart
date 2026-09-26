@@ -61,7 +61,12 @@ void main() {
 
   test('movement rows follow the database shape rule and null the fields a kind does not use', () {
     expect(movementRow(kind: 'receive', itemId: 1, qty: 10, from: 3, to: 2),
-        {'kind': 'receive', 'item_id': 1, 'qty': 10, 'from_place': null, 'to_place': 2, 'person_id': null, 'activity_id': null, 'by_staff': null});
+        {
+          'kind': 'receive', 'item_id': 1, 'qty': 10, 'from_place': null, 'to_place': 2, 'person_id': null, 'activity_id': null, 'by_staff': null,
+          'asset_id': null, 'note': null,
+        });
+    expect(movementRow(kind: 'issue', itemId: 1, qty: 1, from: 2, personId: 7, assetId: 40)['asset_id'], 40);
+    expect(() => movementRow(kind: 'receive', itemId: 1, qty: 2, to: 2, assetId: 40), throwsArgumentError);
     expect(movementRow(kind: 'issue', itemId: 1, qty: 2, from: 2, to: 9, personId: 7, activityId: 5)['to_place'], isNull);
     expect(movementRow(kind: 'adjust', itemId: 1, qty: -3, to: 2)['qty'], -3);
     for (final bad in [
@@ -169,5 +174,36 @@ void main() {
     expect(TvSlide(kind: 'bio').problem(), contains('name'));
     expect(TvSlide(kind: 'text', title: 'x', startsOn: DateTime(2026, 10, 2), endsOn: DateTime(2026, 10, 1)).problem(),
         contains('end date'));
+  });
+
+  test('place codes follow the database rule', () {
+    for (final ok in ['R15', 'R15-L-S3', 'B2-R1-S4', 'CUP1']) {
+      expect(validCode(ok), isTrue, reason: ok);
+    }
+    for (final bad in ['r15', 'R15 L', 'R15--L', '-R15', 'R15-', '']) {
+      expect(validCode(bad), isFalse, reason: bad);
+    }
+  });
+
+  test('place tree: parents first with depth, siblings by code, orphans and loops kept', () {
+    final places = [
+      {'id': 3, 'code': 'R15-L-S1', 'name': 'Shelf 1', 'parent_id': 2},
+      {'id': 2, 'code': 'R15-L', 'name': 'Left', 'parent_id': 1},
+      {'id': 1, 'code': 'R15', 'name': 'Room 15', 'parent_id': null},
+      {'id': 4, 'code': 'B2', 'name': '-2 floor', 'parent_id': null},
+      {'id': 5, 'code': null, 'name': 'Orphan', 'parent_id': 99},
+      {'id': 6, 'code': 'X', 'name': 'Loop a', 'parent_id': 7},
+      {'id': 7, 'code': 'Y', 'name': 'Loop b', 'parent_id': 6},
+    ];
+    expect([for (final (p, d) in placeTree(places)) '${p['id']}:$d'], ['4:0', '1:0', '2:1', '3:2', '5:0', '6:0', '7:0']);
+  });
+
+  test('stocktake: adjust rows for the differences only, marked as stocktake', () {
+    final rows = countAdjustments({1: 10, 2: 4}, {1: 8, 2: 4, 3: 1}, 9, byStaff: 5);
+    expect([for (final r in rows) '${r['item_id']}:${r['qty']}'], ['1:-2', '3:1']);
+    expect(rows.first['kind'], 'adjust');
+    expect(rows.first['to_place'], 9);
+    expect(rows.first['note'], 'stocktake');
+    expect(rows.first['by_staff'], 5);
   });
 }

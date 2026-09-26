@@ -19,23 +19,31 @@ typedef Rec = Map<String, dynamic>;
 
 /// Reference lists the pages need, loaded once per page.
 class Refs {
-  Refs(this.places, this.people, this.orgs, this.items, this.me);
-  final List<Rec> places, people, orgs, items;
+  Refs(this.places, this.people, this.orgs, this.items, this.assets, this.me);
+  final List<Rec> places, people, orgs, items, assets;
   final int? me; // the signed-in staff member's people.id
   List<Rec> get rooms => [for (final p in places) if (p['kind'] == 'room') p];
   Map<int, String> get itemNames => {for (final i in items) i['id'] as int: i['name'] as String};
+  Rec? placeByCode(String code) => places.where((p) => p['code'] == code).firstOrNull;
+  String placeName(int? id) {
+    final p = places.where((p) => p['id'] == id).firstOrNull;
+    return p == null ? '?' : (p['code'] == null ? p['name'] as String : '${p['code']} · ${p['name']}');
+  }
 }
 
 Future<Refs> loadRefs() async {
   final r = await Future.wait([
-    db.from('places').select('id,name,iade_name,kind,tier').order('name'),
+    db.from('places').select(placeCols).order('name'),
     db.from('people').select('id,name,kind,email').order('name'),
     db.from('organizations').select('id,name').order('name'),
-    db.from('items').select('id,name,kind').order('name'),
+    db.from('items').select('id,name,kind,note').isFilter('merged_into', null).order('name'),
+    db.from('assets').select('id,item_id,tag,serial,condition').order('tag'),
     db.from('people').select('id').eq('auth_user_id', db.auth.currentUser!.id).maybeSingle(),
   ]);
-  return Refs(r[0] as List<Rec>, r[1] as List<Rec>, r[2] as List<Rec>, r[3] as List<Rec>, (r[4] as Rec?)?['id'] as int?);
+  return Refs(r[0] as List<Rec>, r[1] as List<Rec>, r[2] as List<Rec>, r[3] as List<Rec>, r[4] as List<Rec>, (r[5] as Rec?)?['id'] as int?);
 }
+
+const placeCols = 'id,name,iade_name,kind,tier,parent_id,code,counted_at';
 
 /// Upcoming activities, plus repeating ones that started earlier.
 Future<List<Activity>> upcoming() async {
@@ -118,6 +126,34 @@ Future<List<Rec>> onLoan() => db.from('on_loan').select('item_id,person_id,qty')
 
 /// Movements are append-only: a mistake is corrected with an 'adjust' row, never edited.
 Future<void> addMovements(List<Rec> rows) => db.from('movements').insert(rows);
+
+// ---------- smart storage ----------
+
+/// Where each tagged item is now (its latest movement): place_id, or person_id while on loan.
+Future<List<Rec>> assetPlaces() => db.from('asset_place').select('asset_id,place_id,person_id');
+
+/// Everything in Needs attention (view storage_issues), waived ones already left out.
+Future<List<Rec>> storageIssues() => db.from('storage_issues').select('code,a_id,b_id,detail,key').order('code').order('detail');
+
+Future<Rec> savePlace(Rec row, int? id) => id == null
+    ? db.from('places').insert(row).select(placeCols).single()
+    : db.from('places').update(row).eq('id', id).select(placeCols).single();
+
+Future<void> markCounted(int placeId) =>
+    db.from('places').update({'counted_at': DateTime.now().toUtc().toIso8601String()}).eq('id', placeId);
+
+Future<Rec> addAsset(int itemId, String tag, String serial) => db
+    .from('assets')
+    .insert({'item_id': itemId, if (tag.trim().isNotEmpty) 'tag': tag.trim(), 'serial': serial.trim().isEmpty ? null : serial.trim()})
+    .select('id,item_id,tag,serial,condition')
+    .single();
+
+Future<void> updateAssets(List<int> ids, Rec change) => db.from('assets').update(change).inFilter('id', ids);
+
+Future<void> waiveIssue(String key, int? staffId) => db.from('issue_waivers').insert({'key': key, 'by_staff': staffId});
+
+/// Soft merge (merge_items): the losers' stock, tagged items and kit lines move to the survivor; the losers stay, hidden.
+Future<void> mergeItems(int survivor, List<int> losers) => db.rpc('merge_items', params: {'p_survivor': survivor, 'p_losers': losers});
 
 // ---------- book me ----------
 
