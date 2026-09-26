@@ -59,13 +59,14 @@ else echo "  only ${RAM_GB} GB RAM: ornith (about 8 GB) won't fit comfortably. I
 step "7/10 first run (sync deps, scrape, export, push if changed, backup)"
 run sh -c "cd '$DIR' && uv sync -q && scripts/publish.sh --scrape && set -a && . ./.env && set +a && uv run python scripts/backup.py && { uv run python scripts/ideas_ai.py || echo '  idea AI not reachable now; cron retries every 15 min'; }"
 
-step "8/10 cron (publish every 10 min, scrape every 6 h, idea AI every 15 min, TV playlist every minute, backup and mirror nightly)"
+step "8/10 cron (publish every 10 min, scrape every 6 h, idea AI every 15 min, TV playlist every minute, archive sheets every 15 min, backup and mirror nightly)"
 CRON="*/10 * * * *  cd $DIR && scripts/publish.sh          >> \$HOME/publish.log 2>&1
 15 */6 * * *  cd $DIR && scripts/publish.sh --scrape >> \$HOME/publish.log 2>&1
 */15 * * * *  cd $DIR && set -a && . ./.env && set +a && $HOME/.local/bin/uv run python scripts/ideas_ai.py >> \$HOME/ideas_ai.log 2>&1
 * * * * *  cd $DIR && set -a && . ./.env && set +a && $HOME/.local/bin/uv run python scripts/tv.py > /dev/null 2>> \$HOME/tv.log
 30 3 * * *    cd $DIR && set -a && . ./.env && set +a && $HOME/.local/bin/uv run python scripts/backup.py >> \$HOME/backup.log 2>&1
-45 3 * * *    cd $DIR && $HOME/.local/bin/uv run python scripts/mirror.py >> \$HOME/mirror.log 2>&1${OLLAMA_BOOT:+
+45 3 * * *    cd $DIR && $HOME/.local/bin/uv run python scripts/mirror.py >> \$HOME/mirror.log 2>&1
+7-59/15 * * * *  cd $DIR && set -a && . ./.env && set +a && $HOME/.local/bin/uv run python scripts/archive_ocr.py >> \$HOME/archive_ocr.log 2>&1${OLLAMA_BOOT:+
 $OLLAMA_BOOT}"
 if [ "$DRY" = 1 ]; then echo "  would install (replacing older openlabtwin lines):"; echo "$CRON" | sed 's/^/    /'
 else { crontab -l 2>/dev/null | grep -v openlabtwin || true; echo "PATH=$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin"; echo "$CRON"; } \
@@ -83,6 +84,11 @@ if command -v systemctl >/dev/null && [ -d /run/systemd/system ]; then run sudo 
 else run sudo service nginx reload; run sudo service smbd start; fi
 if ! grep -q '^\[tv\]' /etc/samba/smb.conf 2>/dev/null; then
   run sh -c "printf '\n[tv]\n   path = $HOME/tv-media\n   valid users = $USER\n   read only = no\n   create mask = 0644\n   directory mask = 0755\n' | sudo tee -a /etc/samba/smb.conf >/dev/null"
+  run sudo service smbd restart
+fi
+run mkdir -p "$HOME/archive/inbox" "$HOME/archive/originals" "$HOME/archive/copies"
+if ! grep -q '^\[archive\]' /etc/samba/smb.conf 2>/dev/null; then  # loan sheet photos: smb://<ip>/archive (scripts/archive_ocr.py)
+  run sh -c "printf '\n[archive]\n   path = $HOME/archive/inbox\n   valid users = $USER\n   read only = no\n   create mask = 0644\n   directory mask = 0755\n   veto files = /._*/.DS_Store/\n   delete veto files = yes\n' | sudo tee -a /etc/samba/smb.conf >/dev/null"
   run sudo service smbd restart
 fi
 if ! grep -q 'veto files = /._\*/.DS_Store/' /etc/samba/smb.conf 2>/dev/null; then  # no Mac litter (._name, .DS_Store) in the share

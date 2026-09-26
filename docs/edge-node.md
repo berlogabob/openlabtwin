@@ -87,6 +87,10 @@ The lab's TV Pi is `192.168.1.194` (maker code `b8:27:eb`: a Pi 3 or older, 1 GB
 
 The Supabase free plan keeps **no** backups. Every night `scripts/backup.py` saves each table as JSON to `~/openlabtwin-backups/YYYY-MM-DD/` and keeps the newest 30 days (about 4 MB a day). The folder is mode 700 and outside the repo because it holds emails. To restore, insert each file's rows back in the order of `TABLES` in `backup.py` (parents first), with the service key.
 
+## Loan sheet archive
+
+Photos of the old A4 loan sheets go into `smb://192.168.1.131/archive` (`~/archive/inbox`, same Samba user as the TV folder). Every 15 minutes `scripts/archive_ocr.py` takes new photos in (turned upright, shrunk to 2000 px, a private copy in the Supabase Storage bucket `archive`, the original moved to `~/archive/originals`, the copy kept in `~/archive/copies`) and asks the vision model on Studio (`ARCHIVE_MODEL`, default `unsloth/gemma-4-26B-A4B-it-qat-GGUF`, with thinking off) to transcribe each sheet and extract its fields. Up to 5 sheets per run; a failed one is retried after 6 hours; the log is `~/archive_ocr.log`. Staff then check each sheet in the office. To try one photo from any machine without writing anything: `set -a; . ./.env; set +a; uv run python scripts/archive_ocr.py --file photo.jpg`. iPhone photos (HEIC) are read too.
+
 ## Mirror
 
 A read-only copy of the database in local Postgres (Debian's `postgresql`, listening on localhost only), database `openlabtwin`. At 03:45, after the backup, `scripts/mirror.py` loads the newest backup folder: every table is dropped and recreated from its JSON (column types from the values), then `stock`, `on_loan` and `asset_place` are recreated. It fails, and logs to `~/mirror.log`, if any row count differs from its file. Setup step 10 installs Postgres, gives `TechLAB` a role and creates the database.
