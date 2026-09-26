@@ -12,7 +12,7 @@ from pathlib import Path
 
 from db import connect, select
 
-TABLES = ["places", "items", "people", "organizations", "consultation_hours", "activities", "activity_items", "movements", "lessons",
+TABLES = ["places", "items", "people", "organizations", "consultation_hours", "activities", "activity_items", "assets", "movements", "lessons",
           "audit_log"]  # parents before children
 KEEP = 30
 

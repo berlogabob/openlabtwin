@@ -20,7 +20,7 @@
 
 ### Task 1: Storage core (places codes, assets, asset_place)
 
-- [ ] **Step 1 (pi): create `supabase/tests/database/04_smart_storage.test.sql`**
+- [ ] **Step 1 (pi): create `supabase/tests/database/07_smart_storage.test.sql`**
 
 ```sql
 begin;
@@ -73,7 +73,7 @@ select * from finish();
 rollback;
 ```
 
-- [ ] **Step 2 (controller):** `uv run python scripts/sqltest.py` → `04_smart_storage` fails (column `code` does not exist).
+- [ ] **Step 2 (controller):** `uv run python scripts/sqltest.py` → `07_smart_storage` fails (column `code` does not exist).
 
 - [ ] **Step 3 (pi): create `supabase/migrations/20260926100000_smart_storage.sql`**
 
@@ -194,7 +194,7 @@ assert backup.TABLES.index("items") < backup.TABLES.index("assets") < backup.TAB
 print("ok")
 ```
 
-- [ ] **Step 6 (controller):** `uv run python scripts/sqltest.py` → `applied 20260926100000_smart_storage.sql`, then ✓ for 01–04. `uv run python tests/test_backup.py` → `ok`.
+- [ ] **Step 6 (controller):** `uv run python scripts/sqltest.py` → `applied 20260926100000_smart_storage.sql`, then ✓ for every test file. `uv run python tests/test_backup.py` → `ok`.
 
 - [ ] **Commit**
 
@@ -210,7 +210,7 @@ Claude-Session: https://claude.ai/code/session_01TArcJAcFxarRo4kv9wMDtk"
 
 ### Task 2: Needs attention (storage_issues, waivers, merge_items)
 
-- [ ] **Step 1 (pi): create `supabase/tests/database/05_storage_quality.test.sql`**
+- [ ] **Step 1 (pi): create `supabase/tests/database/08_storage_quality.test.sql`**
 
 ```sql
 begin;
@@ -250,7 +250,7 @@ select * from finish();
 rollback;
 ```
 
-- [ ] **Step 2 (controller):** `uv run python scripts/sqltest.py` → `05_storage_quality` fails (relation `storage_issues` does not exist).
+- [ ] **Step 2 (controller):** `uv run python scripts/sqltest.py` → `08_storage_quality` fails (relation `storage_issues` does not exist).
 
 - [ ] **Step 3 (pi): create `supabase/migrations/20260926110000_storage_quality.sql`**
 
@@ -332,7 +332,7 @@ revoke all on function merge_items(bigint, bigint[]) from public, anon;
 grant execute on function merge_items(bigint, bigint[]) to authenticated;
 ```
 
-- [ ] **Step 4 (controller):** `uv run python scripts/sqltest.py` → ✓ for 01–05.
+- [ ] **Step 4 (controller):** `uv run python scripts/sqltest.py` → ✓ for every test file.
 
 - [ ] **Commit**
 

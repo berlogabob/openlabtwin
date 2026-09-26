@@ -9,4 +9,5 @@ days = ["2026-09-03", "2026-09-01", "2026-09-02", "2026-09-04"]
 assert backup.prune(days, 2) == ["2026-09-01", "2026-09-02"], "oldest go first"
 assert backup.prune(days, 4) == [] and backup.prune([], 30) == []
 assert backup.TABLES.index("activities") < backup.TABLES.index("activity_items") < backup.TABLES.index("audit_log")
+assert backup.TABLES.index("items") < backup.TABLES.index("assets") < backup.TABLES.index("movements")
 print("ok")
