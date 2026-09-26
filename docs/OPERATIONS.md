@@ -67,7 +67,7 @@ The public `/kit/` form calls `equipment_catalogue()` (names of lendable items o
 
 ## Loan sheet archive
 
-The reader runs on the node ([edge-node.md → Loan sheet archive](edge-node.md#loan-sheet-archive)). The model's output is only a proposal: a sheet becomes loans (`archive_loans`) when staff approve it. The prompts are `PROMPT_READ` and `PROMPT_FIELDS` in `scripts/archive_ocr.py`; tune them on real sheets with `--file`. Studio's OpenAI API needs `chat_template_kwargs.enable_thinking=false` for Gemma 4, or the answer ends up in the reasoning. Loading the vision model on Studio can unload the model pi or the idea AI uses; the next call loads it back (slower once).
+The reader runs on the node ([edge-node.md → Loan sheet archive](edge-node.md#loan-sheet-archive)). The model's output is only a proposal: a sheet becomes loans (`archive_loans`) when staff approve it. The prompts are `PROMPT_READ` and `PROMPT_FIELDS` in `scripts/archive_ocr.py`; tune them on real sheets with `--file`. For the thesis, `uv run python scripts/usage_export.py` writes `usage_by_item.csv`, `usage_by_course.csv` and `peak_on_loan.csv` (counts, no names) to `~/Downloads/openlabtwin-usage-<date>/`; on the node, `psql openlabtwin` has `usage_events` in the mirror. Studio's OpenAI API needs `chat_template_kwargs.enable_thinking=false` for Gemma 4, or the answer ends up in the reasoning. Loading the vision model on Studio can unload the model pi or the idea AI uses; the next call loads it back (slower once).
 
 ## Idea hub AI
 

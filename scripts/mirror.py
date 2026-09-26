@@ -11,7 +11,7 @@ from pathlib import Path
 
 from backup import TABLES
 
-# The views staff use most, over the mirrored tables (same definitions as the migrations).
+# The views staff use most, and usage_events for the thesis queries, over the mirrored tables (same definitions as the migrations).
 VIEWS = """
 create view stock as
   select item_id, place_id, sum(qty) as qty from (
@@ -27,19 +27,29 @@ create view asset_place as
          case when kind in ('issue', 'consume') or (kind = 'adjust' and qty < 0) then null else to_place end as place_id,
          case when kind = 'issue' then person_id end as person_id, at
   from movements where asset_id is not null order by asset_id, at desc, id desc;
+create view usage_events as
+  select 'archive' as source, l.item_id, l.person_id, l.course, l.qty, l.out_on as day, l.back_on
+  from archive_loans l where l.item_id is not null
+  union all
+  select 'live', m.item_id, m.person_id, null, m.qty, (m.at at time zone 'Europe/Lisbon')::date, null
+  from movements m where m.kind = 'issue';
 """
 
 
 # An empty table's JSON has no columns, but the views need these. ponytail: copied from the migrations; keep in step.
 EMPTY = {"movements": '"id" bigint, "item_id" bigint, "qty" numeric, "from_place" bigint, "to_place" bigint, "kind" text, '
-                      '"person_id" bigint, "activity_id" bigint, "by_staff" bigint, "at" timestamptz, "asset_id" bigint, "note" text'}
+                      '"person_id" bigint, "activity_id" bigint, "by_staff" bigint, "at" timestamptz, "asset_id" bigint, "note" text',
+         "archive_loans": '"id" bigint, "sheet_id" bigint, "person_id" bigint, "course" text, "item_id" bigint, "item_text" text, '
+                          '"qty" numeric, "out_on" date, "back_on" date'}
 
 
 def column_type(name, values):
-    """A Postgres type from a column's JSON values. ponytail: guessed from the data; timestamps by the *_at / at naming rule."""
+    """A Postgres type from a column's JSON values. ponytail: guessed from the data; timestamps (*_at, at) and dates (*_on, date) by name."""
     seen = [v for v in values if v is not None]
     if name == "at" or name.endswith("_at"):
         return "timestamptz"
+    if name == "date" or name.endswith("_on"):  # lessons.date, archive_loans.out_on / back_on
+        return "date"
     if not seen:
         return "text"
     if all(isinstance(v, bool) for v in seen):

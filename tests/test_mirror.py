@@ -15,4 +15,6 @@ assert sql.startswith("drop table if exists items cascade;") and '"id" bigint, "
 assert "$jj$" in sql, "the dollar quote never collides with the data"
 assert mirror.table_sql("empty", []).endswith("create table empty ();")
 assert '"to_place" bigint' in mirror.table_sql("movements", []), "an empty movements table still has the columns the views read"
+assert '"out_on" date' in mirror.table_sql("archive_loans", []), "an empty archive_loans still has the columns usage_events reads"
+assert mirror.column_type("out_on", ["2019-03-01"]) == "date" and mirror.column_type("date", [None]) == "date"
 print("ok")
