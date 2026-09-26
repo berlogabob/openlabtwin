@@ -43,6 +43,8 @@ The node, the big PC with Unsloth Studio and the Mac are wired to the lab's ASUS
 
 **Tailscale** (since 2026-09-25, one account): Mac `berlogas-macbook-pro` 100.97.176.12, node `techlab-01` 100.104.12.36, Studio PC `desktop-vdsrh2e` 100.96.84.51. From home: `ssh -i ~/.ssh/techlab TechLAB@techlab-01`, the showcase TV at `http://techlab-01/tv/`, Studio at `http://desktop-vdsrh2e:8888` (same key). The Windows PC needed a firewall rule for Studio on Tailscale (`New-NetFirewallRule -DisplayName "Unsloth Studio (Tailscale)" -Direction Inbound -Protocol TCP -LocalPort 8888 -RemoteAddress 100.64.0.0/10 -Action Allow`).
 
+Checked from home Wi-Fi 2026-09-25: both reachable, but only through Tailscale's relay (DERP Madrid, about 40 ms, no direct connection). Fine for SSH and AI calls, slow for big video copies. SSH by name needs the node's key under that name too, or it fails with "Host key verification failed": `echo "techlab-01 $(ssh-keygen -F 100.104.12.36 | awk 'NR==2{print $2, $3}')" >> ~/.ssh/known_hosts` (reuses the key already stored for the IP). The node resolves `.local` names (avahi, `mdns4_minimal`), so it can be the jump host for lab devices such as the video wall Pis ([videowall](https://github.com/berlogabob/videowall) `docs/pi-setup.md`).
+
 **The Studio PC** (Windows) starts Unsloth Studio at boot: a shortcut in its Startup folder (`shell:startup`), Windows signs in by itself (`netplwiz`), and sleep is off. It must be on for new ideas to be processed; everything else keeps running without it.
 
 The node's `.env` sends chat to Studio and keeps embeddings on its own Ollama:
