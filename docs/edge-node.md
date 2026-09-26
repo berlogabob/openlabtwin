@@ -87,6 +87,12 @@ The lab's TV Pi is `192.168.1.194` (maker code `b8:27:eb`: a Pi 3 or older, 1 GB
 
 The Supabase free plan keeps **no** backups. Every night `scripts/backup.py` saves each table as JSON to `~/openlabtwin-backups/YYYY-MM-DD/` and keeps the newest 30 days (about 4 MB a day). The folder is mode 700 and outside the repo because it holds emails. To restore, insert each file's rows back in the order of `TABLES` in `backup.py` (parents first), with the service key.
 
+## Mirror
+
+A read-only copy of the database in local Postgres (Debian's `postgresql`, listening on localhost only), database `openlabtwin`. At 03:45, after the backup, `scripts/mirror.py` loads the newest backup folder: every table is dropped and recreated from its JSON (column types from the values), then `stock`, `on_loan` and `asset_place` are recreated. It fails, and logs to `~/mirror.log`, if any row count differs from its file. Setup step 10 installs Postgres, gives `TechLAB` a role and creates the database.
+
+Query it on the node with `psql openlabtwin`, for example `select * from stock` or `select code, name from places order by code`. Nothing writes to it except the nightly load, so any change made there is gone the next morning. It is also the tested restore: if the mirror loads, the backup is whole.
+
 ## What it does
 
 `scripts/publish.sh` pulls, optionally scrapes, and exports. It commits and pushes `apps/site/web/data` and `apps/site/web/calendar` only if they changed. The push triggers "Sync and deploy", which rebuilds and publishes the site. If an export fails, nothing is pushed and the site keeps its last version.
@@ -95,6 +101,7 @@ The Supabase free plan keeps **no** backups. Every night `scripts/backup.py` sav
 
 - `tail ~/publish.log`: one block every 10 minutes, ending in `no changes` or `pushed`.
 - `ls ~/openlabtwin-backups`: a new dated folder every morning.
+- `tail ~/mirror.log`: `mirrored YYYY-MM-DD: places …, items …` every morning.
 - `tail ~/ideas_ai.log`: `normalised N, approved M, matches K` every 15 minutes.
 - Hardware check before choosing the model: `free -h` (RAM), `nproc` (cores), `lspci | grep -i nvidia` (GPU). Ornith needs about 8 GB free; on a CPU it takes 1–3 minutes per idea.
 - **Idea AI server:** `set -a; . ./.env; set +a; uv run python scripts/ideas_ai.py --check` runs one chat and one embedding against the configured servers (Studio for chat, the node's Ollama for embeddings) and writes nothing.

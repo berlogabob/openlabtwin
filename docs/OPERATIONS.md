@@ -122,11 +122,11 @@ Anything new that must be public goes through `export.py`: add it to the explici
 
 | What | Command | In CI |
 |---|---|---|
-| Python (parser, export, db helpers, idea AI, TV playlist) | `for t in tests/test_*.py; do uv run python "$t"; done` | yes |
+| Python (parser, export, db helpers, idea AI, TV playlist, inventory import, labels, mirror) | `for t in tests/test_*.py; do uv run python "$t"; done` | yes |
 | Showcase TV page (layout, carousel, takeover, video copies, busy days) | `uv run --with playwright python tests/check_tv_page.py` | yes (Chrome on the runner) |
-| Database (schema, access, inventory, Book me, ideas, TV) | `uv run python scripts/sqltest.py` | no, run locally before pushing migrations |
+| Database (schema, access, inventory, Book me, ideas, TV, smart storage, Needs attention) | `uv run python scripts/sqltest.py` | no, run locally before pushing migrations |
 | Site logic (filters, calendar maths) | `cd apps/site && dart analyze && dart test` | yes |
-| Office logic (repeats, clashes, movements) | `cd apps/office && flutter analyze && flutter test` | yes |
+| Office logic (repeats, clashes, movements, place codes and tree, stocktake) | `cd apps/office && flutter analyze && flutter test` | yes |
 | Browser, end to end | Playwright with system Chrome: `uv run --with playwright python …` | no |
 
 For browser tests of the office, build it with `--dart-define=E2E=true`. That turns on Flutter's accessibility tree, which Playwright reads. Sign in with an admin-generated link (`POST /auth/v1/admin/generate_link`, type `magiclink`), so no email is needed. Wait about 400 ms after focusing a field before typing: Flutter drops keys typed too early.
@@ -141,6 +141,12 @@ The IADE network blocks outgoing Postgres ports 5432 and 6543, so `psql` and `su
 - the office uses the Supabase REST and auth APIs.
 
 The lab machines sit on the lab's ASUS router (`192.168.1.0/24`); the Mac, the node and the Studio PC are also on one Tailscale network, for access from home: [edge-node.md → The lab router network](edge-node.md#the-lab-router-network-since-2026-09-24).
+
+## Storage: import, labels, mirror
+
+- **Import (once, 2026-09-26):** `uv run python scripts/import_inventory.py ~/Downloads/"Inventario Tech Lab.xlsx"` prints what it would write: the place tree, items, tagged items, and the rows it won't import (student loan records from the PlayStation sheet, to settle by hand). `--apply` writes it with the service key (`set -a; . ./.env; set +a` first) and refuses a second run. An unknown location spelling stops it; add the spelling to `place_code()`.
+- **Labels:** `uv run python scripts/labels.py [--root CODE] [--assets]` writes `~/Downloads/labels.html` (A4, 3 × 8). Each QR opens `office/?place=CODE`. The page shows where tagged items are, so it stays on the Mac.
+- **Mirror:** the edge node loads its nightly backup into local Postgres at 03:45 ([edge-node.md → Mirror](edge-node.md#mirror)). It's read-only: write through the office or Supabase, never into the mirror.
 
 ## Keeping the project alive, and backups
 

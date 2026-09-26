@@ -14,6 +14,17 @@ Waiting for access to the Pi (`192.168.1.194`, a Pi 3 or older by its network ma
 6. Measure: which video level the TV settles on (its footer shows "video 480p/720p/1080p") and whether cards and slides stay smooth. If a Pi 3 can't manage, get a Pi 4 (2 GB+) or Pi 5, or an old laptop or mini-PC.
 7. Then retire the old site: point the TV at the new address for good, and follow [OPERATIONS → The old site](OPERATIONS.md#the-old-site) (the local branch `retire-to-openlabtwin` in `iade-lab-schedule` is ready and not pushed).
 
+## Smart storage: first stocktakes
+
+The office side is built (2026-09-26); what's left is walking the store with a phone.
+
+1. Print labels (`scripts/labels.py --root R15`, then `LAB`, `B2`) and stick them on.
+2. Count every place in Room 15 and the Vitrine; Needs attention empties as you go. Merge the duplicate names it finds.
+3. -2 floor: add the racks and shelves from the office (`B2-R1`, `B2-R1-S1`, …), print their labels, count them.
+4. Classroom cupboards `CUP1`–`CUP8`: set each one's room (Edit → Inside) and name.
+5. PlayStation loans: the import listed 12 student loan records and one console outside IADE. Record the ones still out as issue movements (tagged console to the student).
+6. Godot: name each storage node after its place code and read `stock` and `asset_place`.
+
 ## TV showcase, later
 
 - **"Play now" button in the office:** tell the TV to reload within seconds after a change (today: within a minute).
@@ -26,5 +37,5 @@ Waiting for access to the Pi (`192.168.1.194`, a Pi 3 or older by its network ma
 
 - **Milestone 5, thesis layer:** demand forecast and a Godot view. Scope depends on the thesis topic.
 - **Idea hub:** re-tune the matching thresholds once there are real student ideas.
-- **Local models for development:** `pi` hangs at start-up now and then; asking Unsloth Studio's API directly works (a draft in 13 to 60 s, always checked by tests). Look into the hang, or keep the direct route.
-- **Fully local database** (Postgres and PostgREST on the edge node, no Docker), if the node proves reliable. Supabase stays until then.
+- **Local models for development:** `pi` hangs at start-up now and then; asking Unsloth Studio's API directly works (a draft in 13 to 60 s, always checked by tests). Look into the hang, or keep the direct route. pi also renames its process, so `pkill -f` doesn't find it: stop it by process group.
+- **Fully local database:** the node already keeps a read-only mirror (nightly, from the backup). Making it the main database (PostgREST, HTTPS for the office) stays open, if the node proves reliable. Supabase stays until then.

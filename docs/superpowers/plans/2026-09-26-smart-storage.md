@@ -2535,6 +2535,7 @@ sql = mirror.table_sql("items", [{"id": 1, "name": "Cabo $j$ HDMI", "note": None
 assert sql.startswith("drop table if exists items cascade;") and '"id" bigint, "name" text, "note" text' in sql
 assert "$jj$" in sql, "the dollar quote never collides with the data"
 assert mirror.table_sql("empty", []).endswith("create table empty ();")
+assert '"to_place" bigint' in mirror.table_sql("movements", []), "an empty movements table still has the columns the views read"
 print("ok")
 ```
 
@@ -2573,6 +2574,11 @@ create view asset_place as
 """
 
 
+# An empty table's JSON has no columns, but the views need these. ponytail: copied from the migrations; keep in step.
+EMPTY = {"movements": '"id" bigint, "item_id" bigint, "qty" numeric, "from_place" bigint, "to_place" bigint, "kind" text, '
+                      '"person_id" bigint, "activity_id" bigint, "by_staff" bigint, "at" timestamptz, "asset_id" bigint, "note" text'}
+
+
 def column_type(name, values):
     """A Postgres type from a column's JSON values. ponytail: guessed from the data; timestamps by the *_at / at naming rule."""
     seen = [v for v in values if v is not None]
@@ -2602,7 +2608,7 @@ def table_sql(name, rows):
     """Drop and recreate one table from its backup rows."""
     cols = list(dict.fromkeys(k for r in rows for k in r))
     if not cols:
-        return f"drop table if exists {name} cascade; create table {name} ();"
+        return f"drop table if exists {name} cascade; create table {name} ({EMPTY.get(name, '')});"
     spec = ", ".join(f'"{c}" {column_type(c, [r.get(c) for r in rows])}' for c in cols)
     return (f"drop table if exists {name} cascade;"
             f"create table {name} as select * from jsonb_to_recordset({dollar(json.dumps(rows, ensure_ascii=False))}::jsonb) as x({spec});")
@@ -2612,7 +2618,7 @@ def main():
     root = Path(sys.argv[1] if len(sys.argv) > 1 else Path.home() / "openlabtwin-backups")
     day = max(p for p in root.iterdir() if p.is_dir() and len(p.name) == 10)
     data = {t: json.loads((day / f"{t}.json").read_text(encoding="utf-8")) for t in TABLES if (day / f"{t}.json").exists()}
-    sql = "begin;" + "".join(table_sql(t, rows) for t, rows in data.items()) + VIEWS + "commit;"
+    sql = "set client_min_messages = warning; begin;" + "".join(table_sql(t, rows) for t, rows in data.items()) + VIEWS + "commit;"
     subprocess.run(["psql", "-q", "-v", "ON_ERROR_STOP=1", "openlabtwin"], input=sql, text=True, check=True)
     counts = "select " + ", ".join(f"(select count(*) from {t})" for t in data) + ";"
     got = subprocess.run(["psql", "-tA", "-F", " ", "openlabtwin", "-c", counts], capture_output=True, text=True, check=True).stdout.split()
