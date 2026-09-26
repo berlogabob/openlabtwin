@@ -129,7 +129,7 @@ Anything new that must be public goes through `export.py`: add it to the explici
 | Office logic (repeats, clashes, movements, place codes and tree, stocktake) | `cd apps/office && flutter analyze && flutter test` | yes |
 | Browser, end to end | Playwright with system Chrome: `uv run --with playwright python …` | no |
 
-For browser tests of the office, build it with `--dart-define=E2E=true`. That turns on Flutter's accessibility tree, which Playwright reads. Sign in with an admin-generated link (`POST /auth/v1/admin/generate_link`, type `magiclink`), so no email is needed. Wait about 400 ms after focusing a field before typing: Flutter drops keys typed too early.
+For browser tests of the office, build it with `--dart-define=E2E=true`. To open a place's screen, give the admin link a `redirect_to` ending in `?place=CODE`; the stocktake's count boxes are named "Count of <item>". That turns on Flutter's accessibility tree, which Playwright reads. Sign in with an admin-generated link (`POST /auth/v1/admin/generate_link`, type `magiclink`), so no email is needed. Wait about 400 ms after focusing a field before typing: Flutter drops keys typed too early.
 
 To test Jaspr pages, use Playwright on system Chrome, not headless `--dump-dom` / `--virtual-time-budget`. The virtual clock makes the 3 MB data fetch look stuck at "Loading…".
 
@@ -172,6 +172,10 @@ Run it after schema changes: Supabase dashboard → Advisors, or `GET https://ap
 | The office says "Could not start" | the build is missing `SUPABASE_URL` or `SUPABASE_ANON_KEY` | check the GitHub variables |
 | A sign-in link opens the office but stays on the login page | a different browser, or an expired link (1 h) | open the link in the same browser; send a new one |
 | The office TV screen is red: "TV not updating" | the edge node is off, or `tv.py` fails (the error is shown) | check the node; `cat ~/tv.log` |
+| `import_inventory.py` stops with "unknown location" | a spelling `place_code()` doesn't know | add it to `place_code()` and its test; nothing was written |
+| `import_inventory.py --apply` says "Already imported" | the import note is already on movements | it runs once; correct counts with a stocktake instead |
+| A QR label opens Bookings, not the place | signed out when scanned (sign-in drops `?place=`), or the code was changed | sign in, scan again; reprint the label if the code changed |
+| `~/mirror.log` on the node says "mirror count mismatch" or a psql error | the backup was incomplete, or a new column a view reads | check `~/backup.log`; for an empty table a view reads, add its columns to `EMPTY` in `mirror.py` |
 | A TV page says FILE MISSING | its file was renamed or deleted in the shared folder | put the file back (same name), or pick another file |
 | The TV goes full screen or stays on one page at the wrong time | a takeover page is on; the office shows "Takeover: … until …" | switch that page off, or fix its dates and times |
 | Videos stutter on the TV | the TV computer is slow | the TV steps down to lighter copies by itself (footer: "video 480p"); see [edge-node.md → The TV computer](edge-node.md#the-tv-computer-raspberry-pi) |

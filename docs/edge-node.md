@@ -1,8 +1,8 @@
 # Edge node
 
-The always-on lab machine (a Raspberry Pi or any Linux or macOS box) that publishes approved bookings every 10 minutes and re-scrapes the timetable every 6 hours. It exists because GitHub's scheduler never fired the 10-minute cron for this repo (see [ARCHITECTURE → Decisions](ARCHITECTURE.md#decisions-and-why)). It's also the thesis's first edge node.
+The always-on lab machine (a Raspberry Pi or any Linux or macOS box) that publishes approved bookings every 10 minutes, re-scrapes the timetable every 6 hours, and keeps a nightly backup plus a read-only copy of the database. It exists because GitHub's scheduler never fired the 10-minute cron for this repo (see [ARCHITECTURE → Decisions](ARCHITECTURE.md#decisions-and-why)). It's also the thesis's first edge node.
 
-It needs HTTPS to GitHub and Supabase, which the IADE network allows. It needs no Postgres port.
+It needs HTTPS to GitHub and Supabase, which the IADE network allows. It needs no outgoing Postgres port: its own Postgres (the mirror) listens on localhost only.
 
 ## Setup (once)
 

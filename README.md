@@ -11,13 +11,14 @@ The IADE game lab's system of record: rooms, storage, equipment, people, booking
 | Book a consultation (QR) | https://berlogabob.github.io/openlabtwin/book/ |
 | Share an idea (QR) | https://berlogabob.github.io/openlabtwin/ideas/ |
 | Back office (staff) | https://berlogabob.github.io/openlabtwin/office/ |
+| A storage place (its QR label; staff) | https://berlogabob.github.io/openlabtwin/office/?place=R15-L-S3 |
 
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md): the parts, how data flows, the three privacy layers, and why each decision was made.
 - [Operations](docs/OPERATIONS.md): the runbook. Publishing, secrets, staff and rooms, migrations, tests, troubleshooting.
-- [Staff guide](docs/STAFF-GUIDE.md): for lab technicians using the back office, the TV and the public site.
-- [Edge node](docs/edge-node.md): the always-on lab machine (TechLAB-01): publishing, idea AI, the showcase TV, backups; the lab network, Tailscale, the TV computer.
+- [Staff guide](docs/STAFF-GUIDE.md): for lab technicians using the back office (bookings, inventory, places and stocktake, labels), the TV and the public site.
+- [Edge node](docs/edge-node.md): the always-on lab machine (TechLAB-01): publishing, idea AI, the showcase TV, backups and the read-only database mirror; the lab network, Tailscale, the TV computer.
 - [Roadmap](docs/ROADMAP.md): what's next.
 - History: the design spec and the per-milestone implementation plans in [`docs/superpowers/`](docs/superpowers/).
 
@@ -27,7 +28,8 @@ The IADE game lab's system of record: rooms, storage, equipment, people, booking
 supabase/migrations/   schema, row-level security, grants, audit      supabase/tests/database/  pgTAP tests
 scripts/               timetable.py (scrape), export.py (public JSON + lab.ics), db.py (PostgREST over urllib),
                        sqltest.py (migrations + DB tests over HTTPS), publish.sh + edge-setup.sh (edge node), backup.py, ideas_ai.py, tv.py,
-                       ics.py, timetable_parse.py
+                       ics.py, timetable_parse.py, import_inventory.py (one-off spreadsheet import), labels.py (QR labels),
+                       mirror.py (read-only Postgres copy on the node)
 tests/                 Python tests (plain asserts: uv run python tests/test_x.py)
 apps/site/             public site + TV (Jaspr, static)                 apps/office/  back office (Flutter web)
 apps/tv/               showcase TV (plain HTML, served by the edge node)

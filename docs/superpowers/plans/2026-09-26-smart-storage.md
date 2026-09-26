@@ -8,6 +8,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-09-26-smart-storage-design.md`.
 
+**Status (2026-09-26):** tasks 1–7 done: commits `0c92824` to `d8b3c18`, both migrations applied, and every test green (DB 01–08, Python, office, browser e2e, the mirror on a local Postgres). pi on Studio wrote 11 of the 19 files byte for byte; the plan wrote the rest after start-up hangs and time-outs. Task 8 waits for the user (import review, push, node step 10).
+
 ## Ponytail
 
 - **Needs attention** is one view, not a table per rule. Waivers are a single text key. The duplicate check is an items × items self-join, fine for hundreds of items.
@@ -20,7 +22,7 @@
 
 ### Task 1: Storage core (places codes, assets, asset_place)
 
-- [ ] **Step 1 (pi): create `supabase/tests/database/07_smart_storage.test.sql`**
+- [x] **Step 1 (pi): create `supabase/tests/database/07_smart_storage.test.sql`**
 
 ```sql
 begin;
@@ -73,9 +75,9 @@ select * from finish();
 rollback;
 ```
 
-- [ ] **Step 2 (controller):** `uv run python scripts/sqltest.py` → `07_smart_storage` fails (column `code` does not exist).
+- [x] **Step 2 (controller):** `uv run python scripts/sqltest.py` → `07_smart_storage` fails (column `code` does not exist).
 
-- [ ] **Step 3 (pi): create `supabase/migrations/20260926100000_smart_storage.sql`**
+- [x] **Step 3 (pi): create `supabase/migrations/20260926100000_smart_storage.sql`**
 
 ```sql
 -- Smart storage (docs/superpowers/specs/2026-09-26-smart-storage-design.md): place codes, individual assets, stocktake.
@@ -128,7 +130,7 @@ order by asset_id, at desc, id desc;
 revoke all on asset_place from anon;
 ```
 
-- [ ] **Step 4 (pi): replace `scripts/backup.py`**
+- [x] **Step 4 (pi): replace `scripts/backup.py`**
 
 ```python
 """Nightly off-site backup: every table as JSON under a dated folder. The Supabase free plan keeps no backups.
@@ -176,7 +178,7 @@ if __name__ == "__main__":
     main()
 ```
 
-- [ ] **Step 5 (pi): replace `tests/test_backup.py`**
+- [x] **Step 5 (pi): replace `tests/test_backup.py`**
 
 ```python
 """Run: uv run python tests/test_backup.py"""
@@ -194,9 +196,9 @@ assert backup.TABLES.index("items") < backup.TABLES.index("assets") < backup.TAB
 print("ok")
 ```
 
-- [ ] **Step 6 (controller):** `uv run python scripts/sqltest.py` → `applied 20260926100000_smart_storage.sql`, then ✓ for every test file. `uv run python tests/test_backup.py` → `ok`.
+- [x] **Step 6 (controller):** `uv run python scripts/sqltest.py` → `applied 20260926100000_smart_storage.sql`, then ✓ for every test file. `uv run python tests/test_backup.py` → `ok`.
 
-- [ ] **Commit**
+- [x] **Commit**
 
 ```bash
 git add supabase scripts/backup.py tests/test_backup.py
@@ -210,7 +212,7 @@ Claude-Session: https://claude.ai/code/session_01TArcJAcFxarRo4kv9wMDtk"
 
 ### Task 2: Needs attention (storage_issues, waivers, merge_items)
 
-- [ ] **Step 1 (pi): create `supabase/tests/database/08_storage_quality.test.sql`**
+- [x] **Step 1 (pi): create `supabase/tests/database/08_storage_quality.test.sql`**
 
 ```sql
 begin;
@@ -250,9 +252,9 @@ select * from finish();
 rollback;
 ```
 
-- [ ] **Step 2 (controller):** `uv run python scripts/sqltest.py` → `08_storage_quality` fails (relation `storage_issues` does not exist).
+- [x] **Step 2 (controller):** `uv run python scripts/sqltest.py` → `08_storage_quality` fails (relation `storage_issues` does not exist).
 
-- [ ] **Step 3 (pi): create `supabase/migrations/20260926110000_storage_quality.sql`**
+- [x] **Step 3 (pi): create `supabase/migrations/20260926110000_storage_quality.sql`**
 
 ```sql
 -- Needs attention for storage, the UNIDCOM RIMS way (output_quality.sql, output_merge.sql): every rule in one view,
@@ -332,9 +334,9 @@ revoke all on function merge_items(bigint, bigint[]) from public, anon;
 grant execute on function merge_items(bigint, bigint[]) to authenticated;
 ```
 
-- [ ] **Step 4 (controller):** `uv run python scripts/sqltest.py` → ✓ for every test file.
+- [x] **Step 4 (controller):** `uv run python scripts/sqltest.py` → ✓ for every test file.
 
-- [ ] **Commit**
+- [x] **Commit**
 
 ```bash
 git add supabase
@@ -348,9 +350,9 @@ Claude-Session: https://claude.ai/code/session_01TArcJAcFxarRo4kv9wMDtk"
 
 ### Task 3: Import the spreadsheet
 
-- [ ] **Step 1 (controller):** `uv add openpyxl`.
+- [x] **Step 1 (controller):** `uv add openpyxl`.
 
-- [ ] **Step 2 (pi): create `tests/test_import_inventory.py`**
+- [x] **Step 2 (pi): create `tests/test_import_inventory.py`**
 
 ```python
 """Run: uv run python tests/test_import_inventory.py"""
@@ -398,7 +400,7 @@ assert len(inv.assets) == 3 and inv.assets["S0"]["note"] == "seen twice", "one a
 print("ok")
 ```
 
-- [ ] **Step 3 (pi): create `scripts/import_inventory.py`**
+- [x] **Step 3 (pi): create `scripts/import_inventory.py`**
 
 ```python
 """One-off import of the previous team's spreadsheet (Inventario Tech Lab.xlsx) into places, items, assets and movements.
@@ -667,9 +669,9 @@ if __name__ == "__main__":
         apply(inventory)
 ```
 
-- [ ] **Step 4 (controller):** `uv run python tests/test_import_inventory.py` → `ok`. Dry run: `uv run python scripts/import_inventory.py ~/Downloads/"Inventario Tech Lab.xlsx"` → `141 items, 83 assets, 126 counted lines`, and 13 rows under "Not imported".
+- [x] **Step 4 (controller):** `uv run python tests/test_import_inventory.py` → `ok`. Dry run: `uv run python scripts/import_inventory.py ~/Downloads/"Inventario Tech Lab.xlsx"` → `141 items, 83 assets, 126 counted lines`, and 13 rows under "Not imported".
 
-- [ ] **Commit**
+- [x] **Commit**
 
 ```bash
 git add pyproject.toml uv.lock scripts/import_inventory.py tests/test_import_inventory.py
@@ -683,7 +685,7 @@ Claude-Session: https://claude.ai/code/session_01TArcJAcFxarRo4kv9wMDtk"
 
 ### Task 4: Office: places, stocktake, tagged items, Needs attention
 
-- [ ] **Step 1 (pi): replace `apps/office/lib/logic.dart`**
+- [x] **Step 1 (pi): replace `apps/office/lib/logic.dart`**
 
 ```dart
 // Booking logic with no Flutter in it, so `flutter test` covers it.
@@ -1080,7 +1082,7 @@ List<Map<String, dynamic>> countAdjustments(Map<int, num> expected, Map<int, num
     ];
 ```
 
-- [ ] **Step 2 (pi): replace `apps/office/test/logic_test.dart`**
+- [x] **Step 2 (pi): replace `apps/office/test/logic_test.dart`**
 
 ```dart
 // Run: flutter test (from apps/office)
@@ -1294,7 +1296,7 @@ void main() {
 }
 ```
 
-- [ ] **Step 3 (pi): replace `apps/office/lib/data.dart`**
+- [x] **Step 3 (pi): replace `apps/office/lib/data.dart`**
 
 ```dart
 // Every query the office makes. RLS lets only staff (people.is_staff, linked by auth_user_id) read or write.
@@ -1532,7 +1534,7 @@ Future<void> reorderTvSlides(List<int> ids) async =>
     await Future.wait([for (var i = 0; i < ids.length; i++) db.from('tv_slides').update({'position': i}).eq('id', ids[i])]);
 ```
 
-- [ ] **Step 4 (pi): replace `apps/office/lib/inventory.dart`**
+- [x] **Step 4 (pi): replace `apps/office/lib/inventory.dart`**
 
 ```dart
 // Inventory: Needs attention, stock per place, who holds what, and one form for every movement.
@@ -1836,7 +1838,7 @@ class _InventoryPageState extends State<InventoryPage> {
 }
 ```
 
-- [ ] **Step 5 (pi): create `apps/office/lib/places.dart`**
+- [x] **Step 5 (pi): create `apps/office/lib/places.dart`**
 
 ```dart
 // Places: the storage tree (rooms, cabinets, shelves, boxes), each place's contents, and the stocktake.
@@ -2284,7 +2286,7 @@ class PlaceLinkPage extends StatelessWidget {
 }
 ```
 
-- [ ] **Step 6 (pi): replace `apps/office/lib/main.dart`**
+- [x] **Step 6 (pi): replace `apps/office/lib/main.dart`**
 
 ```dart
 // Lab office: staff sign in with an email link, then log, approve and equip bookings.
@@ -2386,9 +2388,9 @@ class _LoginPageState extends State<LoginPage> {
 }
 ```
 
-- [ ] **Step 7 (controller):** `cd apps/office && flutter analyze && flutter test` → no issues, all pass. Then `flutter build web --release --base-href /openlabtwin/office/` builds.
+- [x] **Step 7 (controller):** `cd apps/office && flutter analyze && flutter test` → no issues, all pass. Then `flutter build web --release --base-href /openlabtwin/office/` builds.
 
-- [ ] **Commit**
+- [x] **Commit**
 
 ```bash
 git add apps/office
@@ -2402,7 +2404,7 @@ Claude-Session: https://claude.ai/code/session_01TArcJAcFxarRo4kv9wMDtk"
 
 ### Task 5: QR labels
 
-- [ ] **Step 1 (pi): create `tests/test_labels.py`**
+- [x] **Step 1 (pi): create `tests/test_labels.py`**
 
 ```python
 """Run: uv run python tests/test_labels.py"""
@@ -2425,7 +2427,7 @@ assert page.count("<svg") == 1 and "R15-L-S1" in page and "Shelf &lt;1&gt;" in p
 print("ok")
 ```
 
-- [ ] **Step 2 (pi): create `scripts/labels.py`**
+- [x] **Step 2 (pi): create `scripts/labels.py`**
 
 ```python
 """Printable QR labels for places and assets: an A4 HTML page, 3 × 8 labels, each QR opening the office at that place.
@@ -2500,9 +2502,9 @@ if __name__ == "__main__":
     main()
 ```
 
-- [ ] **Step 3 (controller):** `uv run python tests/test_labels.py` → `ok`.
+- [x] **Step 3 (controller):** `uv run python tests/test_labels.py` → `ok`.
 
-- [ ] **Commit**
+- [x] **Commit**
 
 ```bash
 git add scripts/labels.py tests/test_labels.py
@@ -2516,7 +2518,7 @@ Claude-Session: https://claude.ai/code/session_01TArcJAcFxarRo4kv9wMDtk"
 
 ### Task 6: Read-only mirror on the edge node
 
-- [ ] **Step 1 (pi): create `tests/test_mirror.py`**
+- [x] **Step 1 (pi): create `tests/test_mirror.py`**
 
 ```python
 """Run: uv run python tests/test_mirror.py"""
@@ -2539,7 +2541,7 @@ assert '"to_place" bigint' in mirror.table_sql("movements", []), "an empty movem
 print("ok")
 ```
 
-- [ ] **Step 2 (pi): create `scripts/mirror.py`**
+- [x] **Step 2 (pi): create `scripts/mirror.py`**
 
 ```python
 """Read-only copy of the database on the edge node: loads the newest nightly backup into the local Postgres `openlabtwin`.
@@ -2632,7 +2634,7 @@ if __name__ == "__main__":
     main()
 ```
 
-- [ ] **Step 3 (pi): replace `scripts/edge-setup.sh`**
+- [x] **Step 3 (pi): replace `scripts/edge-setup.sh`**
 
 ```bash
 #!/usr/bin/env bash
@@ -2744,9 +2746,9 @@ run sh -c "cd '$DIR' && uv run python scripts/mirror.py"
 step "done: tail -f ~/publish.log   ·   ip: $(hostname -I 2>/dev/null | cut -d' ' -f1)"
 ```
 
-- [ ] **Step 4 (controller):** `uv run python tests/test_mirror.py` → `ok`. `bash -n scripts/edge-setup.sh`, then `scripts/edge-setup.sh --dry-run | tail -12` shows step 10 and the 03:45 cron line.
+- [x] **Step 4 (controller):** `uv run python tests/test_mirror.py` → `ok`. `bash -n scripts/edge-setup.sh`, then `scripts/edge-setup.sh --dry-run | tail -12` shows step 10 and the 03:45 cron line.
 
-- [ ] **Commit**
+- [x] **Commit**
 
 ```bash
 git add scripts/mirror.py tests/test_mirror.py scripts/edge-setup.sh

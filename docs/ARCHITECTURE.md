@@ -59,9 +59,9 @@ Thesis link: timetable + bookings with headcount and equipment give *known deman
 This follows UNIDCOM RIMS, which learned the hard way that row-level security has no column dimension.
 
 1. **Grants.** The `anon` role has no privileges on any table or view (`20260923120100_access.sql`, including default privileges for future tables). The anon key ships in the office's JavaScript, so this layer is what makes that safe.
-2. **RLS.** Every table allows reads and writes only when `is_staff()` is true, meaning a `people` row with `is_staff` linked to the signed-in `auth_user_id`. `movements` can't be updated or deleted by staff, `lessons`, `tv_media` and `tv_status` can't be written by staff, and `audit_log` is read-only.
+2. **RLS.** Every table allows reads and writes only when `is_staff()` is true, meaning a `people` row with `is_staff` linked to the signed-in `auth_user_id`. `movements` can't be updated or deleted by staff, `lessons`, `tv_media` and `tv_status` can't be written by staff, and `audit_log` is read-only. The one exception for staff is `merge_items()` (security definer, checks `is_staff()` itself), which re-points movements from a duplicate item to the one kept.
 3. **Public functions.** The only exception to layer 1: `anon` may execute `free_slots`, `request_consultation` and `consultation_status` (Book me), plus `submit_idea`, `idea_status` and `idea_connect` (idea hub). All share the `check_contact` / `file_student` helpers. They run as `security definer`, so they bypass RLS, and each one validates its own input and returns only what the student may see.
-4. **Export allowlist.** `export.py` runs with the service key, which bypasses RLS. So it selects explicit columns only and fails if a record carries a key outside `KEYS`. Emails, `purpose`, equipment lists, stock and loans never reach the public files.
+4. **Export allowlist.** `export.py` runs with the service key, which bypasses RLS. So it selects explicit columns only and fails if a record carries a key outside `KEYS`. Emails, `purpose`, equipment lists, stock and loans never reach the public files. Storage data (places, tagged items, stock) is never exported at all: QR labels are printed from the Mac, and the node's mirror listens on localhost only.
 
 ## Decisions and why
 
