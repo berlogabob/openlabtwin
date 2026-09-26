@@ -4,6 +4,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-09-26-equipment-and-archive-design.md`.
 
+**Status (2026-09-26):** tasks 1–7 done, every suite green (DB 01–10, Python, site, office, browser e2e for /kit/, storage and archive). pi on Studio wrote 1 of 7 files it was given (Studio swapping between the coder and the vision model); the rest came from the plan, and the office screens from Codex. Waiting for: real sheet photos (prompt tuning), the push, and the node's `edge-setup.sh`.
+
 ## Ponytail
 
 - One public form for every kind of request (class, lab work, take home); the use is a field, not three forms.
@@ -752,5 +754,29 @@ revoke all on usage_events, usage_by_item, usage_by_course, peak_on_loan from an
 - [ ] **Step 4 (controller):** `uv run python scripts/sqltest.py` → ✓ for every file, 10 with 12 passed.
 
 - [ ] **Commit:** "Loan archive: sheets, historic loans apart from stock, item matching, approval, usage and peak views"
+
+---
+
+### Task 5: The sheet reader on the node
+
+- [ ] **Step 1 (controller):** `scripts/archive_ocr.py` and `tests/test_archive_ocr.py` (Pillow, pillow-heif), the `archive` Samba share and the 15-minute cron in `edge-setup.sh`. Checked on Studio with a generated fictional sheet: every field right in 124 s.
+
+- [ ] **Commit:** "Loan sheet reader on the node: shared folder in, vision model on Studio, fields out for staff review"
+
+---
+
+### Task 6: Usage export and the mirror
+
+- [ ] **Step 1 (controller):** `scripts/usage_export.py` + test; `mirror.py` types `*_on` / `date` columns as dates and adds `usage_events`. Checked on a throwaway local Postgres.
+
+- [ ] **Commit:** "Usage statistics as CSV for the thesis; the mirror keeps dates as dates and gains usage_events"
+
+---
+
+### Task 7: Office Archive and Usage screens
+
+- [ ] **Step 1 (controller):** drafted by Codex (`codex exec -m gpt-5.6-luna -s workspace-write`, brief in the session) in `archive_screen.dart`, `usage_screen.dart`, `data.dart`, `logic.dart`, `inventory.dart`, tests; reviewed and fixed by the controller; `tests/e2e_archive.py` passes.
+
+- [ ] **Commit:** "Office: Archive review screen and Usage screen"
 
 ---
