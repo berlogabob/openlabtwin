@@ -22,6 +22,10 @@ fair = {"id": 2, "title": "Open day", "layer": "event", "kind": "external", "pla
         "rrule": None, "exdates": [], "status": "approved", "requester_display": None, "organization_id": None,
         "public_note": None}
 pending = club | {"id": 3, "title": "Secret", "status": "requested", "rrule": None}
+take_home = fair | {"id": 5, "title": "Take-home kit", "kind": "equipment", "location_text": None}
+lab_work = fair | {"id": 6, "title": "Lab work", "kind": "equipment", "place_ids": [1], "location_text": None}
+kits = export.build([], [take_home, lab_work], places, orgs, date(2026, 9, 23))
+assert [r["course"] for r in kits] == ["Lab work"], "a kit with no room stays private; lab work shows as a booking of the lab"
 
 out = export.build([lesson, lesson | {"date": "2026-09-20"}], [club, fair, pending], places, orgs, date(2026, 9, 23),
                    [{"id": 4, "name": "Andrey Dyakov"}])

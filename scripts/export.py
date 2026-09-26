@@ -66,6 +66,11 @@ def assert_whitelist(records):
         assert not stray, f"record {r.get('course')!r} {r.get('date')} has forbidden keys: {sorted(stray)}"
 
 
+def private_kit(a):
+    """An equipment booking with no room (a class kit, a take-home kit): its class is already public, and a loan is private."""
+    return a["kind"] == "equipment" and not a["place_ids"] and not a.get("location_text")
+
+
 def build(lessons, activities, places, organizations, today, staff=()):
     first = monday_of(today)
     last = first + timedelta(days=WINDOW_DAYS)
@@ -74,7 +79,7 @@ def build(lessons, activities, places, organizations, today, staff=()):
     staff_names = {p["id"]: p["name"] for p in staff}
     out = [lesson_record(r) for r in lessons if r["date"] >= first.isoformat()]
     for a in activities:
-        if a["status"] == "approved":  # also filtered in the query; checked again so a query change can't leak
+        if a["status"] == "approved" and not private_kit(a):  # approval also filtered in the query, checked again here
             out += activity_records(a, place_names, org_names, first, last, staff_names)
     assert_whitelist(out)
     return sorted(out, key=lambda r: (r["date"], r["start"], r["course"]))
