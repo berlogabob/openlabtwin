@@ -446,3 +446,33 @@ List<Map<String, dynamic>> foundRows(Map<String, dynamic> asset, Map<String, dyn
         note: 'stocktake')
   ];
 }
+
+/// Portable equipment asked for more than the lab owns: at each session of this booking, its kit plus every overlapping
+/// approved booking's kit, against the lab's total stock. others: (booking, item id -> qty). totals: item id -> units owned.
+List<String> demandWarnings(
+    Activity a, Map<int, num> mine, List<(Activity, Map<int, num>)> others, Map<int, num> totals, Map<int, String> names) {
+  final out = <String>[];
+  final length = a.end.difference(a.start);
+  for (final s in a.occurrences()) {
+    final e = s.add(length);
+    for (final item in mine.keys) {
+      var need = mine[item]!;
+      final who = <String>[];
+      for (final (o, kit) in others) {
+        final q = kit[item];
+        if (q == null || o.id == a.id) continue;
+        final oLength = o.end.difference(o.start);
+        if (o.occurrences().any((os) => os.isBefore(e) && s.isBefore(os.add(oLength)))) {
+          need += q;
+          who.add('${o.title} $q');
+        }
+      }
+      final have = totals[item] ?? 0;
+      if (who.isNotEmpty && need > have) {
+        out.add('${isoDate(s)} ${hhmm(s)}: ${names[item] ?? 'item $item'} needed $need (this ${mine[item]}, ${who.join(', ')}), '
+            'the lab has $have');
+      }
+    }
+  }
+  return out;
+}

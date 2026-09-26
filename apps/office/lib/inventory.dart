@@ -197,6 +197,43 @@ class _InventoryPageState extends State<InventoryPage> {
     }
   }
 
+  /// An item's details: its note from the spreadsheet, and whether the public /kit/ list offers it.
+  Future<void> _item(Rec i) async {
+    var lendable = i['lendable'] == true;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, set) => AlertDialog(
+          title: Text(i['name'] as String),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (i['note'] != null) Text(i['note'] as String),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Can be requested (public equipment list)'),
+                value: lendable,
+                onChanged: (v) => set(() => lendable = v),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+            FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Save')),
+          ],
+        ),
+      ),
+    );
+    if (ok != true || lendable == (i['lendable'] == true)) return;
+    try {
+      await setLendable(i['id'] as int, lendable);
+      setState(() => i['lendable'] = lendable);
+    } catch (e) {
+      if (mounted) say(context, 'Could not save: $e');
+    }
+  }
+
   Widget _issue(Rec i) {
     final code = i['code'] as String;
     final placeIssue = code == 'never_counted' || code == 'stale_count';
@@ -280,7 +317,9 @@ class _InventoryPageState extends State<InventoryPage> {
                   final total = here.fold<num>(0, (t, s) => t + (s['qty'] as num));
                   final tags = refs.assets.where((a) => a['item_id'] == i['id']).length;
                   return ListTile(
-                    title: Text('${i['name']} (${i['kind']})${tags == 0 ? '' : ' · $tags tagged'}'),
+                    onTap: () => _item(i),
+                    title: Text('${i['name']} (${i['kind']})${tags == 0 ? '' : ' · $tags tagged'}'
+                        '${i['lendable'] == true ? ' · can be requested' : ''}'),
                     subtitle: Text(
                       [
                         for (final s in here) '${refs.placeName(s['place_id'] as int?)} ${s['qty']}',

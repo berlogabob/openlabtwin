@@ -247,4 +247,18 @@ void main() {
     expect(kind({'place_id': 9, 'person_id': null}), '');
     expect(foundRows(a, null, 9).single['note'], 'stocktake');
   });
+
+  test('demand: overlapping approved kits that ask for more than the lab owns', () {
+    final a = Activity(id: 1, title: 'Workshop', start: DateTime(2026, 10, 20, 10), end: DateTime(2026, 10, 20, 12));
+    final club = Activity(id: 2, title: 'Club', start: DateTime(2026, 10, 20, 11), end: DateTime(2026, 10, 20, 13));
+    final later = Activity(id: 3, title: 'Evening', start: DateTime(2026, 10, 20, 18), end: DateTime(2026, 10, 20, 19));
+    final others = [
+      (club, {7: 4}),
+      (later, {7: 20}),
+    ];
+    expect(demandWarnings(a, {7: 10}, others, {7: 12}, {7: 'ESP32'}),
+        ['2026-10-20 10:00: ESP32 needed 14 (this 10, Club 4), the lab has 12']);
+    expect(demandWarnings(a, {7: 8}, others, {7: 12}, {7: 'ESP32'}), isEmpty, reason: '8 + 4 fits in 12');
+    expect(demandWarnings(a, {7: 30}, [], {7: 12}, {7: 'ESP32'}), isEmpty, reason: 'alone it is the shortage check at issue time');
+  });
 }

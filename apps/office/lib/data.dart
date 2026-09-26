@@ -36,7 +36,7 @@ Future<Refs> loadRefs() async {
     db.from('places').select(placeCols).order('name'),
     db.from('people').select('id,name,kind,email').order('name'),
     db.from('organizations').select('id,name').order('name'),
-    db.from('items').select('id,name,kind,note').isFilter('merged_into', null).order('name'),
+    db.from('items').select('id,name,kind,note,lendable').isFilter('merged_into', null).order('name'),
     db.from('assets').select('id,item_id,tag,serial,condition').order('tag'),
     db.from('people').select('id').eq('auth_user_id', db.auth.currentUser!.id).maybeSingle(),
   ]);
@@ -61,7 +61,7 @@ Future<int> saveActivity(Activity a) async {
 }
 
 Future<List<String>> clashWarnings(Activity a, Refs refs) async {
-  if (a.placeIds.isEmpty) return _stationaryClashes(a, refs);
+  if (a.placeIds.isEmpty) return [...await _stationaryClashes(a, refs), ...await _demand(a, refs)];
   final names = {
     for (final r in refs.rooms)
       if (a.placeIds.contains(r['id'])) (r['iade_name'] ?? r['name']) as String
@@ -74,7 +74,38 @@ Future<List<String>> clashWarnings(Activity a, Refs refs) async {
       .lte('date', isoDate(last))
       .overlaps('rooms', names.toList());
   final others = await db.from('activities').select().eq('status', 'approved').overlaps('place_ids', a.placeIds);
-  return [...clashes(a, names, lessons, [for (final o in others) Activity.fromRow(o)]), ...await _stationaryClashes(a, refs)];
+  return [
+    ...clashes(a, names, lessons, [for (final o in others) Activity.fromRow(o)]),
+    ...await _stationaryClashes(a, refs),
+    ...await _demand(a, refs),
+  ];
+}
+
+/// Portable kit lines that, with overlapping approved bookings, ask for more than the lab owns.
+Future<List<String>> _demand(Activity a, Refs refs) async {
+  if (a.id == null) return [];
+  final mine = {
+    for (final k in await equipment(a.id!))
+      if ((k['items'] as Rec)['kind'] != 'stationary') k['item_id'] as int: k['qty'] as num
+  };
+  if (mine.isEmpty) return [];
+  final rows = await db
+      .from('activity_items')
+      .select('item_id,qty,activities!inner(*)')
+      .inFilter('item_id', mine.keys.toList())
+      .eq('activities.status', 'approved')
+      .neq('activity_id', a.id!);
+  final byActivity = <int, (Activity, Map<int, num>)>{};
+  for (final r in rows) {
+    final o = Activity.fromRow(r['activities'] as Rec);
+    byActivity.putIfAbsent(o.id!, () => (o, <int, num>{})).$2[r['item_id'] as int] = r['qty'] as num;
+  }
+  final totals = <int, num>{};
+  for (final s in await stock()) {
+    final item = s['item_id'] as int;
+    if (mine.containsKey(item)) totals[item] = (totals[item] ?? 0) + (s['qty'] as num);
+  }
+  return demandWarnings(a, mine, byActivity.values.toList(), totals, refs.itemNames);
 }
 
 /// The same laser cutter / printer booked by another approved activity at an overlapping time.
@@ -147,6 +178,9 @@ Future<Rec> addAsset(int itemId, String tag, String serial) => db
     .insert({'item_id': itemId, if (tag.trim().isNotEmpty) 'tag': tag.trim(), 'serial': serial.trim().isEmpty ? null : serial.trim()})
     .select('id,item_id,tag,serial,condition')
     .single();
+
+/// Whether the public /kit/ list offers this item.
+Future<void> setLendable(int itemId, bool lendable) => db.from('items').update({'lendable': lendable}).eq('id', itemId);
 
 Future<void> updateAssets(List<int> ids, Rec change) => db.from('assets').update(change).inFilter('id', ids);
 

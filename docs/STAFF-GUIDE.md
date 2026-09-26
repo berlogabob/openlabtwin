@@ -21,7 +21,8 @@ Type your staff email and press **Send sign-in link**. Open the link from the em
 After every save the form lists **clashes**:
 - lessons in the same rooms;
 - other approved bookings in those rooms;
-- the same machine (laser cutter, printer…) booked twice.
+- the same machine (laser cutter, printer…) booked twice;
+- portable equipment asked for by overlapping approved bookings beyond what the lab owns ("ESP32 needed 14 (this 10, Club 4), the lab has 12").
 
 They are warnings. You decide.
 
