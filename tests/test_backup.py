@@ -11,4 +11,5 @@ assert backup.prune(days, 4) == [] and backup.prune([], 30) == []
 assert backup.TABLES.index("activities") < backup.TABLES.index("activity_items") < backup.TABLES.index("audit_log")
 assert backup.TABLES.index("items") < backup.TABLES.index("assets") < backup.TABLES.index("movements")
 assert backup.TABLES.index("people") < backup.TABLES.index("issue_waivers") and backup.ORDER["issue_waivers"] == "key"
+assert backup.TABLES.index("items") < backup.TABLES.index("archive_sheets") < backup.TABLES.index("archive_loans")
 print("ok")

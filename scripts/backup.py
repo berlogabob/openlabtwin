@@ -13,7 +13,7 @@ from pathlib import Path
 from db import connect, select
 
 TABLES = ["places", "items", "people", "organizations", "consultation_hours", "activities", "activity_items", "assets", "movements",
-          "issue_waivers", "lessons", "audit_log"]  # parents before children
+          "issue_waivers", "archive_sheets", "archive_loans", "lessons", "audit_log"]  # parents before children
 ORDER = {"activity_items": "activity_id,item_id", "issue_waivers": "key"}  # tables without an id column
 KEEP = 30
 
