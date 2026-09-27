@@ -8,7 +8,7 @@
 
 **Spec:** `docs/superpowers/specs/2026-09-26-smart-storage-design.md`.
 
-**Status (2026-09-26):** tasks 1–7 done: commits `0c92824` to `d8b3c18`, both migrations applied, and every test green (DB 01–08, Python, office, browser e2e, the mirror on a local Postgres). pi on Studio wrote 11 of the 19 files byte for byte; the plan wrote the rest after start-up hangs and time-outs. Task 8: import applied and pushed 2026-09-27; the node step (edge-setup.sh with sudo) is the last part.
+**Status (2026-09-26):** tasks 1–7 done: commits `0c92824` to `d8b3c18`, both migrations applied, and every test green (DB 01–08, Python, office, browser e2e, the mirror on a local Postgres). pi on Studio wrote 11 of the 19 files byte for byte; the plan wrote the rest after start-up hangs and time-outs. Task 8 done 2026-09-27: import applied, pushed, node set up (mirror loading, archive share).
 
 ## Ponytail
 

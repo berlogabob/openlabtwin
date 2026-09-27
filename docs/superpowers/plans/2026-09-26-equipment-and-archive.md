@@ -4,7 +4,7 @@
 
 **Spec:** `docs/superpowers/specs/2026-09-26-equipment-and-archive-design.md`.
 
-**Status (2026-09-26):** tasks 1–7 done, every suite green (DB 01–10, Python, site, office, browser e2e for /kit/, storage and archive). pi on Studio wrote 1 of 7 files it was given (Studio swapping between the coder and the vision model); the rest came from the plan, and the office screens from Codex. Deployed 2026-09-27 (pushed; the import applied, 112 portable items requestable). Waiting for: real sheet photos (prompt tuning) and the node's `edge-setup.sh`.
+**Status (2026-09-26):** tasks 1–7 done, every suite green (DB 01–10, Python, site, office, browser e2e for /kit/, storage and archive). pi on Studio wrote 1 of 7 files it was given (Studio swapping between the coder and the vision model); the rest came from the plan, and the office screens from Codex. Deployed 2026-09-27 (pushed; the import applied, 112 portable items requestable). Node set up 2026-09-27 (archive share, reader, mirror). Waiting for: real sheet photos (prompt tuning).
 
 ## Ponytail
 
