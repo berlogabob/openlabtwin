@@ -28,11 +28,19 @@ long = "A small robot arm built with servos and 3D-printed parts, controlled rem
     "slides": [{"kind": "media", "src": "media/tall.svg", "video": False, "w": 400, "h": 800, "title": "Tall photo", "body": "", "seconds": 1},
                {"kind": "text", "title": "Welcome", "body": "Open lab on Fridays", "seconds": 1},
                {"kind": "ideas", "seconds": 1}]}))
+import time
 from datetime import datetime, timedelta
-soon = (datetime.now() + timedelta(minutes=1)).strftime("%H:%M")
 normal = {"kind": "text", "title": "Normal page", "body": "", "seconds": 1}
-takeover = {"generated": "", "takeover": False, "ideas": [], "slides": [normal, {"kind": "text", "title": "Moda show", "body": "Tonight 17:00",
-            "seconds": 1, "full": True, "takeover": True, "from": soon, "to": "23:59"}]}
+
+
+def takeover_from_next_minute():
+    """A takeover starting at the next whole minute, at least 20 s away: built when that step runs, so the start is still ahead
+    (built at the top, a run that reached this step after the minute turned saw the takeover already on)."""
+    if datetime.now().second > 40:
+        time.sleep(61 - datetime.now().second)
+    soon = (datetime.now() + timedelta(minutes=1)).strftime("%H:%M")
+    return {"generated": "", "takeover": False, "ideas": [], "slides": [normal, {"kind": "text", "title": "Moda show",
+            "body": "Tonight 17:00", "seconds": 1, "full": True, "takeover": True, "from": soon, "to": "23:59"}]}
 class Quiet(SimpleHTTPRequestHandler):
     def log_message(self, *args):
         pass
@@ -90,19 +98,19 @@ with sync_playwright() as p:
     assert 0.3 < aside["width"] / 1920 < 0.37, f"schedule column is a third: {aside}"
     page.wait_for_function("""() => { const f = document.querySelector('#frame'), h = f.querySelector('h1');
         return h && h.textContent === 'Welcome' && Math.abs(f.offsetWidth / f.offsetHeight - 16 / 9) < 0.02; }""", timeout=5000)
-    page.wait_for_selector("#frame h1:has-text('Micro robot arm')", timeout=15000)  # an upper bound: slow CI runners need more than 4 s
+    page.wait_for_selector("#frame h1:has-text('Micro robot arm')", timeout=4000)
     over = page.eval_on_selector("#frame .text", "t => [t.scrollHeight - t.clientHeight, t.scrollWidth - t.clientWidth]")
     assert over[0] <= 0 and over[1] <= 0, f"long idea text fits the frame: {over}"
     top = page.text_content("#top")
     assert "Tech Lab" in top and ":" not in top, f"top line: day and rooms, no clock: {top!r}"
     # event mode: tv.json switches to a takeover, the TV follows on its next reload, full screen
-    (d / "tv.json").write_text(json.dumps(takeover))
+    (d / "tv.json").write_text(json.dumps(takeover_from_next_minute()))
     page.evaluate("load()")
-    page.wait_for_selector("#frame h1:has-text('Normal page')", timeout=15000)  # an upper bound: slow CI runners need more than 4 s
+    page.wait_for_selector("#frame h1:has-text('Normal page')", timeout=4000)
     assert page.evaluate("!live().takeover"), "before its time the takeover page stays out"
     page.evaluate(f"(() => {{ const real = Date; const t = new real(real.now() + 61000); Date = class extends real {{ constructor(...a) {{ super(...(a.length ? a : [t])); }} static now() {{ return t.getTime(); }} }}; }})()")
     page.evaluate("tick()")
-    page.wait_for_selector("#frame h1:has-text('Moda show')", timeout=15000)  # an upper bound: slow CI runners need more than 4 s
+    page.wait_for_selector("#frame h1:has-text('Moda show')", timeout=4000)
     assert page.evaluate("document.body.classList.contains('full')") and not page.locator("#schedule").is_visible()
     box = page.locator("#frame").bounding_box()
     assert box["width"] > 1600, f"full screen frame: {box}"
