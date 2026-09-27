@@ -50,6 +50,5 @@ The office side is built (2026-09-26); what's left is walking the store with a p
 
 - **Milestone 5, thesis layer:** demand forecast and a Godot view. Scope depends on the thesis topic.
 - **Idea hub:** re-tune the matching thresholds once there are real student ideas.
-- **Flaky CI test:** `tests/check_tv_page.py` failed once on GitHub (2026-09-27, run 36308277095) waiting 4 s for the takeover step's "Normal page"; it passed on rerun and 3 of 3 locally. Give that wait more time or wait for the page change itself.
 - **Local models for development:** `pi` hangs at start-up now and then; asking Unsloth Studio's API directly works (a draft in 13 to 60 s, always checked by tests). Look into the hang, or keep the direct route. pi also renames its process, so `pkill -f` doesn't find it: stop it by process group.
 - **Fully local database:** the node already keeps a read-only mirror (nightly, from the backup). Making it the main database (PostgREST, HTTPS for the office) stays open, if the node proves reliable. Supabase stays until then.

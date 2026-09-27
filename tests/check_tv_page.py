@@ -90,7 +90,7 @@ with sync_playwright() as p:
     assert 0.3 < aside["width"] / 1920 < 0.37, f"schedule column is a third: {aside}"
     page.wait_for_function("""() => { const f = document.querySelector('#frame'), h = f.querySelector('h1');
         return h && h.textContent === 'Welcome' && Math.abs(f.offsetWidth / f.offsetHeight - 16 / 9) < 0.02; }""", timeout=5000)
-    page.wait_for_selector("#frame h1:has-text('Micro robot arm')", timeout=4000)
+    page.wait_for_selector("#frame h1:has-text('Micro robot arm')", timeout=15000)  # an upper bound: slow CI runners need more than 4 s
     over = page.eval_on_selector("#frame .text", "t => [t.scrollHeight - t.clientHeight, t.scrollWidth - t.clientWidth]")
     assert over[0] <= 0 and over[1] <= 0, f"long idea text fits the frame: {over}"
     top = page.text_content("#top")
@@ -98,11 +98,11 @@ with sync_playwright() as p:
     # event mode: tv.json switches to a takeover, the TV follows on its next reload, full screen
     (d / "tv.json").write_text(json.dumps(takeover))
     page.evaluate("load()")
-    page.wait_for_selector("#frame h1:has-text('Normal page')", timeout=4000)
+    page.wait_for_selector("#frame h1:has-text('Normal page')", timeout=15000)  # an upper bound: slow CI runners need more than 4 s
     assert page.evaluate("!live().takeover"), "before its time the takeover page stays out"
     page.evaluate(f"(() => {{ const real = Date; const t = new real(real.now() + 61000); Date = class extends real {{ constructor(...a) {{ super(...(a.length ? a : [t])); }} static now() {{ return t.getTime(); }} }}; }})()")
     page.evaluate("tick()")
-    page.wait_for_selector("#frame h1:has-text('Moda show')", timeout=4000)
+    page.wait_for_selector("#frame h1:has-text('Moda show')", timeout=15000)  # an upper bound: slow CI runners need more than 4 s
     assert page.evaluate("document.body.classList.contains('full')") and not page.locator("#schedule").is_visible()
     box = page.locator("#frame").bounding_box()
     assert box["width"] > 1600, f"full screen frame: {box}"
