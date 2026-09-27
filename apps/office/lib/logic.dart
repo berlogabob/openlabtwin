@@ -141,6 +141,10 @@ List<String> clashes(Activity a, Set<String> roomNames, List<Map<String, dynamic
 
 const movementKinds = ['receive', 'move', 'issue', 'return', 'consume', 'adjust'];
 
+bool isGone(int itemId, List<Map<String, dynamic>> stock, List<Map<String, dynamic>> loans) =>
+    stock.where((s) => s['item_id'] == itemId).fold<num>(0, (total, s) => total + (s['qty'] as num)) == 0 &&
+    !loans.any((l) => l['item_id'] == itemId && (l['qty'] as num) > 0);
+
 /// A `movements` row, checked against the same shape rule the database enforces (movement_shape).
 /// Fields a kind doesn't use are sent as null, so the check constraint never trips on leftovers.
 Map<String, dynamic> movementRow({

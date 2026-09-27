@@ -3,6 +3,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:office/logic.dart';
 
 void main() {
+  test('gone items have no stock and no loan', () {
+    final stock = [{'item_id': 1, 'qty': 0}, {'item_id': 2, 'qty': 1}];
+    final loans = [{'item_id': 1, 'qty': 1}];
+    expect(isGone(1, stock, loans), isFalse);
+    expect(isGone(2, stock, loans), isFalse);
+    expect(isGone(3, stock, loans), isTrue);
+  });
+
   test('archive person matching prefers student number, then trimmed case-insensitive name', () {
     final people = [
       {'id': 1, 'name': 'Ana Silva', 'student_number': 'A-1'},

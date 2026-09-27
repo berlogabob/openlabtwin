@@ -6,6 +6,7 @@ import 'bookings.dart';
 import 'data.dart';
 import 'inventory.dart';
 import 'logic.dart';
+import 'pick.dart';
 
 String _day(Object? at) => at == null ? 'never counted' : 'counted ${isoDate(DateTime.parse(at as String).toLocal())}';
 
@@ -47,15 +48,13 @@ Future<Rec?> editPlace(BuildContext context, Refs refs, {Rec? place, int? parent
                   ],
                   onChanged: (v) => set(() => tier = v!),
                 ),
-              DropdownButton<int?>(
+              Pick<int?>(
+                label: 'Inside (none: top level)',
                 value: parent,
-                isExpanded: true,
-                hint: const Text('Inside (none: top level)'),
-                items: [
-                  const DropdownMenuItem<int?>(value: null, child: Text('Top level')),
-                  for (final (p, depth) in placeTree(refs.places))
-                    if (p['id'] != place?['id'])
-                      DropdownMenuItem(value: p['id'] as int, child: Text('${'  ' * depth}${refs.placeName(p['id'] as int)}')),
+                nullText: 'Top level',
+                options: [
+                  for (final (p, _) in placeTree(refs.places))
+                    if (p['id'] != place?['id']) (p['id'] as int, refs.placeName(p['id'] as int)),
                 ],
                 onChanged: (v) => set(() => parent = v),
               ),
@@ -273,11 +272,10 @@ class _PlacePageState extends State<PlacePage> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              DropdownButton<int?>(
+              Pick<int?>(
+                label: 'Item',
                 value: itemId,
-                isExpanded: true,
-                hint: const Text('Item'),
-                items: [for (final i in refs.items) DropdownMenuItem(value: i['id'] as int, child: Text(i['name'] as String))],
+                options: [for (final i in refs.items) (i['id'] as int, i['name'] as String)],
                 onChanged: (v) => set(() => itemId = v),
               ),
               TextField(

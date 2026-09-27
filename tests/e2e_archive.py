@@ -55,15 +55,14 @@ try:
         pg.locator("[aria-label^='e2e_sheet.jpg']").or_(pg.get_by_text("e2e_sheet.jpg")).first.click()
         pg.get_by_role("button", name="Approve").wait_for(timeout=30000)
         pg.wait_for_timeout(3000)  # the item suggestions arrive
-        body = pg.evaluate("[...document.querySelectorAll('flt-semantics')].map(e => e.getAttribute('aria-label') || e.innerText).join('|')")
-        checks["the student is matched by number"] = "E2E Aluna Ficticia" in body
-        checks["the item is suggested for its line"] = "E2E Arduino UNO (" in body
+        # the student (matched by number) and the item (suggested for its line) are prefilled in pickers, whose text Flutter
+        # doesn't expose to the test: approving without touching them proves both (checked in the saved loans below)
         pg.get_by_role("button", name="Approve").click()
         pg.get_by_text("Paper archive").first.wait_for(timeout=30000)  # back on the Archive list
         pg.wait_for_timeout(2000)
         loans = api("GET", f"/rest/v1/archive_loans?select=person_id,course,item_id,item_text,qty,out_on,back_on&sheet_id=eq.{sheet}&order=id")
         print(loans)
-        checks["approve wrote both lines, matched and unmatched"] = (
+        checks["approve, untouched, saved the matched student and suggested item, and the unmatched line"] = (
             len(loans) == 2 and loans[0]["item_id"] == item and loans[0]["qty"] == 2 and loans[1]["item_id"] is None
             and all(l["person_id"] == student and l["out_on"] == "2019-03-12" and l["back_on"] == "2019-03-29" for l in loans))
         checks["the sheet is reviewed"] = api("GET", f"/rest/v1/archive_sheets?select=status&id=eq.{sheet}")[0]["status"] == "reviewed"
@@ -86,6 +85,6 @@ finally:
     print("cleaned up" if not left else f"LEFT OVER: {left}")
 for name, ok in checks.items():
     print("✓" if ok else "✗", name)
-passed = len(checks) == 6 and all(checks.values())
+passed = len(checks) == 4 and all(checks.values())
 print("E2E", "PASS" if passed else "FAIL")
 sys.exit(0 if passed else 1)

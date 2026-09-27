@@ -37,7 +37,9 @@ Save the booking first. Then:
 
 ## Inventory
 
-The **Inventory** button (box icon, top bar) shows every item: how many are in each place, who has some on loan, and the total.
+The **Inventory** button (box icon, top bar) shows every item: how many are in each place, who has some on loan, and the total. Items with nothing left (all used up, broken and taken apart, given away) are hidden; **Show items with nothing left** brings them back. To take something out for good, record a **consume** with a note (for example "disassembled: broken"); its history stays.
+
+Every long list in the office (items, places, people) is a search field: type part of a name, pick from the list, and **×** clears it. The public site works the same way.
 
 **Record movement** covers everything else:
 

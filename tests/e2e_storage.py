@@ -34,7 +34,7 @@ def rows(path):
 
 
 def pick(pg, text):
-    """Choose a dropdown entry: Flutter shows menu items as menuitem or button in the accessibility tree."""
+    """Choose an entry of an open picker: Flutter shows its entries as menuitem or button in the accessibility tree."""
     pg.get_by_role("menuitem", name=text).or_(pg.get_by_role("button", name=text)).last.click()
 
 
@@ -106,8 +106,11 @@ try:
             pg.get_by_role("button", name=kind).wait_for(timeout=20000)
             pg.get_by_role("button", name=kind).click()
             pg.wait_for_timeout(1500)
-            pg.get_by_role("button", name="R15 · Room 15 (gabinete)").last.click()  # the default place is Room 15
-            pg.wait_for_timeout(500)
+            box = pg.get_by_role("textbox", name="From" if kind == "Issue kit" else "Back to")
+            if kind == "Issue kit":
+                pg.screenshot(path=os.environ.get("E2E_SHOT", "/dev/null"))  # the kit's place starts as Room 15 (Flutter hides field values)
+            box.click(); pg.wait_for_timeout(400)  # the office's searchable picker: type, then pick from the list
+            pg.keyboard.press("Meta+A"); pg.keyboard.type("E2E-S1", delay=60); pg.wait_for_timeout(600)
             pick(pg, "E2E-S1 · E2E shelf")
             pg.wait_for_timeout(400)
             pg.get_by_role("button", name=kind.split()[0], exact=True).click()
@@ -124,7 +127,11 @@ try:
         pg.go_back()
         pg.get_by_role("button", name="Inventory").click()
         pg.get_by_text("Needs attention", exact=False).first.wait_for(timeout=20000)
-        pg.get_by_role("button", name="Merge").first.click()
+        if pg.locator("[aria-label^='E2E Cabo HDMI longo /']").count() == 0:
+            pg.get_by_text("Needs attention", exact=False).first.click()  # collapsed when there are more than 10 issues
+            pg.wait_for_timeout(1500)
+        # only this test's own pair: the live list holds real duplicates too
+        pg.locator("[aria-label^='E2E Cabo HDMI longo /']").get_by_role("button", name="Merge").click()
         pg.get_by_text("E2E Cabos HDMI longos", exact=True).last.click()
         pg.get_by_text("Merged into", exact=False).first.wait_for(timeout=20000)
         stock = rows(f"stock?select=item_id,qty&place_id=eq.{s1}&qty=neq.0&order=item_id")

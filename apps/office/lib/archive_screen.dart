@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'data.dart';
 import 'inventory.dart';
 import 'logic.dart';
+import 'pick.dart';
 
 class ArchiveScreen extends StatefulWidget {
   const ArchiveScreen({super.key, required this.refs});
@@ -123,11 +124,10 @@ class _SheetPageState extends State<SheetPage> {
         children: [
           Row(children: [
             Expanded(
-              child: DropdownButton<int?>(
+              child: Pick<int?>(
+                label: 'Student',
                 value: personId,
-                isExpanded: true,
-                hint: const Text('Student'),
-                items: [for (final p in widget.refs.people.where((p) => p['kind'] == 'student')) DropdownMenuItem(value: p['id'] as int, child: Text(p['name'] as String))],
+                options: [for (final p in widget.refs.people.where((p) => p['kind'] == 'student')) (p['id'] as int, p['name'] as String)],
                 onChanged: (v) => setState(() => personId = v),
               ),
             ),
@@ -169,11 +169,11 @@ class _SheetPageState extends State<SheetPage> {
                 SizedBox(width: 70, child: TextField(controller: qty, decoration: const InputDecoration(labelText: 'Qty'), keyboardType: TextInputType.number, onChanged: (v) => line['qty'] = num.tryParse(v) ?? 1)),
                 IconButton(tooltip: 'Remove line', icon: const Icon(Icons.delete_outline), onPressed: () => setState(() => lines.removeAt(index))),
               ]),
-              DropdownButton<int?>(
+              Pick<int?>(
+                label: 'Item',
                 value: values.contains(line['item_id']) ? line['item_id'] as int : null,
-                isExpanded: true,
-                hint: const Text('No item (keep the text)'),
-                items: [const DropdownMenuItem<int?>(value: null, child: Text('No item (keep the text)')), for (final m in matches) DropdownMenuItem(value: m['id'] as int, child: Text('${m['name']} (${m['score']})'))],
+                nullText: 'No item (keep the text)',
+                options: [for (final m in matches) (m['id'] as int, '${m['name']} (${m['score']})')],
                 onChanged: (v) => setState(() {
                   line['item_chosen'] = true;
                   line['item_id'] = v;

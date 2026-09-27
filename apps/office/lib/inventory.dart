@@ -6,6 +6,7 @@ import 'logic.dart';
 import 'places.dart';
 import 'archive_screen.dart';
 import 'usage_screen.dart';
+import 'pick.dart';
 
 void say(BuildContext context, String text) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
 
@@ -20,16 +21,12 @@ Future<bool> recordMovement(BuildContext context, Refs refs, {int? placeId}) asy
     context: context,
     builder: (context) => StatefulBuilder(
       builder: (context, set) {
-        DropdownButton<int?> placePick(String hint, int? value, void Function(int?) change) => DropdownButton<int?>(
-          value: value,
-          isExpanded: true,
-          hint: Text(hint),
-          items: [
-            for (final (p, depth) in placeTree(refs.places))
-              DropdownMenuItem(value: p['id'] as int, child: Text('${'  ' * depth}${refs.placeName(p['id'] as int)}')),
-          ],
-          onChanged: (v) => set(() => change(v)),
-        );
+        Pick<int?> placePick(String label, int? value, void Function(int?) change) => Pick<int?>(
+              label: label,
+              value: value,
+              options: [for (final (p, _) in placeTree(refs.places)) (p['id'] as int, refs.placeName(p['id'] as int))],
+              onChanged: (v) => set(() => change(v)),
+            );
         final tagged = [
           for (final a in refs.assets)
             if (a['item_id'] == itemId) a,
@@ -46,11 +43,10 @@ Future<bool> recordMovement(BuildContext context, Refs refs, {int? placeId}) asy
                   items: [for (final k in movementKinds) DropdownMenuItem(value: k, child: Text(k))],
                   onChanged: (v) => set(() => kind = v!),
                 ),
-                DropdownButton<int?>(
+                Pick<int?>(
+                  label: 'Item, or type a new one below',
                   value: itemId,
-                  isExpanded: true,
-                  hint: const Text('Item, or type a new one below'),
-                  items: [for (final i in refs.items) DropdownMenuItem(value: i['id'] as int, child: Text('${i['name']} (${i['kind']})'))],
+                  options: [for (final i in refs.items) (i['id'] as int, '${i['name']} (${i['kind']})')],
                   onChanged: (v) => set(() => (itemId, assetId) = (v, null)),
                 ),
                 if (itemId == null) ...[
@@ -68,18 +64,11 @@ Future<bool> recordMovement(BuildContext context, Refs refs, {int? placeId}) asy
                   ),
                 ],
                 if (tagged.isNotEmpty)
-                  DropdownButton<int?>(
+                  Pick<int?>(
+                    label: 'Tagged one (optional)',
                     value: assetId,
-                    isExpanded: true,
-                    hint: const Text('Tagged one (optional)'),
-                    items: [
-                      const DropdownMenuItem<int?>(value: null, child: Text('Untagged')),
-                      for (final a in tagged)
-                        DropdownMenuItem(
-                          value: a['id'] as int,
-                          child: Text('${a['tag']}${a['serial'] == null ? '' : ' · ${a['serial']}'}'),
-                        ),
-                    ],
+                    nullText: 'Untagged',
+                    options: [for (final a in tagged) (a['id'] as int, '${a['tag']}${a['serial'] == null ? '' : ' · ${a['serial']}'}')],
                     onChanged: (v) => set(() {
                       assetId = v;
                       if (v != null) qty.text = kind == 'adjust' && qty.text.startsWith('-') ? '-1' : '1';
@@ -94,13 +83,10 @@ Future<bool> recordMovement(BuildContext context, Refs refs, {int? placeId}) asy
                 if (const {'receive', 'move', 'return', 'adjust'}.contains(kind))
                   placePick(kind == 'adjust' ? 'Place' : 'To', to, (v) => to = v),
                 if (const {'issue', 'return'}.contains(kind))
-                  DropdownButton<int?>(
+                  Pick<int?>(
+                    label: kind == 'issue' ? 'Given to' : 'Returned by',
                     value: personId,
-                    isExpanded: true,
-                    hint: Text(kind == 'issue' ? 'Given to' : 'Returned by'),
-                    items: [
-                      for (final p in refs.people) DropdownMenuItem(value: p['id'] as int, child: Text('${p['name']} (${p['kind']})')),
-                    ],
+                    options: [for (final p in refs.people) (p['id'] as int, '${p['name']} (${p['kind']})')],
                     onChanged: (v) => set(() => personId = v),
                   ),
               ],
@@ -157,6 +143,7 @@ class InventoryPage extends StatefulWidget {
 class _InventoryPageState extends State<InventoryPage> {
   late final refs = widget.refs;
   late Future<(List<Rec>, List<Rec>, List<Rec>)> data = _load();
+  bool showGone = false;
 
   Future<(List<Rec>, List<Rec>, List<Rec>)> _load() async => (await stock(), await onLoan(), await storageIssues());
 
@@ -306,8 +293,14 @@ class _InventoryPageState extends State<InventoryPage> {
         if (loaded == null) return const Center(child: CircularProgressIndicator());
         final (stockRows, loans, issues) = loaded;
         if (refs.items.isEmpty) return const Center(child: Text('No items yet. Record a "receive" to add the first one.'));
+        final gone = refs.items.where((i) => isGone(i['id'] as int, stockRows, loans)).length;
         return ListView(
           children: [
+            FilterChip(
+              label: Text('Show items with nothing left ($gone)'),
+              selected: showGone,
+              onSelected: (v) => setState(() => showGone = v),
+            ),
             if (issues.isNotEmpty)
               ExpansionTile(
                 initiallyExpanded: issues.length <= 10,
@@ -316,6 +309,7 @@ class _InventoryPageState extends State<InventoryPage> {
                 children: [for (final i in issues) _issue(i)],
               ),
             for (final i in refs.items)
+              if (showGone || !isGone(i['id'] as int, stockRows, loans))
               Builder(
                 builder: (context) {
                   final here = [

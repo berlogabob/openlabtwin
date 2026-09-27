@@ -7,6 +7,7 @@ import 'ideas_screen.dart';
 import 'inventory.dart';
 import 'logic.dart';
 import 'tv_screen.dart';
+import 'pick.dart';
 
 const statusColors = {
   'requested': Colors.orange,
@@ -265,11 +266,10 @@ class _BookingFormState extends State<BookingForm> {
         builder: (context, set) => AlertDialog(
           title: const Text('Add equipment'),
           content: Column(mainAxisSize: MainAxisSize.min, children: [
-            DropdownButton<Rec?>(
+            Pick<Rec?>(
+              label: 'Existing item, or type a new one below',
               value: item,
-              isExpanded: true,
-              hint: const Text('Existing item, or type a new one below'),
-              items: [for (final i in refs.items) DropdownMenuItem(value: i, child: Text('${i['name']} (${i['kind']})'))],
+              options: [for (final i in refs.items) (i, '${i['name']} (${i['kind']})')],
               onChanged: (v) => set(() => item = v),
             ),
             TextField(controller: newName, decoration: const InputDecoration(labelText: 'New item name')),
@@ -308,21 +308,16 @@ class _BookingFormState extends State<BookingForm> {
         builder: (context, set) => AlertDialog(
           title: Text(kind == 'issue' ? 'Issue kit' : 'Return kit'),
           content: Column(mainAxisSize: MainAxisSize.min, children: [
-            DropdownButton<int?>(
+            Pick<int?>(
+              label: kind == 'issue' ? 'From' : 'Back to',
               value: placeId,
-              isExpanded: true,
-              hint: Text(kind == 'issue' ? 'From' : 'Back to'),
-              items: [
-                for (final (p, depth) in placeTree(refs.places))
-                  DropdownMenuItem(value: p['id'] as int, child: Text('${'  ' * depth}${refs.placeName(p['id'] as int)}')),
-              ],
+              options: [for (final (p, _) in placeTree(refs.places)) (p['id'] as int, refs.placeName(p['id'] as int))],
               onChanged: (v) => set(() => placeId = v),
             ),
-            DropdownButton<int?>(
+            Pick<int?>(
+              label: kind == 'issue' ? 'Given to' : 'Returned by',
               value: personId,
-              isExpanded: true,
-              hint: Text(kind == 'issue' ? 'Given to' : 'Returned by'),
-              items: [for (final p in refs.people) DropdownMenuItem(value: p['id'] as int, child: Text(p['name'] as String))],
+              options: [for (final p in refs.people) (p['id'] as int, p['name'] as String)],
               onChanged: (v) => set(() => personId = v),
             ),
           ]),
@@ -430,13 +425,17 @@ class _BookingFormState extends State<BookingForm> {
         const SizedBox(height: 12),
         Row(children: [
           Expanded(
-            child: DropdownButtonFormField<int?>(
-              initialValue: a.requesterId,
-              decoration: const InputDecoration(labelText: 'Requested by'),
-              items: [
-                for (final p in refs.people) DropdownMenuItem(value: p['id'] as int, child: Text('${p['name']} (${p['kind']})')),
-              ],
-              onChanged: (v) => setState(() => _setRequester(refs.people.firstWhere((p) => p['id'] == v))),
+            child: Pick<int?>(
+              label: 'Requested by',
+              value: a.requesterId,
+              options: [for (final p in refs.people) (p['id'] as int, '${p['name']} (${p['kind']})')],
+              onChanged: (v) => setState(() {
+                if (v == null) {
+                  a.requesterId = null;
+                } else {
+                  _setRequester(refs.people.firstWhere((p) => p['id'] == v));
+                }
+              }),
             ),
           ),
           IconButton(tooltip: 'New person', icon: const Icon(Icons.person_add), onPressed: _newPerson),
@@ -456,14 +455,12 @@ class _BookingFormState extends State<BookingForm> {
                 ),
             ],
           ),
-        DropdownButtonFormField<int?>(
-          initialValue: a.organizationId,
-          decoration: const InputDecoration(labelText: 'Club / course / project (optional)'),
-          items: [
-            const DropdownMenuItem<int?>(value: null, child: Text('—')),
-            for (final o in refs.orgs) DropdownMenuItem(value: o['id'] as int, child: Text(o['name'] as String)),
-          ],
-          onChanged: (v) => a.organizationId = v,
+        Pick<int?>(
+          label: 'Club / course / project (optional)',
+          value: a.organizationId,
+          nullText: '—',
+          options: [for (final o in refs.orgs) (o['id'] as int, o['name'] as String)],
+          onChanged: (v) => setState(() => a.organizationId = v),
         ),
         TextField(controller: attendees, decoration: const InputDecoration(labelText: 'People attending'), keyboardType: TextInputType.number),
         TextField(controller: purpose, decoration: const InputDecoration(labelText: 'Purpose and notes (private)'), maxLines: 3),

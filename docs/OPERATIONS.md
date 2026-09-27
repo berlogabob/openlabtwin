@@ -136,6 +136,7 @@ Anything new that must be public goes through `export.py`: add it to the explici
 | Site logic (filters, calendar maths) | `cd apps/site && dart analyze && dart test` | yes |
 | Office logic (repeats, clashes, movements, place codes and tree, stocktake) | `cd apps/office && flutter analyze && flutter test` | yes |
 | Browser, end to end | Playwright with system Chrome: `uv run --with playwright python …` | no |
+| Public forms (one picker, courses and items, required student number, schedule chips, idea skills, Book me) | site built and served, or the live site: `set -a; . ./.env; set +a; uv run --with playwright python tests/e2e_site.py [base URL]` (throwaway rows, removed at the end) | no |
 | Paper archive in the office (a fictional sheet → Archive → approve → loans → Usage) | the same office build and server, then `set -a; . ./.env; set +a; uv run --with playwright python tests/e2e_archive.py` (throwaway rows and photo, removed at the end) | no |
 | Smart storage in the office (QR link through sign-in, count, found here, kit with a tag, merge) | office built with `E2E=true` and served at `127.0.0.1:8765/openlabtwin/office/`, then `set -a; . ./.env; set +a; uv run --with playwright python tests/e2e_storage.py` (throwaway rows, removed at the end) | no |
 
