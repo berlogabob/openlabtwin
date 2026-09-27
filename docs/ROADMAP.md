@@ -14,11 +14,15 @@ Waiting for access to the Pi (`192.168.1.194`, a Pi 3 or older by its network ma
 6. Measure: which video level the TV settles on (its footer shows "video 480p/720p/1080p") and whether cards and slides stay smooth. If a Pi 3 can't manage, get a Pi 4 (2 GB+) or Pi 5, or an old laptop or mini-PC.
 7. Then retire the old site: point the TV at the new address for good, and follow [OPERATIONS → The old site](OPERATIONS.md#the-old-site) (the local branch `retire-to-openlabtwin` in `iade-lab-schedule` is ready and not pushed).
 
+## Next: finish the node setup (needs sudo, 2026-09-27)
+
+The node runs the new code and the loan-sheet reader (cron every 15 min, `~/archive/inbox`, tested with a fictional sheet). What needs the node's sudo password, from a terminal: `ssh -t -i ~/.ssh/techlab TechLAB@techlab-01 'cd openlabtwin && scripts/edge-setup.sh'`. It adds the `smb://192.168.1.131/archive` share (until then, copy photos in with `scp`) and installs Postgres for the nightly read-only mirror (step 10).
+
 ## Smart storage: first stocktakes
 
 The office side is built (2026-09-26); what's left is walking the store with a phone.
 
-1. Print labels (`scripts/labels.py --root R15`, then `LAB`, `B2`) and stick them on.
+1. Print labels and stick them on: all 28 places and all 83 tagged items were generated on 2026-09-27 (`~/Downloads/labels-places.html`, `labels-assets.html`); later ones with `scripts/labels.py --root CODE` or `--assets`.
 2. Count every place in Room 15 and the Vitrine; Needs attention empties as you go. Merge the duplicate names it finds.
 3. -2 floor: add the racks and shelves from the office (`B2-R1`, `B2-R1-S1`, …), print their labels, count them.
 4. Classroom cupboards `CUP1`–`CUP8`: set each one's room (Edit → Inside) and name.
