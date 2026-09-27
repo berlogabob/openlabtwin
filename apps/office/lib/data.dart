@@ -146,8 +146,12 @@ Future<Rec> addPerson(String name, String kind, String email) => db
     .select('id,name,kind,email')
     .single();
 
-Future<Rec> addItem(String name, String kind) =>
-    db.from('items').insert({'name': name.trim(), 'kind': kind}).select('id,name,kind').single();
+/// A new portable item can be requested on the public /kit/ list straight away; staff can switch that off.
+Future<Rec> addItem(String name, String kind) => db
+    .from('items')
+    .insert({'name': name.trim(), 'kind': kind, 'lendable': kind == 'portable'})
+    .select('id,name,kind,note,lendable')
+    .single();
 
 // ---------- inventory ----------
 

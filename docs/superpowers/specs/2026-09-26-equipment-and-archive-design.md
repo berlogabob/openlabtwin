@@ -34,7 +34,7 @@ The catalogue fills once the smart storage import is applied.
 ## Milestone A: equipment requests (booking ↔ storage)
 
 **Database** (`supabase/migrations/…_equipment_requests.sql`, test `09_equipment_requests.test.sql`):
-- `items.lendable boolean`: true for portable items at migration time, and staff can untick any item. Only lendable, unmerged items appear in the public catalogue.
+- `items.lendable boolean`: true for portable items (set at migration time, again after the import on 2026-09-27, and for each new portable item the office adds), and staff can untick any item. Only lendable, unmerged items appear in the public catalogue.
 - `equipment_catalogue()` (anon, security definer): id, name and kind only. No places, counts or tags.
 - `request_equipment(name, email, student_number, use, course, starts_at, ends_at, repeat_until, items jsonb, other, website)`:
   - `use` is one of: class, lab, home;
