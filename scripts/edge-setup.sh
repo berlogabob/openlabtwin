@@ -25,7 +25,8 @@ step "3/10 deploy key (write access to this repo only)"
 if [ ! -f "$KEY" ]; then run ssh-keygen -t ed25519 -f "$KEY" -N "" -C "lab edge node"; fi
 # the IADE network blocks outgoing port 22: talk to GitHub over SSH on port 443 (ssh.github.com)
 grep -q "IdentityFile $KEY" "$HOME/.ssh/config" 2>/dev/null || run sh -c "printf 'Host github.com\n  Hostname ssh.github.com\n  Port 443\n  User git\n  IdentityFile $KEY\n  StrictHostKeyChecking accept-new\n' >> '$HOME/.ssh/config'"
-if [ "$DRY" = 0 ] && ! ssh -o StrictHostKeyChecking=accept-new -T git@github.com 2>&1 | grep -q "successfully authenticated"; then
+# ssh -T to GitHub always exits 1 (no shell), which pipefail would pass on: capture the greeting first, then look at it
+if [ "$DRY" = 0 ] && ! { ssh -o StrictHostKeyChecking=accept-new -T git@github.com 2>&1 || true; } | grep -q "successfully authenticated"; then
   echo "Add this key at https://github.com/berlogabob/openlabtwin/settings/keys  (tick 'Allow write access'):"
   cat "$KEY.pub"; read -rp "Press Enter once it is added… " _ </dev/tty
 fi

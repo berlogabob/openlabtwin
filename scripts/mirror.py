@@ -36,8 +36,9 @@ create view usage_events as
 """
 
 
-# An empty table's JSON has no columns, but the views need these. ponytail: copied from the migrations; keep in step.
-EMPTY = {"movements": '"id" bigint, "item_id" bigint, "qty" numeric, "from_place" bigint, "to_place" bigint, "kind" text, '
+# The tables the views read, typed as in the migrations: guessing from the data fails when a column holds only nulls
+# (every movements.from_place was null after the import), or when a table is empty. ponytail: keep in step with the migrations.
+FIXED = {"movements": '"id" bigint, "item_id" bigint, "qty" numeric, "from_place" bigint, "to_place" bigint, "kind" text, '
                       '"person_id" bigint, "activity_id" bigint, "by_staff" bigint, "at" timestamptz, "asset_id" bigint, "note" text',
          "archive_loans": '"id" bigint, "sheet_id" bigint, "person_id" bigint, "course" text, "item_id" bigint, "item_text" text, '
                           '"qty" numeric, "out_on" date, "back_on" date'}
@@ -72,10 +73,12 @@ def dollar(text):
 
 def table_sql(name, rows):
     """Drop and recreate one table from its backup rows."""
-    cols = list(dict.fromkeys(k for r in rows for k in r))
-    if not cols:
-        return f"drop table if exists {name} cascade; create table {name} ({EMPTY.get(name, '')});"
-    spec = ", ".join(f'"{c}" {column_type(c, [r.get(c) for r in rows])}' for c in cols)
+    fixed = FIXED.get(name, "")
+    known = {c.split('"')[1] for c in fixed.split(", ") if c}
+    cols = [c for c in dict.fromkeys(k for r in rows for k in r) if c not in known]
+    spec = ", ".join([s for s in [fixed] if s] + [f'"{c}" {column_type(c, [r.get(c) for r in rows])}' for c in cols])
+    if not rows:
+        return f"drop table if exists {name} cascade; create table {name} ({spec});"
     return (f"drop table if exists {name} cascade;"
             f"create table {name} as select * from jsonb_to_recordset({dollar(json.dumps(rows, ensure_ascii=False))}::jsonb) as x({spec});")
 
