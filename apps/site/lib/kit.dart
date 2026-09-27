@@ -1,19 +1,16 @@
-// Equipment requests (/kit/): the catalogue search, the form's checks (mirroring request_equipment()) and what it sends.
+// Equipment requests (/kit/): the catalogue and course lists, the form's checks (mirroring request_equipment()) and what it sends.
 import 'book.dart';
-import 'schedule.dart' show plain;
+import 'schedule.dart' show Lesson;
 
 const uses = {'class': 'For my class', 'lab': 'Lab work in the Tech Lab', 'home': 'To take home'};
 
 typedef Item = ({int id, String name});
 
+/// The courses of the timetable (all.json lessons), in name order: the course picker's list.
+List<String> courses(List<Lesson> lessons) => ({for (final l in lessons) if (l.layer == 'lesson' && l.course.isNotEmpty) l.course}.toList()..sort());
+
 List<Item> catalogue(List<Object?> rows) =>
     [for (final r in rows.cast<Map<String, dynamic>>()) (id: r['id'] as int, name: r['name'] as String)];
-
-/// Items whose name holds every typed word, ignoring case and accents: "esp dev" finds "ESP32 DevKit".
-List<Item> search(List<Item> items, String q) {
-  final words = [for (final w in plain(q).split(RegExp(r'\s+'))) if (w.isNotEmpty) w];
-  return [for (final i in items) if (words.every(plain(i.name).contains)) i];
-}
 
 /// A local date ("2026-10-20") and time ("14:00") as an instant, or null when either is missing.
 DateTime? localAt(String date, String time) => date.isEmpty || time.isEmpty ? null : DateTime.tryParse('${date}T$time');
@@ -22,7 +19,7 @@ DateTime? localAt(String date, String time) => date.isEmpty || time.isEmpty ? nu
 String? kitProblem({
   required String name,
   required String email,
-  String number = '',
+  required String number,
   required String use,
   DateTime? start,
   DateTime? end,
@@ -41,8 +38,8 @@ String? kitProblem({
   if (picked.length > 20) return 'At most 20 different items per request.';
   if (picked.isEmpty && other.trim().length < 3) return 'Pick at least one item, or say what you need.';
   if (picked.values.any((q) => q < 1 || q > 100)) return 'Quantities are 1–100.';
-  if (other.trim().length > 500 || course.trim().length > 100) {
-    return 'Keep "something else" under 500 characters and the course under 100.';
+  if (other.trim().length > 500 || course.trim().length > 300) {
+    return 'Keep "something else" under 500 characters and the courses under 300.';
   }
   return null;
 }

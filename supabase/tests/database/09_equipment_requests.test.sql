@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(15);
+select plan(16);
 
 insert into items (name, kind, lendable) values ('Kit ESP32', 'portable', true), ('Kit laser cutter', 'stationary', false);
 create temp table t as select now() + interval '2 days' as s, (select id from items where name = 'Kit laser cutter') as laser;
@@ -15,7 +15,7 @@ select is((select count(*)::int from equipment_catalogue() where name = 'Kit ESP
 select is((select count(*)::int from equipment_catalogue() where name = 'Kit laser cutter'), 0, 'items not lent are not');
 
 set local role anon;
-create temp table tok as select request_equipment('Prof Kit', 'prof.kit@example.com', null, 'class', 'Physical Computing',
+create temp table tok as select request_equipment('Prof Kit', 'prof.kit@example.com', 'STAFF-7', 'class', 'Physical Computing',
   (select s from t), (select s from t) + interval '2 hours', ((select s from t) + interval '28 days')::date,
   jsonb_build_array(jsonb_build_object('item_id', (select id from equipment_catalogue() where name = 'Kit ESP32'), 'qty', 12)),
   'and a projector adapter') as token;
@@ -32,13 +32,16 @@ select matches((select purpose from activities where status_token = (select toke
 select is((select items -> 0 ->> 'name' from equipment_status((select token from tok))), 'Kit ESP32', 'the status link lists the items');
 
 set local role anon;
-select throws_ok($$select request_equipment('X Y', 'x@example.com', null, 'home', null, now() + interval '1 day', now() + interval '2 days',
+select throws_ok($$select request_equipment('X Y', 'x@example.com', 'X-1', 'home', null, now() + interval '1 day', now() + interval '2 days',
   null, jsonb_build_array(jsonb_build_object('item_id', (select laser from t), 'qty', 1)), null)$$,
   'P0001', 'One of the items is not on the list, or its quantity is not 1–100.', 'only lendable items can be asked for');
-select throws_ok($$select request_equipment('X Y', 'x@example.com', null, 'home', null, now() + interval '1 day', now() + interval '2 days',
+select throws_ok($$select request_equipment('X Y', 'x@example.com', 'X-1', 'home', null, now() + interval '1 day', now() + interval '2 days',
   now()::date + 30, '[]', 'a soldering iron')$$, 'P0001', 'Weekly repeats are for classes, up to 6 months.', 'only classes repeat');
-select throws_ok($$select request_equipment('X Y', 'x@example.com', null, 'party', null, now() + interval '1 day', now() + interval '2 days',
+select throws_ok($$select request_equipment('X Y', 'x@example.com', 'X-1', 'party', null, now() + interval '1 day', now() + interval '2 days',
   null, '[]', 'a soldering iron')$$, 'P0001', null, 'the use must be class, lab or home');
+select throws_ok($$select request_equipment('No Number', 'nn@example.com', null, 'lab', null, now() + interval '1 day',
+  now() + interval '1 day 2 hours', null, '[]', 'a soldering iron')$$, 'P0001', 'Please give your student number (staff: your staff number).',
+                 'the student number is required: it is the lab''s local ID');
 select isnt((select request_equipment('Bot', 'bot@example.com', null, 'home', null, now(), now(), null, '[]', null, 'http://spam')), null,
             'the honeypot answers with a token');
 reset role;

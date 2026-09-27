@@ -20,22 +20,26 @@ Map<String, List<Slot>> byDay(List<Slot> slots) {
   return out;
 }
 
+/// The label every public form uses for the student number: the lab's local ID for a person (staff give their staff number).
+const numberLabel = 'Student number (staff: your staff number)';
+
 /// The first problem with name, email, link or student number: the rules of check_contact() in the database.
-String? contactProblem({required String name, required String email, String link = '', String number = ''}) {
+String? contactProblem({required String name, required String email, String link = '', required String number}) {
   final n = name.trim(), e = email.trim(), l = link.trim(), s = number.trim();
   if (n.length < 2 || n.length > 100) return 'Please give your name (2–100 characters).';
   if (e.length < 3 || e.length > 200 || !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(e)) return 'Please give a valid email.';
   if (l.isNotEmpty && (l.length > 500 || !RegExp(r'^https?://\S+$', caseSensitive: false).hasMatch(l))) {
     return 'The link must start with http:// or https://.';
   }
-  if (s.isNotEmpty && !RegExp(r'^[A-Za-z0-9-]{1,30}$').hasMatch(s)) return 'The student number can only have letters, digits and dashes.';
+  if (s.isEmpty) return 'Please give your student number (staff: your staff number).';
+  if (!RegExp(r'^[A-Za-z0-9-]{1,30}$').hasMatch(s)) return 'The student number can only have letters, digits and dashes.';
   return null;
 }
 
 /// The first problem with the Book me form, or null (mirrors request_consultation()).
-String? formProblem({required String name, required String email, required String need}) {
+String? formProblem({required String name, required String email, required String number, required String need}) {
   final n = need.trim();
-  return contactProblem(name: name, email: email) ??
+  return contactProblem(name: name, email: email, number: number) ??
       (n.length < 3 || n.length > 300 ? 'Say in a line what you need (3–300 characters).' : null);
 }
 

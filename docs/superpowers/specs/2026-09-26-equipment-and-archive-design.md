@@ -50,8 +50,8 @@ The catalogue fills once the smart storage import is applied.
   - who you are (name, email, student number optional);
   - what for: **for my class**, **lab work** or **take home**;
   - when: date and times, plus "every week until" for classes;
-  - a searchable checklist from `equipment_catalogue()` with quantities, and "something else";
-  - course (optional).
+  - the equipment from `equipment_catalogue()` and the courses from the timetable, both with the site's one picker (chips with ×, a searchable dropdown), a quantity on each item, and "something else";
+  - the student number, required (staff: their staff number; decided 2026-09-27).
 - The link to the private status page, as in Book me.
 - A QR code `apps/site/web/qr/kit.svg` (segno, as `book.svg`), and a "Need equipment?" link on the Book me page.
 - Pure logic (building the request, validation) in `lib/kit.dart`, tested in `test/logic_test.dart`.

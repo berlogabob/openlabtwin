@@ -40,18 +40,18 @@ select is((select count(*)::int from people where email = 'ana@example.com' and 
 select results_eq(
   $$ select to_char(starts_at at time zone 'Europe/Lisbon', 'HH24:MI') from free_slots((select day from target), (select day from target)) $$,
   array['15:30', '16:00', '16:30'], 'a requested slot is no longer free');
-select throws_like($$ select request_consultation('Ben', 'ben@example.com', 'Another project idea', null, pg_temp.at('14:30')) $$,
+select throws_like($$ select request_consultation('Ben', 'ben@example.com', 'Another project idea', null, pg_temp.at('14:30'), 'B-1') $$,
                    '%no longer free%', 'the same slot twice is refused');
-select lives_ok($$ select request_consultation('Ana Test', 'ana@example.com', 'A second visit, same project', null, pg_temp.at('15:30')) $$,
+select lives_ok($$ select request_consultation('Ana Test', 'ana@example.com', 'A second visit, same project', null, pg_temp.at('15:30'), 'A-123') $$,
                 'a second open request by the same student is accepted');
-select throws_like($$ select request_consultation('Ana Test', 'ana@example.com', 'A third one is too many', null, pg_temp.at('16:00')) $$,
+select throws_like($$ select request_consultation('Ana Test', 'ana@example.com', 'A third one is too many', null, pg_temp.at('16:00'), 'A-123') $$,
                    '%2 open requests%', 'a third open request by the same email is refused');
 select is((select count(*)::int from people where email = 'ana@example.com'), 1, 'repeat requests share one people row: one history');
 select is((select count(*)::int from activities a join people p on p.id = a.requester_id where p.email = 'bot@example.com'), 0,
           'honeypot writes nothing')
   from (select request_consultation('Bot', 'bot@example.com', 'Spam spam spam spam', null, pg_temp.at('16:30'), null, 'http://x')) h;
 
-select throws_like($$ select request_consultation('Cat Test', 'cat@example.com', 'hi', null, now()) $$, '%3–300%',
+select throws_like($$ select request_consultation('Cat Test', 'cat@example.com', 'hi', null, now(), 'C-1') $$, '%3–300%',
                    'the request needs at least a short line');
 select * from finish();
 rollback;

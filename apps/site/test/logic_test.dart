@@ -102,19 +102,21 @@ void main() {
   });
 
   test('book me: form checks mirror request_consultation()', () {
-    String? check({String name = 'Ana', String email = 'ana@example.com', String need = 'Help with a 3D print'}) =>
-        formProblem(name: name, email: email, need: need);
+    String? check({String name = 'Ana', String email = 'ana@example.com', String number = '20190001', String need = 'Help with a 3D print'}) =>
+        formProblem(name: name, email: email, number: number, need: need);
     expect(check(), isNull);
     expect(check(need: 'LED'), isNull);
     expect(check(name: 'A'), contains('name'));
     expect(check(email: 'ana@'), contains('email'));
     expect(check(need: 'hi'), contains('3–300'));
     expect(check(need: 'x' * 301), contains('3–300'));
+    expect(check(number: ''), contains('student number'), reason: 'the local ID is required on every public form');
+    expect(check(number: 'A 1'), contains('letters, digits'));
   });
 
   test('ideas: form checks mirror submit_idea()', () {
     String? check({String body = 'A plant game with real sensors', String canBring = '', String link = ''}) =>
-        ideaProblem(name: 'Ana', email: 'ana@example.com', body: body, canBring: canBring, link: link);
+        ideaProblem(name: 'Ana', email: 'ana@example.com', number: 'A-1', body: body, canBring: canBring, link: link);
     expect(check(), isNull);
     expect(check(body: 'short'), contains('10–4000'));
     expect(check(canBring: 'x' * 501), contains('500'));
@@ -145,17 +147,16 @@ void main() {
     expect(nowIndex([], '12:00'), 0);
   });
 
-  test('kit: catalogue search ignores case and accents, every word must match', () {
-    final items = [(id: 1, name: 'ESP32 DevKit'), (id: 2, name: 'Cabo HDMI'), (id: 3, name: 'Ecrãs Samsung')];
-    expect([for (final i in search(items, 'esp dev')) i.id], [1]);
-    expect([for (final i in search(items, 'ecras')) i.id], [3]);
-    expect(search(items, '').length, 3);
+  test('kit: the course list is the timetable\'s courses, once each, in order', () {
+    final lessons = [at('09:00', '10:00', 'Physical Computing'), at('10:00', '11:00', 'Animação'), at('11:00', '12:00', 'Physical Computing'),
+        const Lesson(date: '2026-09-17', start: '12:00', end: '13:00', course: 'Club meeting', layer: 'booking')];
+    expect(courses(lessons), ['Animação', 'Physical Computing']);
   });
 
   test('kit: form checks mirror request_equipment()', () {
     final s = DateTime(2026, 10, 20, 10), e = DateTime(2026, 10, 20, 12);
     String? check({String use = 'class', DateTime? start, DateTime? end, String until = '', Map<int, int>? picked, String other = ''}) =>
-        kitProblem(name: 'Ana', email: 'ana@example.com', use: use, start: start ?? s, end: end ?? e, repeatUntil: until,
+        kitProblem(name: 'Ana', email: 'ana@example.com', number: 'STAFF-7', use: use, start: start ?? s, end: end ?? e, repeatUntil: until,
             picked: picked ?? {1: 12}, other: other);
     expect(check(), isNull);
     expect(check(picked: {}, other: 'a soldering station'), isNull);

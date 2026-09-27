@@ -63,7 +63,7 @@ To regenerate the printable QR code: `uv run --with segno python -c "import segn
 
 ## Equipment requests
 
-The public `/kit/` form calls `equipment_catalogue()` (names of lendable items only), `request_equipment()` and `equipment_status()`, all security definer and granted to anon, like Book me. Limits: 3 open requests per email, 30 open in total, 1–20 lines, 1–100 each, up to 6 months ahead, at most 90 days, weekly repeats for classes only; a filled honeypot gets a token and stores nothing. `export.py` skips approved equipment bookings with no room (`private_kit`).
+The public `/kit/` form calls `equipment_catalogue()` (names of lendable items only), `request_equipment()` and `equipment_status()`, all security definer and granted to anon, like Book me. Limits: a student number (staff number) is required, as on every public form (`check_contact`); 3 open requests per email, 30 open in total, 1–20 lines, 1–100 each, courses up to 300 characters (several are joined with "; "), up to 6 months ahead, at most 90 days, weekly repeats for classes only; a filled honeypot gets a token and stores nothing. `export.py` skips approved equipment bookings with no room (`private_kit`).
 
 ## Loan sheet archive
 

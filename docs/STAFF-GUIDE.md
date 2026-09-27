@@ -85,7 +85,7 @@ From the Mac, in the repo: `uv run python scripts/labels.py --root R15` (one roo
 
 ## Equipment requests (by QR or link)
 
-Anyone with an email can ask for equipment at https://berlogabob.github.io/openlabtwin/kit/ (QR: `apps/site/web/qr/kit.svg`), **for a class** (with "every week until" for a course), **for lab work** in the Tech Lab, or **to take home** for a project. They tick items from the list and quantities, and can describe anything else. It's optional: nothing else in the lab needs it.
+Anyone with an email can ask for equipment at https://berlogabob.github.io/openlabtwin/kit/ (QR: `apps/site/web/qr/kit.svg`), **for a class** (with "every week until" for a course), **for lab work** in the Tech Lab, or **to take home** for a project. They pick courses from the timetable and items from the lab's list the same way as the schedule filters (type to search, pick from the list, × to remove), set a quantity on each item, and can describe anything else. Every public form (equipment, Book me, ideas) asks for the **student number**: the lab's local ID for a person; staff give their staff number. It's optional: nothing else in the lab needs it.
 
 - The request arrives in the bookings list as **Equipment**, *requested*, titled Class kit, Lab work or Take-home kit, with the kit already listed and what it's for in **Purpose and notes**. Approve, prepare the lines, then **Issue kit** / **Return kit** as usual.
 - The list only shows items marked **can be requested**: portable items start ticked. Change it on the Inventory page: tap an item.

@@ -1,6 +1,14 @@
 // Idea hub: form checks (mirroring submit_idea()) and the private status view parsed from idea_status().
 import 'book.dart';
 
+/// Skills offered as suggestions in "I can bring" / "I'm looking for" (typing anything else works too). The idea AI turns
+/// whatever is written into short general names, so these only help people type less.
+const skills = [
+  '3D modelling', '3D printing', 'animation', 'Arduino', 'electronics', 'game design', 'illustration', 'laser cutting',
+  'marketing', 'music', 'photography', 'programming', 'project management', 'robotics', 'sensors', 'sound design',
+  'Unity', 'Unreal Engine', 'UX/UI design', 'video editing', 'VR / AR', 'web development', 'writing',
+];
+
 /// The first problem with the idea form, or null.
 String? ideaProblem({
   required String name,
@@ -9,7 +17,7 @@ String? ideaProblem({
   String link = '',
   String canBring = '',
   String lookingFor = '',
-  String number = '',
+  required String number,
 }) {
   final b = body.trim();
   return contactProblem(name: name, email: email, link: link, number: number) ??

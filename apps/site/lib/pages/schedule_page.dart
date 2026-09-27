@@ -8,6 +8,7 @@ import 'package:jaspr/jaspr.dart';
 import 'package:universal_web/web.dart' as web;
 
 import '../calendar.dart';
+import '../pick.dart';
 import '../schedule.dart';
 
 const maxList = 300; // ponytail: render cap, add paging if people need to scroll past it
@@ -237,29 +238,17 @@ class SchedulePageState extends State<SchedulePage> {
         ]),
         div(id: 'filters', [
           for (final k in fields.keys)
-            label([
-              .text(labels[k]!),
-              span(classes: 'chips', [
-                for (final v in f.values[k] ?? const <String>[])
-                  span(classes: 'chip', [
-                    .text(v),
-                    button(
-                      type: ButtonType.button,
-                      attributes: {'aria-label': 'Remove $v'},
-                      onClick: () => _update(() => f.values[k]!.remove(v)),
-                      [.text('×')],
-                    ),
-                  ]),
-                input<String>(
-                  type: InputType.text,
-                  value: drafts[k] ?? '',
-                  attributes: {'list': '$k-list', 'placeholder': (f.values[k] ?? const []).isEmpty ? 'any' : 'or…', 'autocomplete': 'off'},
-                  onInput: (v) => known[k]!.contains(v) ? _pick(k, v) : setState(() => drafts[k] = v),
-                  onChange: (v) => _pick(k, v.trim()),
-                ),
-              ]),
-              datalist(id: '$k-list', [for (final v in options[k]!) option(value: v, [])]),
-            ]),
+            ChipPicker(
+              id: k,
+              caption: labels[k]!,
+              // every value of the field counts as known (typing one picks it); the dropdown offers what still matches
+              options: options[k]!,
+              picked: f.values[k] ?? const [],
+              draft: drafts[k] ?? '',
+              onDraft: (v) => known[k]!.contains(v) ? _pick(k, v) : setState(() => drafts[k] = v),
+              onAdd: (v) => _pick(k, v),
+              onRemove: (v) => _update(() => f.values[k]!.remove(v)),
+            ),
           if (f.view == 'list') ...[
             label(classes: 'date-field', [
               .text('From'),

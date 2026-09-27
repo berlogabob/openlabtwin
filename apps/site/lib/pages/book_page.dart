@@ -19,7 +19,7 @@ class BookPage extends StatefulComponent {
 class BookPageState extends State<BookPage> {
   List<Slot>? slots;
   Slot? picked;
-  String name = '', email = '', need = '', website = '';
+  String name = '', email = '', number = '', need = '', website = '';
   String? error, token;
   bool sending = false;
 
@@ -45,7 +45,7 @@ class BookPageState extends State<BookPage> {
   Future<void> _send() async {
     final problem = picked == null
         ? 'Pick a time first.'
-        : formProblem(name: name, email: email, need: need);
+        : formProblem(name: name, email: email, number: number, need: need);
     if (problem != null) return setState(() => error = problem);
     setState(() {
       sending = true;
@@ -54,7 +54,7 @@ class BookPageState extends State<BookPage> {
     try {
       final t = await rpc('request_consultation', {
         'p_name': name, 'p_email': email, 'p_project': need, 'p_link': '', 'p_starts_at': picked!.iso,
-        'p_student_number': '', 'p_website': website,
+        'p_student_number': number, 'p_website': website,
       });
       setState(() => token = t as String);
     } catch (e) {
@@ -107,6 +107,7 @@ class BookPageState extends State<BookPage> {
           div(classes: 'form', [
             _field('Name', name, (v) => name = v),
             _field('Email', email, (v) => email = v, type: InputType.email),
+            _field(numberLabel, number, (v) => number = v),
             _field('What do you need?', need, (v) => need = v),
             // honeypot: hidden from people, bots fill it in
             label(classes: 'hp', attributes: {'aria-hidden': 'true'}, [
@@ -116,7 +117,7 @@ class BookPageState extends State<BookPage> {
             button(type: ButtonType.button, disabled: sending, onClick: _send, [.text(sending ? 'Sending…' : 'Send request')]),
             if (error != null) p(classes: 'error', [.text(error!)]),
             p(classes: 'note', [.text('Your request is saved in your lab history, visible to lab staff only.')]),
-            p(classes: 'note', [.text('Need equipment for a class, lab work or a project? '), a(href: '../kit/', [.text('Ask for it here')])]),
+            p(classes: 'note', [.text('Need equipment for a class, lab work or a project? '), a(href: 'kit/', [.text('Ask for it here')])]),
           ]),
         ],
       ]),

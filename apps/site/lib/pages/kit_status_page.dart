@@ -47,7 +47,7 @@ class KitStatusPageState extends State<KitStatusPage> {
 
   @override
   Component build(BuildContext context) => div(classes: 'book', [
-        header([h1([a(href: '../', [.text('Your equipment request')])])]),
+        header([h1([a(href: 'kit/', [.text('Your equipment request')])])]),
         main_([
           p(classes: 'status', [.text(message ?? 'Loading…')]),
           if (lines.isNotEmpty) ul([for (final l in lines) li([.text(l)])]),

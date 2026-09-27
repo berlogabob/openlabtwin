@@ -8,9 +8,9 @@ insert into tok
                             'Unity, 3D modelling', 'electronics, soil sensors', 'A-1');
 insert into tok
   select 'ben', submit_idea('Ben Costa', 'ben@example.com', 'Plant watering robot for the lab garden', 'https://github.com/ben',
-                            'electronics, ESP32', 'someone to make it playful');
+                            'electronics, ESP32', 'someone to make it playful', 'B-1');
 insert into tok
-  select 'cat', submit_idea('Cat Reis', 'cat@example.com', 'A sound installation for the atrium', null, null, null);
+  select 'cat', submit_idea('Cat Reis', 'cat@example.com', 'A sound installation for the atrium', null, null, null, 'C-1');
 create function pg_temp.st(w text) returns json language sql as $$ select idea_status((select t from tok where who = w)) $$;
 create function pg_temp.id(w text) returns bigint language sql as
   $$ select id from ideas where status_token = (select t from tok where who = w) $$;
@@ -44,7 +44,7 @@ select idea_connect((select t from tok where who = 'ben'), pg_temp.id('ana'));
 select is(pg_temp.st('ana') -> 'matches' -> 0 -> 'contact' ->> 'email', 'ben@example.com', 'both connected: contact shown');
 select throws_like($$ select idea_connect((select t from tok where who = 'ana'), pg_temp.id('cat')) $$, '%not available%',
                    'connecting to an unapproved idea is refused');
-select throws_like($$ select submit_idea('Ana Silva', 'ana@example.com', 'Idea number six today, too many', null, null, null)
+select throws_like($$ select submit_idea('Ana Silva', 'ana@example.com', 'Idea number six today, too many', null, null, null, 'A-1')
                      from generate_series(1, 5) $$, '%5 ideas today%', 'at most 5 ideas per email per day');
 
 select * from finish();

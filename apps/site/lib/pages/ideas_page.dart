@@ -4,6 +4,7 @@ import 'package:jaspr/jaspr.dart';
 
 import '../book.dart';
 import '../ideas.dart';
+import '../pick.dart';
 
 @client
 class IdeasPage extends StatefulComponent {
@@ -14,7 +15,10 @@ class IdeasPage extends StatefulComponent {
 }
 
 class IdeasPageState extends State<IdeasPage> {
-  String name = '', email = '', number = '', body = '', link = '', canBring = '', lookingFor = '', website = '';
+  String name = '', email = '', number = '', body = '', link = '', website = '', bringDraft = '', lookDraft = '';
+  final bring = <String>[], looking = <String>[];
+  String get canBring => bring.join(', ');
+  String get lookingFor => looking.join(', ');
   String? error, token;
   bool sending = false;
 
@@ -38,6 +42,22 @@ class IdeasPageState extends State<IdeasPage> {
       setState(() => sending = false);
     }
   }
+
+  /// Skills as chips, from the suggested list or typed (Enter).
+  Component _skills(String id, String caption, List<String> picked, String draft, void Function(String) setDraft) => ChipPicker(
+        id: id,
+        caption: caption,
+        options: skills,
+        picked: picked,
+        draft: draft,
+        placeholder: picked.isEmpty ? 'e.g. Unity, electronics: pick or type, then Enter' : 'add more…',
+        onDraft: (v) => setState(() => setDraft(v)),
+        onAdd: (v) => setState(() {
+          if (!picked.contains(v)) picked.add(v);
+          setDraft('');
+        }),
+        onRemove: (v) => setState(() => picked.remove(v)),
+      );
 
   Component _field(String caption, String value, void Function(String) set, {InputType type = InputType.text}) =>
       label([.text(caption), input<String>(type: type, value: value, onInput: (v) => set(v))]);
@@ -64,11 +84,11 @@ class IdeasPageState extends State<IdeasPage> {
           div(classes: 'form', [
             _field('Name', name, (v) => name = v),
             _field('Email', email, (v) => email = v, type: InputType.email),
-            _field('Student number (optional)', number, (v) => number = v),
+            _field(numberLabel, number, (v) => number = v),
             label([.text('Your idea'), textarea(rows: 5, onInput: (v) => body = v, [.text(body)])]),
             _field('Link (optional: example, repository, social)', link, (v) => this.link = v, type: InputType.url),
-            _field('I can bring (optional: e.g. Unity, 3D modelling)', canBring, (v) => canBring = v),
-            _field('I\'m looking for (optional: e.g. electronics, a sound designer)', lookingFor, (v) => lookingFor = v),
+            _skills('bring', 'I can bring (optional)', bring, bringDraft, (v) => bringDraft = v),
+            _skills('looking', 'I\'m looking for (optional)', looking, lookDraft, (v) => lookDraft = v),
             // honeypot: hidden from people, bots fill it in
             label(classes: 'hp', attributes: {'aria-hidden': 'true'}, [
               .text('Website'),

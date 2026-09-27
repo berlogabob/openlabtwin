@@ -1,11 +1,16 @@
 // Equipment request form (/kit/): who, what for (class, lab work, take home), when, and a checklist from the lab's
 // catalogue. Optional everywhere else: a booking never needs one. Ends with the private status link, as Book me does.
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
 import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
 
 import '../book.dart';
 import '../calendar.dart';
 import '../kit.dart';
+import '../pick.dart';
+import '../schedule.dart' show parseLessons;
 
 @client
 class KitPage extends StatefulComponent {
@@ -17,8 +22,10 @@ class KitPage extends StatefulComponent {
 
 class KitPageState extends State<KitPage> {
   List<Item>? items;
-  final picked = <int, int>{};
-  String name = '', email = '', number = '', use = 'class', course = '', other = '', website = '', q = '';
+  List<String> courseList = [];
+  final picked = <int, int>{}; // item id -> how many
+  final coursesPicked = <String>[];
+  String name = '', email = '', number = '', use = 'class', other = '', website = '', itemDraft = '', courseDraft = '';
   String day = iso(DateTime.now().add(const Duration(days: 1))), from = '10:00', to = '12:00', backDay = '', until = '';
   String? error, token;
   bool sending = false;
@@ -36,7 +43,14 @@ class KitPageState extends State<KitPage> {
     } catch (e) {
       setState(() => error = 'Could not load the equipment list: $e');
     }
+    try {
+      // the same timetable the schedule page reads (links resolve from the <base>, the site root): its courses are the list
+      final r = await http.get(Uri.parse('data/all.json'), headers: {'Cache-Control': 'no-cache'});
+      setState(() => courseList = courses(parseLessons(utf8.decode(r.bodyBytes))));
+    } catch (_) {} // typing a course still works without the list
   }
+
+  String get course => coursesPicked.join('; ');
 
   // a take-home loan is picked up and brought back on two days; a class or lab work is one time slot
   DateTime? get _start => use == 'home' ? localAt(day, '10:00') : localAt(day, from);
@@ -66,36 +80,26 @@ class KitPageState extends State<KitPage> {
   Component _field(String caption, String value, void Function(String) set, {InputType type = InputType.text}) =>
       label([.text(caption), input<String>(type: type, value: value, onInput: (v) => setState(() => set(v)))]);
 
-  Component _item(Item i) {
-    final n = picked[i.id];
-    return div(classes: 'kit-item', [
-      button(
-        type: ButtonType.button,
-        classes: n == null ? 'slot' : 'slot on',
-        onClick: () => setState(() => n == null ? picked[i.id] = 1 : picked.remove(i.id)),
-        [.text(i.name)],
-      ),
-      if (n != null)
-        label([
-          .text('How many'),
-          input<String>(
-            type: InputType.text,
-            value: '$n',
-            attributes: {'inputmode': 'numeric', 'size': '3'},
-            onInput: (v) => setState(() => picked[i.id] = int.tryParse(v.trim()) ?? 0),
-          ),
-        ]),
-    ]);
+  /// The quantity inside an item's chip.
+  Component _qty(String itemName) {
+    final i = items!.firstWhere((it) => it.name == itemName);
+    return input<String>(
+      type: InputType.text,
+      classes: 'qty',
+      value: '${picked[i.id]}',
+      attributes: {'inputmode': 'numeric', 'aria-label': 'How many $itemName'},
+      onInput: (v) => setState(() => picked[i.id] = int.tryParse(v.trim()) ?? 0),
+    );
   }
 
   @override
   Component build(BuildContext context) {
     final link = token == null ? '' : Uri.base.resolve('status/?t=$token').toString();
-    final shown = items == null ? const <Item>[] : search(items!, q);
+    final names = {for (final i in items ?? const <Item>[]) i.id: i.name};
     return div(classes: 'book', [
       header([
-        h1([a(href: './', [.text('Ask for equipment')])]),
-        nav([a(href: '../', [.text('Schedule')])]),
+        h1([a(href: 'kit/', [.text('Ask for equipment')])]),
+        nav([a(href: './', [.text('Schedule')])]),
       ]),
       main_([
         if (token != null)
@@ -121,20 +125,47 @@ class KitPageState extends State<KitPage> {
               _field('To', to, (v) => to = v, type: InputType.time),
               if (use == 'class') _field('Every week until (optional)', until, (v) => until = v, type: InputType.date),
             ],
-            _field(use == 'class' ? 'Class or course' : 'Course or project (optional)', course, (v) => course = v),
+            ChipPicker(
+              id: 'course',
+              caption: use == 'class' ? 'Class or course' : 'Course or project (optional)',
+              options: courseList,
+              picked: coursesPicked,
+              draft: courseDraft,
+              placeholder: coursesPicked.isEmpty ? 'type to search the timetable' : 'or…',
+              onDraft: (v) => setState(() => courseDraft = v),
+              onAdd: (v) => setState(() {
+                if (!coursesPicked.contains(v)) coursesPicked.add(v);
+                courseDraft = '';
+              }),
+              onRemove: (v) => setState(() => coursesPicked.remove(v)),
+            ),
           ]),
           h2([.text('What you need')]),
           if (items == null && error == null) p(classes: 'empty', [.text('Loading the equipment list…')]),
-          if (items != null) ...[
-            div(classes: 'form', [_field('Search', q, (v) => q = v)]),
-            div(classes: 'kit-list', [for (final i in shown) _item(i)]),
-            if (shown.isEmpty) p(classes: 'empty', [.text('Nothing by that name. Describe it below.')]),
-          ],
+          if (items != null)
+            div(classes: 'form', [
+              ChipPicker(
+                id: 'items',
+                caption: 'Equipment',
+                options: [for (final i in items!) i.name],
+                picked: [for (final id in picked.keys) names[id]!],
+                draft: itemDraft,
+                free: false, // only the lab's items; anything else goes under "Something else" below
+                placeholder: picked.isEmpty ? 'type to search the equipment list' : 'add more…',
+                chipExtra: _qty,
+                onDraft: (v) => setState(() => itemDraft = v),
+                onAdd: (v) => setState(() {
+                  picked.putIfAbsent(items!.firstWhere((it) => it.name == v).id, () => 1);
+                  itemDraft = '';
+                }),
+                onRemove: (v) => setState(() => picked.remove(items!.firstWhere((it) => it.name == v).id)),
+              ),
+            ]),
           div(classes: 'form', [
             label([.text('Something else, or details (optional)'), textarea(rows: 3, onInput: (v) => other = v, [.text(other)])]),
             _field('Name', name, (v) => name = v),
             _field('Email', email, (v) => email = v, type: InputType.email),
-            _field('Student number (optional)', number, (v) => number = v),
+            _field(numberLabel, number, (v) => number = v),
             // honeypot: hidden from people, bots fill it in
             label(classes: 'hp', attributes: {'aria-hidden': 'true'}, [
               .text('Website'),
