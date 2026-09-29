@@ -28,7 +28,7 @@ VIDEO = {".mp4", ".m4v", ".webm"}
 CODECS = {"h264", "vp8", "vp9", "av1"}  # what Chromium on Linux plays without licensed decoders
 EVENT_DAYS = 14
 SLIDE_KEYS = {"kind", "title", "body", "seconds", "src", "video", "w", "h", "when", "place", "length", "full", "renditions",
-              "from", "to", "takeover"}
+              "from", "to", "takeover", "every"}
 
 
 def exif_orientation(path):
@@ -118,7 +118,7 @@ def link_events(slides, activities, day):
 def build(slides, media, events, ideas, day, generated, clock=None, renditions=None):
     """The day's playlist in the staff's order. An 'events' row expands into the events at its place; an 'ideas' row
     stays a marker the TV fills with 3 random ideas each loop. Pages carry their times of day ('from', 'to') and
-    'takeover'; the TV applies them on its own clock, so an event takes over at 17:00:00, not a minute or two later.
+    'takeover'; 'every' marks an announcement, which interrupts the loop every that many seconds. The TV applies them on its own clock, so an event takes over at 17:00:00, not a minute or two later.
     'takeover' and 'playing' describe the node's clock, for the office."""
     files = {m["name"]: m for m in media if m["playable"]}
     ordered = [s for s in sorted(slides, key=lambda s: (s["position"], s["id"])) if in_window(s, day)
@@ -128,7 +128,7 @@ def build(slides, media, events, ideas, day, generated, clock=None, renditions=N
 
     def pages(s):
         times = {k: v for k, v in (("from", (s.get("from_time") or "")[:5]), ("to", (s.get("to_time") or "")[:5]),
-                                   ("takeover", bool(s.get("takeover")))) if v}
+                                   ("takeover", bool(s.get("takeover"))), ("every", s.get("every_seconds"))) if v}
         if s["kind"] == "events":
             return [e | {"seconds": s["seconds"] or 10} | times for e in events]
         m = files.get(s["media_name"] or "")
@@ -222,7 +222,7 @@ def main():
     for name in known - {m["name"] for m in media}:
         request(db, "DELETE", "tv_media", {"name": f"eq.{name}"}, headers={"Prefer": "return=minimal"})
     slides = select(db, "tv_slides", {"select": "id,kind,title,body,media_name,url,seconds,position,starts_on,ends_on,active,"
-                                      "from_time,to_time,fullscreen,takeover,activity_id",
+                                      "from_time,to_time,fullscreen,takeover,every_seconds,activity_id",
                                       "order": "position,id"})
     activities = select(db, "activities", {"select": "id,title,place_ids,location_text,starts_at,ends_at,rrule,exdates,public_note",
                                            "status": "eq.approved", "layer": "eq.event", "order": "id"})

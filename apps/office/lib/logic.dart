@@ -235,6 +235,7 @@ class TvSlide {
     this.toTime,
     this.fullscreen = false,
     this.takeover = false,
+    this.every,
     this.activityId,
   });
 
@@ -254,6 +255,7 @@ class TvSlide {
         toTime: (r['to_time'] as String?)?.substring(0, 5),
         fullscreen: r['fullscreen'] as bool? ?? false,
         takeover: r['takeover'] as bool? ?? false,
+        every: r['every_seconds'] as int?,
         activityId: r['activity_id'] as int?,
       );
 
@@ -261,6 +263,7 @@ class TvSlide {
   String kind, title, body, url;
   String? fromTime, toTime; // HH:MM, times of day the page plays; null: all day
   bool fullscreen, takeover; // takeover: while on, the TV plays only takeover pages
+  int? every; // announcement: out of the loop, shown every this many seconds for its own seconds
   int? activityId; // linked schedule event: the page plays in its time slot, its own dates and times are ignored
   String? mediaName;
   int? seconds; // null: play the video to its end
@@ -283,6 +286,7 @@ class TvSlide {
         'to_time': toTime,
         'fullscreen': fullscreen,
         'takeover': takeover,
+        'every_seconds': every,
         'activity_id': activityId,
       };
 
@@ -303,6 +307,9 @@ class TvSlide {
       return 'The link must start with http:// or https://.';
     }
     if (seconds != null && seconds! < 1) return 'Seconds must be at least 1.';
+    if (every != null && every! <= (seconds ?? 0)) {
+      return 'Show every: the gap must be longer than the page\'s seconds (a whole video needs its seconds set).';
+    }
     if (takeover && activityId == null && endsOn == null && toTime == null) {
       return 'A takeover needs an end: set "Until" (a date or a time), or it takes over the TV for good.';
     }

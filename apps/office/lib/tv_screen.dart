@@ -82,6 +82,7 @@ class _TvScreenState extends State<TvScreen> {
     if (s.activityId != null) 'during ${_eventLabel(s.activityId)}',
     if (s.fullscreen) 'full screen',
     if (s.takeover) 'takeover',
+    if (s.every != null) 'announcement every ${s.every} s',
     if (!s.showsOn(DateTime.now())) 'not showing today',
   ].join(' · ');
 
@@ -108,6 +109,7 @@ class _TvScreenState extends State<TvScreen> {
     DateTime? from = s.startsOn, to = s.endsOn;
     String? fromTime = s.fromTime, toTime = s.toTime;
     var fullscreen = s.fullscreen, takeover = s.takeover;
+    final every = TextEditingController(text: s.every?.toString() ?? '');
     int? activityId = events.any((e) => e['id'] == s.activityId) ? s.activityId : null;
     Future<String?> pickTime(String? t) async {
       final v = await showTimePicker(
@@ -288,6 +290,14 @@ class _TvScreenState extends State<TvScreen> {
                   value: fullscreen,
                   onChanged: (v) => set(() => fullscreen = v),
                 ),
+                TextField(
+                  controller: every,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Announcement: show every … seconds',
+                    helperText: 'Empty: plays in the loop. 30: interrupts every 30 s for the seconds above',
+                  ),
+                ),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   title: const Text('Takeover'),
@@ -325,6 +335,7 @@ class _TvScreenState extends State<TvScreen> {
       toTime: toTime,
       fullscreen: fullscreen,
       takeover: takeover,
+      every: int.tryParse(every.text.trim()),
       activityId: activityId,
     );
     final problem = slide.problem();

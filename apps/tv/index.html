@@ -167,7 +167,11 @@ function rng(seed) {  // mulberry32: a small seeded random number generator
 const length = s => (s.video ? s.seconds || s.length || 30 : s.seconds || 10);  // seconds a page stays
 
 function where(t) {  // at time t (seconds since the epoch): the page, how far into it, and a key that changes per page
-  const pages = live().slides, per = Math.min(3, tv.ideas.length);
+  const on = live().slides, per = Math.min(3, tv.ideas.length);
+  // an announcement interrupts every `every` seconds for its own length, on the same clock, so every screen agrees
+  const pop = on.find(s => s.every && t % s.every < length(s));
+  if (pop) return { page: pop, off: t % pop.every, left: length(pop) - t % pop.every, key: `every/${Math.floor(t / pop.every)}/${pop.title}/${pop.src}` };
+  const pages = on.filter(s => !s.every);
   const lens = pages.map(s => (s.kind === 'ideas' ? per * (s.seconds || 12) : length(s)));
   const L = lens.reduce((a, b) => a + b, 0);
   if (!L) return null;

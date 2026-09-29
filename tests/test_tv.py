@@ -80,6 +80,9 @@ assert before["slides"] == during["slides"], "the whole day either way: the TV a
 assert before["slides"][-1] == {"kind": "text", "title": "Moda show", "body": "", "seconds": 10, "from": "17:00", "to": "20:00",
                                 "takeover": True, "full": True}, before["slides"][-1]
 tv.assert_public(during)
+notice = base | {"id": 21, "position": 10, "kind": "text", "title": "Notice", "every_seconds": 30}
+assert tv.build([notice], media, events, ideas, day, "")["slides"] == [{"kind": "text", "title": "Notice", "body": "",
+                                                                        "seconds": 10, "every": 30}], "an announcement"
 tv.assert_public(out)
 try:
     tv.assert_public(out | {"ideas": [{"title": "x", "summary": "y", "name": "Ana"}]})

@@ -103,6 +103,10 @@ with sync_playwright() as p:
     assert over[0] <= 0 and over[1] <= 0, f"long idea text fits the frame: {over}"
     top = page.text_content("#top")
     assert "Tech Lab" in top and ":" not in top, f"top line: day and rooms, no clock: {top!r}"
+    # an announcement interrupts every 30 s for 10 s, on the clock; the rest of the time the loop plays without it
+    at = page.evaluate("""() => { tv.slides = [{kind: 'text', title: 'Loop', seconds: 10},
+        {kind: 'text', title: 'Notice', seconds: 10, every: 30}]; return [0, 9, 10, 29, 30].map(t => where(t).page.title); }""")
+    assert at == ["Notice", "Notice", "Loop", "Loop", "Notice"], at
     # event mode: tv.json switches to a takeover, the TV follows on its next reload, full screen
     (d / "tv.json").write_text(json.dumps(takeover_from_next_minute()))
     page.evaluate("load()")
