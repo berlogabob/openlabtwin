@@ -18,6 +18,7 @@ public_tv() {
   local p=$HOME/tv-public
   [ -f "$p/tv.json" ] || return 0
   if [ ! -d "$p/.git" ]; then git -C "$p" init -q -b tv-public && git -C "$p" remote add origin "$(git remote get-url origin)"; fi
+  git -C "$p" config user.name "$(git config user.name)"; git -C "$p" config user.email "$(git config user.email)"
   git -C "$p" add -A
   if ! git -C "$p" rev-parse -q --verify HEAD >/dev/null; then git -C "$p" commit -q -m "Public TV (edge node)"
   elif ! git -C "$p" diff --cached --quiet; then git -C "$p" commit -q --amend -m "Public TV (edge node)"; fi
