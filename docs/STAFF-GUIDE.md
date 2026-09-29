@@ -138,7 +138,7 @@ Students drop project ideas at https://berlogabob.github.io/openlabtwin/ideas/. 
 
 - **Public schedule:** https://berlogabob.github.io/openlabtwin/. Every filter takes several values (two professors, two rooms). Bookings are blue and events green. A red line marks the current time in the list, day and week views.
 - **Lab TV (showcase):** `http://192.168.1.131/tv/?room=<room>&room=<room>`, on the lab network, or from anywhere over Tailscale as `http://techlab-01/tv/…` (served by the edge node). A top line shows the day (left) and the room names (right); the left third shows the rooms stacked for today, as compact cards (finished items dimmed, the current one outlined, a red line at the current time); the right two thirds play the slides. Room names are the full IADE names from the schedule's Room filter, with spaces as `%20`.
-- **Public TV:** `…/tv/?room=<room>&room=<room>` on GitHub Pages works on any network, in the same layout. Its right side cycles only the Book me and Idea hub QR codes and upcoming events (your videos, photos, bios and the ideas live on the node). On a phone it shows the schedule only.
+- **Public TV:** `https://berlogabob.github.io/openlabtwin/tv/` (rooms as above) works on any network and shows the same as the lab TV, about 15 minutes behind. Everything you put on the TV is therefore public on the internet. Very long videos (every copy over 95 MB) play only in the lab.
 
 ## The TV slides
 
@@ -160,6 +160,6 @@ Students drop project ideas at https://berlogabob.github.io/openlabtwin/ideas/. 
 - **Is the TV alive?** The top of the office TV screen shows the node's heartbeat: what plays now ("Takeover: PROTO26 until 20:00" or "Normal loop: 4 pages"), when the playlist was last built, and how many files. It turns red when the build is more than 5 minutes old or the last run failed (with the error). The TV's own footer also says so in red when its playlist is more than 5 minutes old.
 - **Several screens:** every TV works out the current page from the clock, so all screens show the same page (and the same second of a video, the same three ideas) at the same moment. They need correct clocks.
 - **Busy days:** the schedule column shrinks its text until every card fits.
-- The TV reloads every minute. If the internet drops it keeps playing what it has; if the edge node is off, the showcase TV is dark and the public TV still works.
+- The TV reloads every minute. If the internet drops it keeps playing what it has; if the edge node is off, the showcase TV is dark and the public TV keeps playing its last version.
 - **The TV computer:** see [edge-node.md → The TV computer](edge-node.md#the-tv-computer-raspberry-pi); its setup is the next [roadmap](ROADMAP.md) item.
 - **Calendar:** `…/calendar/lab.ics` subscribes in Google Calendar, Apple Calendar or Outlook.

@@ -11,7 +11,7 @@ import os
 import subprocess
 from datetime import datetime, timedelta
 from pathlib import Path
-from urllib.parse import quote
+from urllib.parse import quote, unquote
 
 from db import connect, request, select
 from export import occurrences
@@ -19,6 +19,8 @@ from timetable_parse import TZ
 
 MEDIA = Path(os.environ.get("TV_MEDIA", Path.home() / "tv-media"))
 OUT = Path(os.environ.get("TV_OUT", Path.home() / "tv-out"))
+# The public copy for GitHub Pages: publish.sh force-pushes it to the tv-public branch, the deploy puts it under /tv/.
+PUBLIC = Path(os.environ.get("TV_PUBLIC", Path.home() / "tv-public"))
 PHOTO = {".jpg", ".jpeg", ".png", ".webp"}
 # Lighter copies of every video, so a slow TV computer (a Pi 3) can play them: height -> H.264 bit rate, no audio (the
 # TV plays muted). Kept in a hidden folder inside the shared one, so nginx serves them as media/.tv/... with no change.
@@ -191,6 +193,53 @@ def probe_cached(path, cache):
 
 
 
+def public_tv(tv, sizes, limit=95_000_000):
+    """The playlist for GitHub Pages: no node-only fields, and only files GitHub takes (it refuses files over 100 MB).
+    A video plays its copies there, never the original. Returns the playlist and the files it references."""
+    fits = lambda p: sizes.get(p, limit + 1) <= limit  # noqa: E731
+    slides, files = [], set()
+    for s in tv["slides"]:
+        s = dict(s)
+        if s.get("video"):
+            s["renditions"] = {h: p for h, p in (s.get("renditions") or {}).items() if fits(p)}
+            if not s["renditions"]:
+                continue
+            s["src"] = s["renditions"][min(s["renditions"], key=int)]
+            files |= set(s["renditions"].values())
+        elif s.get("src"):
+            if not fits(s["src"]):
+                continue
+            files.add(s["src"])
+        slides.append(s)
+    return {"slides": slides, "ideas": tv["ideas"]}, sorted(files)
+
+
+def local(path):
+    """A playlist path (URL-quoted media/... or qr/...) as a file on the node."""
+    top, rest = path.split("/", 1)
+    return (MEDIA if top == "media" else OUT / top) / unquote(rest)
+
+
+def write_public(tv):
+    """~/tv-public: tv.json plus hard links to its files (no copies), for publish.sh to push."""
+    paths = {p for s in tv["slides"] for p in [s.get("src"), *(s.get("renditions") or {}).values()] if p}
+    PUBLIC.mkdir(parents=True, exist_ok=True)
+    public, files = public_tv(tv, {p: local(p).stat().st_size for p in paths if local(p).exists()})
+    want = {unquote(f): local(f) for f in files}
+    for p in PUBLIC.rglob("*"):
+        rel = p.relative_to(PUBLIC).as_posix()
+        if p.is_file() and ".git" not in p.parts and rel != "tv.json" and rel not in want:
+            p.unlink()
+    for rel, src in want.items():
+        dest = PUBLIC / rel
+        if dest.exists() and dest.stat().st_ino == src.stat().st_ino:
+            continue
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.unlink(missing_ok=True)
+        os.link(src, dest)
+    (PUBLIC / "tv.json").write_text(json.dumps(public, ensure_ascii=False), encoding="utf-8")
+
+
 def write_qr(qr_slides):
     import segno
     (OUT / "qr").mkdir(parents=True, exist_ok=True)
@@ -240,6 +289,7 @@ def main():
     tmp = OUT / "tv.json.tmp"
     tmp.write_text(json.dumps(tv, ensure_ascii=False), encoding="utf-8")
     tmp.replace(OUT / "tv.json")  # atomic: the TV never reads half a file
+    write_public(tv)
     heartbeat(db, {"built_at": now.isoformat(), "pages": len(tv["slides"]), "media": len(media), "takeover": tv["takeover"],
                    "playing": tv["playing"], "error": None, "error_at": None})
     print(f"media {len(media)}, slides {len(tv['slides'])}, ideas {len(tv['ideas'])}")

@@ -13,7 +13,6 @@ import 'package:site/pages/kit_page.dart' deferred as _kit_page;
 import 'package:site/pages/kit_status_page.dart' deferred as _kit_status_page;
 import 'package:site/pages/schedule_page.dart' deferred as _schedule_page;
 import 'package:site/pages/status_page.dart' deferred as _status_page;
-import 'package:site/pages/tv_page.dart' deferred as _tv_page;
 
 /// Default [ClientOptions] for use with your Jaspr project.
 ///
@@ -60,10 +59,6 @@ ClientOptions get defaultClientOptions => ClientOptions(
     'status_page': ClientLoader(
       (p) => _status_page.StatusPage(),
       loader: _status_page.loadLibrary,
-    ),
-    'tv_page': ClientLoader(
-      (p) => _tv_page.TvPage(),
-      loader: _tv_page.loadLibrary,
     ),
   },
 );

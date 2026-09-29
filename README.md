@@ -6,7 +6,7 @@ The IADE game lab's system of record: rooms, storage, equipment, people, booking
 |---|---|
 | Schedule (public) | https://berlogabob.github.io/openlabtwin/ |
 | Lab TV (showcase: videos, bios, event takeovers; lab network or Tailscale) | http://192.168.1.131/tv/?room=Lab.+e+Estudo+de+Jogos+-+Tech+Lab+(Oriente) |
-| Lab TV (same layout, QR codes and events only; anywhere) | https://berlogabob.github.io/openlabtwin/tv/?room=Lab.+e+Estudo+de+Jogos+-+Tech+Lab+(Oriente) |
+| Lab TV (a copy of the showcase TV; anywhere) | https://berlogabob.github.io/openlabtwin/tv/ |
 | Calendar feed | https://berlogabob.github.io/openlabtwin/calendar/lab.ics |
 | Book a consultation (QR) | https://berlogabob.github.io/openlabtwin/book/ |
 | Share an idea (QR) | https://berlogabob.github.io/openlabtwin/ideas/ |

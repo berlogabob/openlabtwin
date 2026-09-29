@@ -11,6 +11,21 @@ git pull -q --rebase
 set -a; . ./.env; set +a
 if [ "${1:-}" = "--scrape" ]; then uv run python scripts/timetable.py; fi
 uv run python scripts/export.py
+
+# The public TV (tv.py writes ~/tv-public): one commit, force-pushed to the tv-public branch, so replaced videos don't pile
+# up in the repo; the push deploys it to GitHub Pages. A failure here doesn't stop the schedule from publishing.
+public_tv() {
+  local p=$HOME/tv-public
+  [ -f "$p/tv.json" ] || return 0
+  if [ ! -d "$p/.git" ]; then git -C "$p" init -q -b tv-public && git -C "$p" remote add origin "$(git remote get-url origin)"; fi
+  git -C "$p" add -A
+  if ! git -C "$p" rev-parse -q --verify HEAD >/dev/null; then git -C "$p" commit -q -m "Public TV (edge node)"
+  elif ! git -C "$p" diff --cached --quiet; then git -C "$p" commit -q --amend -m "Public TV (edge node)"; fi
+  if [ "$(git -C "$p" rev-parse HEAD)" != "$(git -C "$p" rev-parse -q --verify origin/tv-public || true)" ]; then
+    git -C "$p" push -q -f origin tv-public:tv-public && git -C "$p" update-ref refs/remotes/origin/tv-public HEAD && echo "pushed tv-public"
+  fi
+}
+public_tv || echo "tv-public push failed"
 git add apps/site/web/data apps/site/web/calendar
 if git diff --cached --quiet; then echo "no changes"; exit 0; fi
 git commit -q -m "Publish schedule (edge node)"

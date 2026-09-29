@@ -13,7 +13,7 @@ Staff ──email link──► apps/office (Flutter web) ──► Supabase (Po
                                      │
                      apps/site/web/data/all.json + calendar/lab.ics   (committed to git)
                                      │
-                 GitHub Actions: build apps/site (Jaspr) + apps/office → GitHub Pages
+                 GitHub Actions: build apps/site (Jaspr) + apps/office + apps/tv with the tv-public branch → GitHub Pages
                                      │
                     schedule page · lab TV · lab.ics · office (all static files)
 ```
@@ -23,7 +23,7 @@ Staff ──email link──► apps/office (Flutter web) ──► Supabase (Po
 | Supabase project `openlabtwin` (ref `huqecytswaswkswofrqd`, eu-central-1) | Postgres with row-level security, email sign-in | everything |
 | `scripts/timetable.py` | Scrapes every IADE class page and upserts `lessons` from this Monday on. Older lessons stay as history. | IADE site, Supabase REST |
 | `scripts/export.py` | Writes the public `all.json` and `lab.ics` from lessons and **approved** activities | Supabase REST |
-| `apps/site` | Jaspr static site: schedule page with multi-select filters, Book me, idea hub, and a TV page in the showcase layout (QR codes and events only) | its own `data/all.json`; Supabase public functions |
+| `apps/site` | Jaspr static site: schedule page with multi-select filters, Book me, idea hub, equipment requests (`/tv/` is `apps/tv`, copied in by the deploy) | its own `data/all.json`; Supabase public functions |
 | `apps/tv` | Showcase TV page (plain HTML/JS, no build), served by the edge node's nginx: schedule column plus slide carousel. It applies page times and takeovers on its own clock, and picks a video copy (480p/720p/1080p) by the device and its dropped frames | `tv.json` and `all.json` on the node |
 | `scripts/tv.py` | Runs on the edge node every minute: probes the shared TV folder (only changed files), syncs `tv_media`, writes the day's public `tv.json` (explicit columns, key allowlist, ideas as AI title and summary only), writes the `tv_status` heartbeat, and makes the lighter video copies | Supabase REST, local files, ffmpeg |
 | `apps/office` | Flutter web app for staff: bookings, equipment, inventory (places, stocktake, tagged items, Needs attention), TV slides. A QR label opens `office/?place=CODE` | Supabase directly, as the signed-in staff member |
@@ -62,7 +62,8 @@ This follows UNIDCOM RIMS, which learned the hard way that row-level security ha
 1. **Grants.** The `anon` role has no privileges on any table or view (`20260923120100_access.sql`, including default privileges for future tables). The anon key ships in the office's JavaScript, so this layer is what makes that safe.
 2. **RLS.** Every table allows reads and writes only when `is_staff()` is true, meaning a `people` row with `is_staff` linked to the signed-in `auth_user_id`. `movements` can't be updated or deleted by staff, `lessons`, `tv_media` and `tv_status` can't be written by staff, and `audit_log` is read-only. The one exception for staff is `merge_items()` (security definer, checks `is_staff()` itself), which re-points movements from a duplicate item to the one kept.
 3. **Public functions.** The only exception to layer 1: `anon` may execute `free_slots`, `request_consultation` and `consultation_status` (Book me), plus `submit_idea`, `idea_status` and `idea_connect` (idea hub), plus `equipment_catalogue` (lendable item names only), `request_equipment` and `equipment_status` (equipment requests). All share the `check_contact` / `file_student` helpers. They run as `security definer`, so they bypass RLS, and each one validates its own input and returns only what the student may see.
-4. **Export allowlist.** `export.py` runs with the service key, which bypasses RLS. So it selects explicit columns only and fails if a record carries a key outside `KEYS`. Emails, `purpose`, equipment lists, stock and loans never reach the public files, and an approved equipment booking with no room (a class kit, a take-home kit) isn't exported at all (`private_kit`). Storage data (places, tagged items, stock) is never exported at all: QR labels are printed from the Mac, and the node's mirror listens on localhost only.
+4. **The TV is public.** The node's playlist is public data (`assert_public` in `tv.py`), and its copy with the TV's files goes to GitHub Pages: nothing staff put on the TV is private.
+5. **Export allowlist.** `export.py` runs with the service key, which bypasses RLS. So it selects explicit columns only and fails if a record carries a key outside `KEYS`. Emails, `purpose`, equipment lists, stock and loans never reach the public files, and an approved equipment booking with no room (a class kit, a take-home kit) isn't exported at all (`private_kit`). Storage data (places, tagged items, stock) is never exported at all: QR labels are printed from the Mac, and the node's mirror listens on localhost only.
 
 ## Decisions and why
 

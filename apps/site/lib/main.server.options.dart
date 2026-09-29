@@ -12,7 +12,6 @@ import 'package:site/pages/kit_page.dart' as _kit_page;
 import 'package:site/pages/kit_status_page.dart' as _kit_status_page;
 import 'package:site/pages/schedule_page.dart' as _schedule_page;
 import 'package:site/pages/status_page.dart' as _status_page;
-import 'package:site/pages/tv_page.dart' as _tv_page;
 
 /// Default [ServerOptions] for use with your Jaspr project.
 ///
@@ -46,6 +45,5 @@ ServerOptions get defaultServerOptions => ServerOptions(
     _status_page.StatusPage: ClientTarget<_status_page.StatusPage>(
       'status_page',
     ),
-    _tv_page.TvPage: ClientTarget<_tv_page.TvPage>('tv_page'),
   },
 );

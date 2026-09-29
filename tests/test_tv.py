@@ -181,3 +181,17 @@ assert tv.link_events([page], [proto], date(2026, 10, 2))[0]["active"] is False,
 weekly = proto | {"starts_at": "2026-09-17T16:00:00+00:00", "ends_at": "2026-09-17T19:00:00+00:00", "rrule": "FREQ=WEEKLY;COUNT=5"}
 assert tv.link_events([page], [weekly], day)[0]["from_time"] == "17:00:00", "a weekly event: today's occurrence"
 print("ok event link")
+
+# the public copy for GitHub Pages: no node fields, video copies only, nothing over the size limit
+big = {"generated": "x", "takeover": False, "playing": "x", "ideas": [], "slides": [
+    {"kind": "media", "video": True, "src": "media/r.m4v", "renditions": {"480": "media/.tv/r.480p.mp4", "720": "media/.tv/r.720p.mp4"}},
+    {"kind": "media", "video": True, "src": "media/huge.mp4", "renditions": {"480": "media/.tv/huge.480p.mp4"}},
+    {"kind": "media", "video": False, "src": "media/a%20b.png"}, {"kind": "text", "title": "Hi"}]}
+pub, files = tv.public_tv(big, {"media/.tv/r.480p.mp4": 50, "media/.tv/r.720p.mp4": 200, "media/.tv/huge.480p.mp4": 200,
+                                "media/a%20b.png": 10}, limit=100)
+assert set(pub) == {"slides", "ideas"}, pub
+assert pub["slides"][0]["src"] == "media/.tv/r.480p.mp4" and pub["slides"][0]["renditions"] == {"480": "media/.tv/r.480p.mp4"}
+assert [s.get("src") for s in pub["slides"]] == ["media/.tv/r.480p.mp4", "media/a%20b.png", None], "huge video dropped"
+assert files == ["media/.tv/r.480p.mp4", "media/a%20b.png"] and big["slides"][0]["src"] == "media/r.m4v", "input untouched"
+assert tv.local("media/a%20b.png") == tv.MEDIA / "a b.png" and tv.local("qr/1.svg") == tv.OUT / "qr" / "1.svg"
+print("ok public copy")
