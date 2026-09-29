@@ -4,15 +4,13 @@ What's next, in rough order. Done work moves to the status table in [ARCHITECTUR
 
 ## Next: the TV computer (Raspberry Pi)
 
-Waiting for access to the Pi (`192.168.1.194`, a Pi 3 or older by its network maker code; it lags on the showcase TV). Needed first: `ssh-copy-id -i ~/.ssh/techlab.pub <user>@192.168.1.194` from the Mac, and the user name. Details in [edge-node.md → The TV computer](edge-node.md#the-tv-computer-raspberry-pi).
+The Pi 3 B is reinstalled and runs the kiosk (2026-09-29): see [edge-node.md → The TV computer](edge-node.md#the-tv-computer-raspberry-pi). Left:
 
-1. Check the model (`cat /proc/device-tree/model`) and memory.
-2. Clock: time zone Europe/Lisbon and network time. The TV's now-line, finished cards and takeover switching use the Pi's own clock.
-3. Kiosk: Raspberry Pi OS Lite with only Chromium, full screen at boot on `http://192.168.1.131/tv/?room=…&room=…`, pointer hidden, no screen blanking, nightly Chromium restart.
-4. Pi 3 tuning: `gpu_mem=256`, zram swap, Bluetooth and unused services off, Chromium GPU flags, draw at 720p.
-5. HDMI-CEC: switch the Samsung on in the morning and off at night.
-6. Measure: which video level the TV settles on (its footer shows "video 480p/720p/1080p") and whether cards and slides stay smooth. If a Pi 3 can't manage, get a Pi 4 (2 GB+) or Pi 5, or an old laptop or mini-PC.
-7. Then retire the old site: point the TV at the new address for good, and follow [OPERATIONS → The old site](OPERATIONS.md#the-old-site) (the local branch `retire-to-openlabtwin` in `iade-lab-schedule` is ready and not pushed).
+1. Rooms: run `scripts/tv-pi-setup.sh` again with the TV address and its `?room=` list (today it shows the default, the Tech Lab).
+2. Wi-Fi: give `wifi-TechClub` its password, if the Pi must go without the cable.
+3. Check that HDMI-CEC switches the Samsung (`echo 'standby 0' | cec-client -s -d 1`).
+4. Measure: which video level the TV settles on (its footer shows "video 480p/720p/1080p") and whether cards and slides stay smooth. If a Pi 3 can't manage, get a Pi 4 (2 GB+) or Pi 5, or an old laptop or mini-PC.
+5. Then retire the old site: point the TV at the new address for good, and follow [OPERATIONS → The old site](OPERATIONS.md#the-old-site) (the local branch `retire-to-openlabtwin` in `iade-lab-schedule` is ready and not pushed).
 
 ## Smart storage: first stocktakes
 
