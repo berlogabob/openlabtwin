@@ -101,7 +101,7 @@ Query it on the node with `psql openlabtwin`, for example `select * from stock` 
 
 ## What it does
 
-`scripts/publish.sh` pulls, optionally scrapes, and exports. It commits and pushes `apps/site/web/data` and `apps/site/web/calendar` only if they changed. The push triggers "Sync and deploy", which rebuilds and publishes the site. It also force-pushes the public TV copy (`~/tv-public`, written by `tv.py` each minute: the playlist plus hard links to its photos and video copies under 95 MB) as one commit to the `tv-public` branch when it changed; that push deploys too, and the deploy puts it under `/tv/`. If an export fails, nothing is pushed and the site keeps its last version.
+`scripts/publish.sh` pulls, optionally scrapes, and exports. It commits and pushes `apps/site/web/data` and `apps/site/web/calendar` only if they changed. The push triggers "Sync and deploy", which rebuilds and publishes the site. It also force-pushes the public TV copy (`~/tv-public`, written by `tv.py` each minute: the playlist plus hard links to its photos and video copies under 95 MB) as one commit to the `tv-public` branch when it changed, and writes its commit id to `apps/site/web/data/tv-public.sha`, so the normal push to `main` deploys it (a push to `tv-public` alone can't: that branch has no workflow). The deploy puts it under `/tv/`. If an export fails, nothing is pushed and the site keeps its last version.
 
 ## Checks
 

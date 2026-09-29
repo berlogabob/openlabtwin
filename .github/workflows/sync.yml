@@ -3,7 +3,7 @@ name: Sync and deploy
 on:
   workflow_dispatch:
   push:
-    branches: [main, tv-public] # tv-public: the node's public TV copy
+    branches: [main]
   schedule:
     - cron: "15 */6 * * *" # scrape the IADE timetable (GitHub may delay or skip scheduled runs; the lab edge node is the backup)
 
@@ -24,8 +24,6 @@ jobs:
       SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: main # a tv-public push starts this too
       - uses: astral-sh/setup-uv@v6
       - run: uv sync --locked
       # both scripts exit non-zero before writing if something looks wrong; the last good site stays published
