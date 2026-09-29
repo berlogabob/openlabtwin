@@ -22,7 +22,7 @@
   ("Part", "Link"),
   (
     ("Schedule", u("https://berlogabob.github.io/openlabtwin/")),
-    ("TV (schedule, QR codes, events)", u("https://berlogabob.github.io/openlabtwin/tv/")),
+    ("TV (a copy of the lab TV)", u("https://berlogabob.github.io/openlabtwin/tv/")),
     ("Book a consultation", u("https://berlogabob.github.io/openlabtwin/book/")),
     ("Share an idea", u("https://berlogabob.github.io/openlabtwin/ideas/")),
     ("Ask for equipment", u("https://berlogabob.github.io/openlabtwin/kit/")),
