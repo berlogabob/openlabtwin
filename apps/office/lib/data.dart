@@ -290,3 +290,27 @@ Future<void> deleteTvSlide(int id) async => await db.from('tv_slides').delete().
 
 Future<void> reorderTvSlides(List<int> ids) async =>
     await Future.wait([for (var i = 0; i < ids.length; i++) db.from('tv_slides').update({'position': i}).eq('id', ids[i])]);
+
+Future<List<WallSlide>> wallSlides() async =>
+    [for (final r in await db.from('wall_slides').select().order('position').order('id')) WallSlide.fromRow(r)];
+
+/// The office's controls for the wall (one row): blackout, playing, "show now".
+Future<Rec?> wallState() async => await db.from('wall_state').select().maybeSingle();
+
+/// The wall server's heartbeat (one row), or null before its first report.
+Future<Rec?> wallStatus() async => await db.from('wall_status').select().maybeSingle();
+
+Future<void> setWallState(Rec fields) async => await db.from('wall_state').update(fields).eq('id', 1);
+
+Future<void> saveWallSlide(WallSlide s) async {
+  if (s.id == null) {
+    await db.from('wall_slides').insert(s.toRow());
+  } else {
+    await db.from('wall_slides').update(s.toRow()).eq('id', s.id!);
+  }
+}
+
+Future<void> deleteWallSlide(int id) async => await db.from('wall_slides').delete().eq('id', id);
+
+Future<void> reorderWallSlides(List<int> ids) async =>
+    await Future.wait([for (var i = 0; i < ids.length; i++) db.from('wall_slides').update({'position': i}).eq('id', ids[i])]);

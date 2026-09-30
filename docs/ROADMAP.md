@@ -2,6 +2,14 @@
 
 What's next, in rough order. Done work moves to the status table in [ARCHITECTURE.md](ARCHITECTURE.md#status); this file holds only what is still open. Update it in the same commit that finishes or adds an item.
 
+## Next: the video wall link
+
+Built on branch `wall` (2026-10-01): migration `20261001100000_wall.sql` (`wall_slides`, `wall_state`, `wall_status`), pgTAP `12_wall`, the office Wall screen. Left:
+
+1. Apply and test the migration: `uv run python scripts/sqltest.py`.
+2. Merge `wall` into `main` (deploys the office).
+3. Start the wall server with the `.env` on the node ([edge-node.md → Video wall server](edge-node.md#video-wall-server)) and check its status line in the office.
+
 ## Next: the TV computer (Raspberry Pi)
 
 The Pi 3 B is reinstalled and runs the kiosk (2026-09-29): see [edge-node.md → The TV computer](edge-node.md#the-tv-computer-raspberry-pi). Left:

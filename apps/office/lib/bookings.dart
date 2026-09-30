@@ -7,6 +7,7 @@ import 'ideas_screen.dart';
 import 'inventory.dart';
 import 'logic.dart';
 import 'tv_screen.dart';
+import 'wall_screen.dart';
 import 'pick.dart';
 
 const statusColors = {
@@ -52,6 +53,11 @@ class _BookingsPageState extends State<BookingsPage> {
                 tooltip: 'TV',
                 icon: const Icon(Icons.tv),
                 onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const TvScreen())),
+              ),
+              IconButton(
+                tooltip: 'Video wall',
+                icon: const Icon(Icons.view_module),
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const WallScreen())),
               ),
               IconButton(
                 tooltip: 'Ideas',

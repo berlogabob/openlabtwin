@@ -73,6 +73,10 @@ Step 9 of `edge-setup.sh` installs nginx, Samba and ffmpeg, and cron runs `scrip
 - **Checks:** `cat ~/tv.log` is empty when all is well; `head -c 300 ~/tv-out/tv.json`; `curl -sI localhost/tv/` returns 200.
 - **The TV itself:** Chromium full screen (kiosk) on the address above; videos autoplay because they're muted.
 
+## Video wall server
+
+[videowall](https://github.com/berlogabob/videowall) runs on this node from `~/videowall`, started by hand in tmux (no systemd yet): `set -a; . ~/openlabtwin/.env; set +a; tmux new -s wall 'uv run python -m server --cols 5 --rows 5 --media ~/tv-media --cache ~/wall-cache'`. It uses the TV's folder read-only and renders into `~/wall-cache/` (never into `~/tv-media/.tv/`, which `tv.py` cleans). The Pis reach it on port 8080, which needs, once: `sudo ufw allow from 192.168.1.0/24 to any port 8080`. Setup page: `http://192.168.1.131:8080/`.
+
 ## The TV computer (Raspberry Pi)
 
 The lab's TV Pi is a Raspberry Pi 3 Model B (1 GB), `techlab-tv` (`techlab-tv.local`; Wi-Fi `192.168.1.194`, cable `192.168.1.199`), running Raspberry Pi OS Lite 64-bit (Debian 13). Log in from the Mac with `ssh -i ~/.ssh/techlab tv@techlab-tv.local`; SSH takes that key only, and user `tv` has passwordless sudo. The TV page does the work it can for such a device: it plays the node's lighter video copies (480p/720p/1080p, picked by dropped frames and shown in the footer as "video 720p"), draws no blurred shadows, and shrinks a busy schedule to fit. The rest is set up on the Pi by `scripts/tv-pi-setup.sh` (safe to run again; from the Mac: `ssh -i ~/.ssh/techlab tv@techlab-tv.local 'bash -s' < scripts/tv-pi-setup.sh`, then `sudo reboot`; for rooms, pass the TV address: `… 'bash -s -- "http://192.168.1.131/tv/?room=…"'`):

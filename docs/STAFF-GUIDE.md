@@ -134,6 +134,15 @@ Students drop project ideas at https://berlogabob.github.io/openlabtwin/ideas/. 
 - **Matches.** *Similar* means a close topic. *Complementary* means one student is looking for what the other can bring. A student sees each match as the other idea's AI title and the other student's first name. When **both** tap "I'd like to connect", each sees the other's email and link. The lab never gives out contacts otherwise.
 - **A consultation about an idea.** The student's link has **Book a consultation about this idea**. It opens the booking form with the idea's title filled in as what they need.
 
+## The video wall
+
+Office → the grid button (Video wall). The top line says what the wall plays and how many screens are on; the coloured squares are the screens (green on, orange on but with a power or sync warning, grey off).
+
+- **Blackout** turns every screen black; press again to turn it off. **Stop** shows the logo (or black) until **Play**.
+- **Show now…** plays one thing immediately, above the playlist: Videowall (one file over all screens) or Mosaic (one file per screen, ticked files or all), with Fit (whole picture), Fill (cover, edges cut) or Center. **Back to schedule** returns to the playlist.
+- **The playlist** works like the TV slides: order, dates, times of day, takeover, announcements ("show every … seconds") and "play during a schedule event". The same event linked on the TV and the wall starts on both in the same second. A videowall entry can draw a title, credits, the logo and a black frame (matte) across the screens.
+- Files come from the TV folder (`smb://192.168.1.131/tv`). A new video needs rendering first (about 3 × its length); the entry shows "rendering n%" and the wall shows its first frame meanwhile.
+
 ## The TV and the public site
 
 - **Public schedule:** https://berlogabob.github.io/openlabtwin/. Every filter takes several values (two professors, two rooms). Bookings are blue and events green. A red line marks the current time in the list, day and week views.

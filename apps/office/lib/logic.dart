@@ -559,3 +559,133 @@ List<Map<String, dynamic>> buyList(List<Map<String, dynamic>> peaks) => [...peak
     final right = (b['peak'] as num) - (b['owned'] as num);
     return right == left ? a['name'].toString().compareTo(b['name'].toString()) : right.compareTo(left);
   });
+
+/// A video wall playlist entry (wall_slides). Same schedule fields as TvSlide; the wall server applies the TV's rules.
+class WallSlide {
+  WallSlide({
+    this.id,
+    this.mode = 'videowall',
+    this.title = '',
+    List<String>? mediaNames,
+    this.seconds,
+    this.cycleSeconds,
+    this.fit = 'fit',
+    this.showTitle = false,
+    this.credits = '',
+    this.logo = false,
+    this.matte = 0,
+    this.position = 0,
+    this.active = true,
+    this.startsOn,
+    this.endsOn,
+    this.fromTime,
+    this.toTime,
+    this.takeover = false,
+    this.every,
+    this.activityId,
+  }) : mediaNames = mediaNames ?? [];
+
+  factory WallSlide.fromRow(Map<String, dynamic> r) => WallSlide(
+        id: r['id'] as int?,
+        mode: r['mode'] as String,
+        title: r['title'] as String? ?? '',
+        mediaNames: [for (final n in (r['media_names'] as List? ?? const [])) n as String],
+        seconds: r['seconds'] as int?,
+        cycleSeconds: r['cycle_seconds'] as int?,
+        fit: r['fit'] as String? ?? 'fit',
+        showTitle: r['show_title'] as bool? ?? false,
+        credits: r['credits'] as String? ?? '',
+        logo: r['logo'] as bool? ?? false,
+        matte: r['matte'] as int? ?? 0,
+        position: r['position'] as int? ?? 0,
+        active: r['active'] as bool? ?? true,
+        startsOn: r['starts_on'] == null ? null : DateTime.parse(r['starts_on'] as String),
+        endsOn: r['ends_on'] == null ? null : DateTime.parse(r['ends_on'] as String),
+        fromTime: (r['from_time'] as String?)?.substring(0, 5),
+        toTime: (r['to_time'] as String?)?.substring(0, 5),
+        takeover: r['takeover'] as bool? ?? false,
+        every: r['every_seconds'] as int?,
+        activityId: r['activity_id'] as int?,
+      );
+
+  int? id;
+  String mode; // 'mosaic' (one file per screen) or 'videowall' (one picture over all screens)
+  String title, fit, credits; // fit: fit (bars), fill (cut), center (no scaling)
+  List<String> mediaNames; // videowall: exactly one; mosaic: empty = every file in the folder
+  int? seconds, cycleSeconds, every, activityId;
+  bool showTitle, logo, active, takeover;
+  int matte, position;
+  DateTime? startsOn, endsOn;
+  String? fromTime, toTime;
+
+  Map<String, dynamic> toRow() => {
+        'mode': mode,
+        'title': _blank(title),
+        'media_names': mediaNames,
+        'seconds': seconds,
+        'cycle_seconds': mode == 'mosaic' ? cycleSeconds : null,
+        'fit': fit,
+        'show_title': showTitle,
+        'credits': _blank(credits),
+        'logo': logo,
+        'matte': matte,
+        'position': position,
+        'active': active,
+        'starts_on': startsOn == null ? null : isoDate(startsOn!),
+        'ends_on': endsOn == null ? null : isoDate(endsOn!),
+        'from_time': fromTime,
+        'to_time': toTime,
+        'takeover': takeover,
+        'every_seconds': every,
+        'activity_id': activityId,
+      };
+
+  /// The first thing to fix before saving, or null.
+  String? problem() {
+    if (mode == 'videowall' && mediaNames.length != 1) return 'Pick one file for the videowall.';
+    if (seconds != null && seconds! < 1) return 'Seconds must be at least 1.';
+    if (cycleSeconds != null && cycleSeconds! < 1) return 'Cycle seconds must be at least 1.';
+    if (matte < 0 || matte > 400) return 'Matte is 0 to 400 px.';
+    if (every != null && every! <= (seconds ?? 0)) {
+      return 'Show every: the gap must be longer than the seconds (a whole video needs its seconds set).';
+    }
+    if (takeover && activityId == null && endsOn == null && toTime == null) {
+      return 'A takeover needs an end: set "Until" (a date or a time), or it takes over the wall for good.';
+    }
+    if (fromTime != null && toTime != null && toTime!.compareTo(fromTime!) <= 0) {
+      return 'The end time is before the start time.';
+    }
+    if (startsOn != null && endsOn != null && endsOn!.isBefore(startsOn!)) {
+      return 'The end date is before the start date.';
+    }
+    return null;
+  }
+}
+
+/// The office's line about the wall, from the server's heartbeat (wall_status). ok is false when the server has not
+/// reported for 60 s (its heartbeat is every 10 s), never reported, or its last Supabase call failed.
+({String text, bool ok}) wallStatusLine(Map<String, dynamic>? r, DateTime now) {
+  String hm(DateTime d) => '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+  final seen = r?['seen_at'] == null ? null : DateTime.parse(r!['seen_at'] as String).toLocal();
+  if (seen == null) return (text: 'Wall: the wall server has not reported yet.', ok: false);
+  if (now.difference(seen).inSeconds >= 60) return (text: 'Wall not reporting since ${hm(seen)}: is the wall server running?', ok: false);
+  final screens = (r!['screens'] as Map?) ?? const {};
+  final on = screens.values.where((s) => (s as Map)['on'] == true).length;
+  final errorAt = r['error_at'] == null ? null : DateTime.parse(r['error_at'] as String).toLocal();
+  final failing = errorAt != null && !errorAt.isBefore(seen);
+  return (
+    text: '${r['playing'] ?? 'Wall'} · $on/${screens.length} screens on${failing ? ' · ${r['error']}' : ''}',
+    ok: !failing,
+  );
+}
+
+/// Screen codes as rows of the wall: letter = column, number = row (a1 top left). The server owns the grid size;
+/// the office only lays out the codes it reports.
+List<List<String>> wallGrid(Iterable<String> codes) {
+  final rows = <int, List<String>>{};
+  for (final c in codes) {
+    final row = int.tryParse(c.substring(1));
+    if (row != null) (rows[row] ??= []).add(c);
+  }
+  return [for (final r in (rows.keys.toList()..sort())) rows[r]!..sort()];
+}

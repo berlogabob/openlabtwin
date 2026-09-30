@@ -309,4 +309,41 @@ void main() {
     expect(demandWarnings(a, {7: 8}, others, {7: 12}, {7: 'ESP32'}), isEmpty, reason: '8 + 4 fits in 12');
     expect(demandWarnings(a, {7: 30}, [], {7: 12}, {7: 'ESP32'}), isEmpty, reason: 'alone it is the shortage check at issue time');
   });
+
+  test('Wall slide: row round trip and problems', () {
+    final s = WallSlide.fromRow({
+      'id': 4, 'mode': 'videowall', 'title': 'PROTO26', 'media_names': ['proto.mp4'], 'seconds': null, 'cycle_seconds': 9,
+      'fit': 'fill', 'show_title': true, 'credits': ' Lab ', 'logo': true, 'matte': 40, 'position': 1, 'active': true,
+      'starts_on': '2026-10-01', 'ends_on': null, 'from_time': '17:00:00', 'to_time': '20:00:00', 'takeover': true,
+      'every_seconds': null, 'activity_id': null,
+    });
+    expect(s.toRow(), {
+      'mode': 'videowall', 'title': 'PROTO26', 'media_names': ['proto.mp4'], 'seconds': null, 'cycle_seconds': null,
+      'fit': 'fill', 'show_title': true, 'credits': 'Lab', 'logo': true, 'matte': 40, 'position': 1, 'active': true,
+      'starts_on': '2026-10-01', 'ends_on': null, 'from_time': '17:00', 'to_time': '20:00', 'takeover': true,
+      'every_seconds': null, 'activity_id': null,
+    });
+    expect(s.problem(), isNull);
+    expect(WallSlide(mode: 'videowall').problem(), contains('one file'));
+    expect(WallSlide(mode: 'mosaic').problem(), isNull, reason: 'no files ticked = every file');
+    expect(WallSlide(mode: 'mosaic', takeover: true).problem(), contains('needs an end'));
+    expect(WallSlide(mode: 'mosaic', takeover: true, activityId: 3).problem(), isNull);
+    expect(WallSlide(mode: 'mosaic', seconds: 20, every: 10).problem(), contains('gap'));
+    expect(WallSlide(mode: 'mosaic', fromTime: '20:00', toTime: '17:00').problem(), contains('end time'));
+    expect(WallSlide(mode: 'mosaic', matte: 500).problem(), contains('Matte'));
+  });
+
+  test('Wall status line and grid', () {
+    final now = DateTime.parse('2026-10-01T10:00:30Z');
+    final good = {'seen_at': '2026-10-01T10:00:20Z', 'playing': 'Videowall: proto.mp4',
+      'screens': {'a1': {'on': true}, 'b1': {'on': false}}, 'error': null, 'error_at': null};
+    expect(wallStatusLine(good, now).text, 'Videowall: proto.mp4 · 1/2 screens on');
+    expect(wallStatusLine(good, now).ok, isTrue);
+    expect(wallStatusLine(good, DateTime.parse('2026-10-01T10:01:25Z')).ok, isFalse, reason: 'stale after 60 s');
+    final failing = {...good, 'error': 'URLError: offline', 'error_at': '2026-10-01T10:00:20Z'};
+    expect(wallStatusLine(failing, now).text, contains('offline'));
+    expect(wallStatusLine(failing, now).ok, isFalse);
+    expect(wallStatusLine(null, now).ok, isFalse);
+    expect(wallGrid(['b2', 'a1', 'e1', 'a2', 'c1', 'b1']), [['a1', 'b1', 'c1', 'e1'], ['a2', 'b2']]);
+  });
 }
