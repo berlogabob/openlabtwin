@@ -1247,6 +1247,15 @@ LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
 DESCRIPTION:José Graça\nGroups: LDJO001D01\nP
 END:VEVENT
 BEGIN:VEVENT
+UID:e32b5b591d7e2796e200e5e24323275a907577a8@iade-lab-schedule
+DTSTAMP:20260921T000000Z
+DTSTART;TZID=Europe/Lisbon:20261214T090000
+DTEND;TZID=Europe/Lisbon:20261214T120000
+SUMMARY:Projeto de Jogo 2D/2D Game Design
+LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
+DESCRIPTION:Pamela Teubig\nGroups: LDJO003D01\nP
+END:VEVENT
+BEGIN:VEVENT
 UID:4ee8acd500878a1586c13744bcdd465f4cb73b0e@iade-lab-schedule
 DTSTAMP:20260921T000000Z
 DTSTART;TZID=Europe/Lisbon:20261215T113000
@@ -1255,6 +1264,15 @@ SUMMARY:Projeto de Visualização de Informação
 LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
 DESCRIPTION:Ângela Isabel Maria Xavier Barros\nGroups: LEIIG07D01\, LIGS00
  5D01\nP
+END:VEVENT
+BEGIN:VEVENT
+UID:c566aab4b192cefed4ccfc7daa6b3d463f2ed7bb@iade-lab-schedule
+DTSTAMP:20260921T000000Z
+DTSTART;TZID=Europe/Lisbon:20261215T150000
+DTEND;TZID=Europe/Lisbon:20261215T170000
+SUMMARY:Design para Jogos / Game Design
+LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
+DESCRIPTION:Eulerson Rodrigues\nGroups: LTCR005D01\nP
 END:VEVENT
 BEGIN:VEVENT
 UID:06350d314b06d459db1cd6c266e6421f955d8454@iade-lab-schedule
