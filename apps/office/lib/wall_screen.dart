@@ -24,6 +24,7 @@ class _WallScreenState extends State<WallScreen> {
   List<Rec> media = [], events = [];
   Rec? state, status;
   String? error;
+  String? previewUrl, previewAt;
   Timer? timer;
 
   @override
@@ -48,6 +49,14 @@ class _WallScreenState extends State<WallScreen> {
         media = r[1] as List<Rec>;
         state = r[2] as Rec?;
         status = r[3] as Rec?;
+        final nextPreviewAt = status?['preview_at'] as String?;
+        if (nextPreviewAt != previewAt) {
+          previewAt = nextPreviewAt;
+          previewUrl = null;
+          if (nextPreviewAt != null) wallPreviewUrl().then((url) {
+            if (mounted && previewAt == nextPreviewAt) setState(() => previewUrl = url);
+          }).catchError((_) {});
+        }
         events = r[4] as List<Rec>;
         error = null;
       });
@@ -485,6 +494,10 @@ class _WallScreenState extends State<WallScreen> {
                       title: Text(stale ?? st.text, style: TextStyle(color: stale != null ? Colors.grey : (st.ok ? null : Colors.red))),
                     );
                   },
+                ),
+                if (previewUrl != null) Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Image.network(previewUrl!, height: 180, fit: BoxFit.contain),
                 ),
                 _grid(),
                 Padding(

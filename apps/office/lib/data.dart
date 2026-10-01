@@ -300,6 +300,8 @@ Future<Rec?> wallState() async => await db.from('wall_state').select().maybeSing
 /// The wall server's heartbeat (one row), or null before its first report.
 Future<Rec?> wallStatus() async => await db.from('wall_status').select().maybeSingle();
 
+Future<String> wallPreviewUrl() => db.storage.from('wall-preview').createSignedUrl('current.jpg', 60);
+
 Future<void> setWallState(Rec fields) async => await db.from('wall_state').update(fields).eq('id', 1);
 
 Future<void> saveWallSlide(WallSlide s) async {
