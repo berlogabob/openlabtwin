@@ -294,7 +294,7 @@ Future<void> reorderTvSlides(List<int> ids) async =>
 Future<List<WallSlide>> wallSlides() async =>
     [for (final r in await db.from('wall_slides').select().order('position').order('id')) WallSlide.fromRow(r)];
 
-/// The office's controls for the wall (one row): blackout, playing, "show now".
+/// The office's controls for the wall (one row): blackout, playing, sleep window, "show now".
 Future<Rec?> wallState() async => await db.from('wall_state').select().maybeSingle();
 
 /// The wall server's heartbeat (one row), or null before its first report.

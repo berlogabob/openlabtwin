@@ -143,6 +143,7 @@ Use **Upload** in the Files block to add a photo or video to the TV and wall fol
 - **Identify all** shows each screen's code in big letters (10 s); **Test pattern** shows the alignment grid across the wall (60 s). Tap a screen square to do either on that screen only.
 - Tap a screen square and choose **Restart client** to restart its player, or **Reboot Pi** to restart that computer. **Reboot all (30 s apart)** asks for confirmation, then reboots screens one at a time.
 - **Blackout** turns every screen black; press again to turn it off. **Stop** shows the logo (or black) until **Play**.
+- **Night sleep** sets the overnight window when the wall sends black plans and asks screens to turn their displays off. Edit its start and end times here; the display turns back on outside the window.
 - **Show now…** plays one thing immediately, above the playlist: Videowall (one file over all screens) or Mosaic (one file per screen, ticked files or all), with Fit (whole picture), Fill (cover, edges cut) or Center. **Back to schedule** returns to the playlist.
 - **Emergency message…** displays typed text on every screen over a black background. It stays up until **Back to schedule**.
 - **Preset buttons** under the controls show playlist entries marked “Show as a preset button”. Tap one to show that entry immediately; each playlist row also has a play button, and **Show now** begins 3 seconds ahead so the screens start together.

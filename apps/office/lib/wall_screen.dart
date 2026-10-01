@@ -486,6 +486,38 @@ class _WallScreenState extends State<WallScreen> {
     if (confirmed == true) await _command('reboot', 'all');
   }
 
+  Future<void> _editSleep() async {
+    final sleep = state?['sleep'] as Map?;
+    String from = sleep?['from'] as String? ?? '20:00';
+    String to = sleep?['to'] as String? ?? '08:00';
+    Future<String?> pick(String value) async {
+      final time = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay(hour: int.parse(value.substring(0, 2)), minute: int.parse(value.substring(3))),
+      );
+      return time == null ? null : '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+    }
+
+    final save = await showDialog<bool>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, set) => AlertDialog(
+          title: const Text('Night sleep'),
+          content: Row(children: [
+            TextButton(onPressed: () async { final v = await pick(from); if (v != null) set(() => from = v); }, child: Text(from)),
+            const Text(' – '),
+            TextButton(onPressed: () async { final v = await pick(to); if (v != null) set(() => to = v); }, child: Text(to)),
+          ]),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+            FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Save')),
+          ],
+        ),
+      ),
+    );
+    if (save == true) await _run(() => setWallState({'sleep': {'from': from, 'to': to}}));
+  }
+
   Future<void> _screenMenu(String code) async {
     final action = await showDialog<String>(
       context: context,
@@ -571,6 +603,7 @@ class _WallScreenState extends State<WallScreen> {
   Widget build(BuildContext context) {
     final list = slides;
     final blackout = state?['blackout'] == true, playing = state?['playing'] != false, hasNow = state?['now'] != null;
+    final sleep = state?['sleep'] as Map?;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Video wall'),
@@ -616,6 +649,12 @@ class _WallScreenState extends State<WallScreen> {
                         onPressed: () => _run(() => setWallState({'blackout': !blackout})),
                         child: Text(blackout ? 'Blackout on: turn off' : 'Blackout'),
                       ),
+                      Row(mainAxisSize: MainAxisSize.min, children: [
+                        Icon(Icons.nights_stay_outlined, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                        const SizedBox(width: 6),
+                        Text('Night sleep ${sleep?['from'] ?? '20:00'}–${sleep?['to'] ?? '08:00'}'),
+                        TextButton(onPressed: _editSleep, child: const Text('[edit]')),
+                      ]),
                       FilledButton.tonal(
                         onPressed: () => _run(() => setWallState({'playing': !playing})),
                         child: Text(playing ? 'Stop' : 'Play'),
