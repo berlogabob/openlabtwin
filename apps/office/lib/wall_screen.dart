@@ -53,9 +53,11 @@ class _WallScreenState extends State<WallScreen> {
         if (nextPreviewAt != previewAt) {
           previewAt = nextPreviewAt;
           previewUrl = null;
-          if (nextPreviewAt != null) wallPreviewUrl().then((url) {
-            if (mounted && previewAt == nextPreviewAt) setState(() => previewUrl = url);
-          }).catchError((_) {});
+          if (nextPreviewAt != null) {
+            wallPreviewUrl().then((url) {
+              if (mounted && previewAt == nextPreviewAt) setState(() => previewUrl = url);
+            }).catchError((_) {});
+          }
         }
         events = r[4] as List<Rec>;
         error = null;
@@ -414,18 +416,42 @@ class _WallScreenState extends State<WallScreen> {
     );
   }
 
+  Future<void> _command(String kind, String code) => _run(
+    () => setWallState({
+      'command': {'kind': kind, 'code': code, 'at': DateTime.now().toUtc().toIso8601String()},
+    }),
+  );
+
+  Future<void> _rebootAll() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reboot every wall screen?'),
+        content: const Text('The Pis will reboot one at a time, 30 seconds apart.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Reboot all')),
+        ],
+      ),
+    );
+    if (confirmed == true) await _command('reboot', 'all');
+  }
+
   Future<void> _screenMenu(String code) async {
-    final kind = await showDialog<String>(
+    final action = await showDialog<String>(
       context: context,
       builder: (context) => SimpleDialog(
         title: Text('Screen ${code.toUpperCase()}'),
         children: [
           SimpleDialogOption(onPressed: () => Navigator.pop(context, 'identify'), child: const Text('Identify (10 s)')),
           SimpleDialogOption(onPressed: () => Navigator.pop(context, 'test'), child: const Text('Test pattern (60 s)')),
+          SimpleDialogOption(onPressed: () => Navigator.pop(context, 'restart'), child: const Text('Restart client')),
+          SimpleDialogOption(onPressed: () => Navigator.pop(context, 'reboot'), child: const Text('Reboot Pi')),
         ],
       ),
     );
-    if (kind != null) await _overlay(kind, code);
+    if (action == 'identify' || action == 'test') await _overlay(action!, code);
+    if (action == 'restart' || action == 'reboot') await _command(action!, code);
   }
 
   Widget _grid() {
@@ -548,6 +574,7 @@ class _WallScreenState extends State<WallScreen> {
                       FilledButton.tonal(onPressed: _showNow, child: const Text('Show now…')),
                       OutlinedButton(onPressed: () => _overlay('identify', 'all'), child: const Text('Identify all')),
                       OutlinedButton(onPressed: () => _overlay('test', 'all'), child: const Text('Test pattern')),
+                      OutlinedButton(onPressed: _rebootAll, child: const Text('Reboot all (30 s apart)')),
                       if (hasNow)
                         FilledButton.tonal(
                           onPressed: () => _run(() => setWallState({'now': null, 'now_at': null, 'now_until': null})),

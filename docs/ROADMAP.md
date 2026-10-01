@@ -4,7 +4,7 @@ What's next, in rough order. Done work moves to the status table in [ARCHITECTUR
 
 ## Next: the video wall link
 
-Built on branch `wall` (2026-10-01): migration `20261001100000_wall.sql` (`wall_slides`, `wall_state`, `wall_status`), pgTAP `12_wall`, the office Wall screen and current-picture preview URL. The office Today timeline is in migration `20261002100003_timeline.sql` and reads the server's next 12 hours from `wall_status.timeline`. Left:
+Built on branch `wall` (2026-10-01): migrations `20261001100000_wall.sql` (`wall_slides`, `wall_state`, `wall_status`), `20261002100003_timeline.sql` (office Today timeline), and `20261002100004_commands.sql` (one-shot screen restart/reboot commands); pgTAP wall coverage; office Wall screen, preview URL and per-screen / staggered reboot controls. Left:
 
 1. Apply and test the migration: `uv run python scripts/sqltest.py`.
 2. Merge `wall` into `main` (deploys the office).
