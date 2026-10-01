@@ -138,6 +138,8 @@ Students drop project ideas at https://berlogabob.github.io/openlabtwin/ideas/. 
 
 Office → the grid button (Video wall). The current picture appears above the screen grid. The top line says what the wall plays and how many screens are on. **Today** lists the next 12 hours of playback with start and end times. If the server has stopped reporting for over a minute, it shows a grey “Wall off or server down since …” line with the last screen count; grey squares show each screen's last seen time. The coloured squares are green when on, orange when on with a power or sync warning, and grey when off or the server is stale.
 
+Use **Upload** in the Files block to add a photo or video to the TV and wall folder. It should appear in the list within a minute.
+
 - **Identify all** shows each screen's code in big letters (10 s); **Test pattern** shows the alignment grid across the wall (60 s). Tap a screen square to do either on that screen only.
 - Tap a screen square and choose **Restart client** to restart its player, or **Reboot Pi** to restart that computer. **Reboot all (30 s apart)** asks for confirmation, then reboots screens one at a time.
 - **Blackout** turns every screen black; press again to turn it off. **Stop** shows the logo (or black) until **Play**.

@@ -2,6 +2,7 @@
 // reads wall_state and wall_slides every 2 s and reports in wall_status every 10 s.
 import 'dart:async';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import 'data.dart';
@@ -81,6 +82,22 @@ class _WallScreenState extends State<WallScreen> {
     list.insert(to, list.removeAt(from));
     setState(() => slides = list);
     await _run(() => reorderWallSlides([for (final s in list) s.id!]));
+  }
+
+  Future<void> _upload() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(type: FileType.media, withData: true);
+      final file = result?.files.single;
+      if (file == null) return;
+      final bytes = file.bytes;
+      if (bytes == null) throw Exception('Could not read ${file.name}');
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Uploading…')));
+      await db.storage.from('wall-upload').uploadBinary(file.name, bytes);
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Uploaded. It will appear in the file list shortly.')));
+      await _load();
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
+    }
   }
 
   Rec? _file(String name) => media.where((m) => m['name'] == name).firstOrNull;
@@ -199,7 +216,10 @@ class _WallScreenState extends State<WallScreen> {
                     onChanged: (v) => set(() => names = v == null ? [] : [v]),
                   )
                 else ...[
-                  const Padding(padding: EdgeInsets.only(top: 8), child: Text('Files (none ticked: every file in the folder)')),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Row(children: [const Expanded(child: Text('Files (none ticked: every file in the folder)')), TextButton.icon(onPressed: _upload, icon: const Icon(Icons.upload), label: const Text('Upload'))]),
+                  ),
                   for (final m in media)
                     CheckboxListTile(
                       dense: true,

@@ -102,6 +102,8 @@ The reader runs on the node ([edge-node.md → Loan sheet archive](edge-node.md#
 
 ## Rooms and the TV
 
+Office uploads go to the private `wall-upload` bucket (staff only; 2 GB per object, image and video MIME types). The edge node polls it every 30 seconds and copies unseen files into `~/tv-media`, recording completed names in `~/wall-cache/uploads.json`. It downloads to a `.part` file before rename and leaves existing files in that directory untouched.
+
 The lab rooms are rows in `places` (`kind = 'room'`). `iade_name` must be the exact room name the IADE timetable uses, so lessons, bookings and filters line up. `public = true` lets the room appear in the export. To add the second lab room:
 
 ```bash
