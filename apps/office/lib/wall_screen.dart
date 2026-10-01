@@ -85,25 +85,26 @@ class _WallScreenState extends State<WallScreen> {
   String _render(WallSlide s) => ((status?['slides'] as Map?) ?? const {})['${s.id}'] as String? ?? '';
 
   String _subtitle(WallSlide s) => [
-        wallModes[s.mode]!.split(':').first,
-        s.mediaNames.isEmpty ? 'all files' : s.mediaNames.join(', '),
-        s.fit,
-        s.seconds == null ? (s.mode == 'videowall' ? 'whole video' : '30 s') : '${s.seconds} s',
-        if (s.cycleSeconds != null) 'next file every ${s.cycleSeconds} s',
-        if (s.startsOn != null || s.endsOn != null)
-          '${s.startsOn == null ? '…' : isoDate(s.startsOn!)} – ${s.endsOn == null ? '…' : isoDate(s.endsOn!)}',
-        if (s.fromTime != null || s.toTime != null) '${s.fromTime ?? '…'}–${s.toTime ?? '…'}',
-        if (s.activityId != null) 'during ${_eventLabel(s.activityId)}',
-        if (s.takeover) 'takeover',
-        if (s.every != null) 'announcement every ${s.every} s',
-        if (s.showTitle || s.credits.isNotEmpty || s.logo || s.matte > 0) 'composed',
-        if (_render(s).isNotEmpty) _render(s),
-      ].join(' · ');
+    wallModes[s.mode]!.split(':').first,
+    s.mediaNames.isEmpty ? 'all files' : s.mediaNames.join(', '),
+    s.fit,
+    s.seconds == null ? (s.mode == 'videowall' ? 'whole video' : '30 s') : '${s.seconds} s',
+    if (s.cycleSeconds != null) 'next file every ${s.cycleSeconds} s',
+    if (s.startsOn != null || s.endsOn != null)
+      '${s.startsOn == null ? '…' : isoDate(s.startsOn!)} – ${s.endsOn == null ? '…' : isoDate(s.endsOn!)}',
+    if (s.fromTime != null || s.toTime != null) '${s.fromTime ?? '…'}–${s.toTime ?? '…'}',
+    if (s.activityId != null) 'during ${_eventLabel(s.activityId)}',
+    if (s.takeover) 'takeover',
+    if (s.every != null) 'announcement every ${s.every} s',
+    if (s.showTitle || s.credits.isNotEmpty || s.logo || s.matte > 0) 'composed',
+    if (_render(s).isNotEmpty) _render(s),
+  ].join(' · ');
 
   /// Editor for a playlist entry, or (now: true) a one-off "show this now" without a row.
   Future<WallSlide?> _form(WallSlide s, {bool now = false}) async {
     final title = TextEditingController(text: s.title), credits = TextEditingController(text: s.credits);
-    final seconds = TextEditingController(text: s.seconds?.toString() ?? ''), cycle = TextEditingController(text: s.cycleSeconds?.toString() ?? '');
+    final seconds = TextEditingController(text: s.seconds?.toString() ?? ''),
+        cycle = TextEditingController(text: s.cycleSeconds?.toString() ?? '');
     final every = TextEditingController(text: s.every?.toString() ?? ''), matte = TextEditingController(text: '${s.matte}');
     var mode = s.mode, fit = s.fit, showTitle = s.showTitle, logo = s.logo, takeover = s.takeover;
     var names = [...s.mediaNames];
@@ -113,12 +114,15 @@ class _WallScreenState extends State<WallScreen> {
     Future<String?> pickTime(String? t) async {
       final v = await showTimePicker(
         context: context,
-        initialTime: t == null ? const TimeOfDay(hour: 17, minute: 0) : TimeOfDay(hour: int.parse(t.substring(0, 2)), minute: int.parse(t.substring(3))),
+        initialTime: t == null
+            ? const TimeOfDay(hour: 17, minute: 0)
+            : TimeOfDay(hour: int.parse(t.substring(0, 2)), minute: int.parse(t.substring(3))),
       );
       return v == null ? null : '${v.hour.toString().padLeft(2, '0')}:${v.minute.toString().padLeft(2, '0')}';
     }
 
-    Future<DateTime?> pick(DateTime? d) => showDatePicker(context: context, initialDate: d ?? DateTime.now(), firstDate: DateTime(2026), lastDate: DateTime(2030));
+    Future<DateTime?> pick(DateTime? d) =>
+        showDatePicker(context: context, initialDate: d ?? DateTime.now(), firstDate: DateTime(2026), lastDate: DateTime(2030));
     final action = await showDialog<String>(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -146,7 +150,10 @@ class _WallScreenState extends State<WallScreen> {
                       for (final m in media)
                         DropdownMenuItem<String?>(
                           value: m['name'] as String,
-                          child: Text('${m['name']}${m['seconds'] == null ? '' : ' (${mmss(m['seconds'] as num)})'}', overflow: TextOverflow.ellipsis),
+                          child: Text(
+                            '${m['name']}${m['seconds'] == null ? '' : ' (${mmss(m['seconds'] as num)})'}',
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                     ],
                     onChanged: (v) => set(() => names = v == null ? [] : [v]),
@@ -177,17 +184,26 @@ class _WallScreenState extends State<WallScreen> {
                   TextField(
                     controller: seconds,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: 'Seconds on the wall', helperText: 'Empty: a video plays to its end; a still 10 s; a mosaic 30 s'),
+                    decoration: const InputDecoration(
+                      labelText: 'Seconds on the wall',
+                      helperText: 'Empty: a video plays to its end; a still 10 s; a mosaic 30 s',
+                    ),
                   ),
                 if (mode == 'videowall') ...[
-                  TextField(controller: title, decoration: const InputDecoration(labelText: 'Title')),
+                  TextField(
+                    controller: title,
+                    decoration: const InputDecoration(labelText: 'Title'),
+                  ),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Draw the title on the wall'),
                     value: showTitle,
                     onChanged: (v) => set(() => showTitle = v),
                   ),
-                  TextField(controller: credits, decoration: const InputDecoration(labelText: 'Credits (small, bottom right)')),
+                  TextField(
+                    controller: credits,
+                    decoration: const InputDecoration(labelText: 'Credits (small, bottom right)'),
+                  ),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Logo (top right)'),
@@ -208,48 +224,60 @@ class _WallScreenState extends State<WallScreen> {
                     items: [
                       const DropdownMenuItem<int?>(value: null, child: Text('No: use the dates and times below')),
                       for (final e in events)
-                        DropdownMenuItem<int?>(value: e['id'] as int, child: Text(_eventLabel(e['id'] as int), overflow: TextOverflow.ellipsis)),
+                        DropdownMenuItem<int?>(
+                          value: e['id'] as int,
+                          child: Text(_eventLabel(e['id'] as int), overflow: TextOverflow.ellipsis),
+                        ),
                     ],
                     onChanged: (v) => set(() => activityId = v),
                   ),
                   if (activityId == null) ...[
                     const SizedBox(height: 8),
-                    Wrap(spacing: 8, runSpacing: 8, children: [
-                      OutlinedButton(
-                        onPressed: () async {
-                          final d = await pick(from);
-                          if (d != null) set(() => from = d);
-                        },
-                        child: Text(from == null ? 'From: now' : 'From ${isoDate(from!)}'),
-                      ),
-                      OutlinedButton(
-                        onPressed: () async {
-                          final d = await pick(to);
-                          if (d != null) set(() => to = d);
-                        },
-                        child: Text(to == null ? 'Until: no end' : 'Until ${isoDate(to!)}'),
-                      ),
-                      if (from != null || to != null) TextButton(onPressed: () => set(() => from = to = null), child: const Text('Clear dates')),
-                    ]),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        OutlinedButton(
+                          onPressed: () async {
+                            final d = await pick(from);
+                            if (d != null) set(() => from = d);
+                          },
+                          child: Text(from == null ? 'From: now' : 'From ${isoDate(from!)}'),
+                        ),
+                        OutlinedButton(
+                          onPressed: () async {
+                            final d = await pick(to);
+                            if (d != null) set(() => to = d);
+                          },
+                          child: Text(to == null ? 'Until: no end' : 'Until ${isoDate(to!)}'),
+                        ),
+                        if (from != null || to != null)
+                          TextButton(onPressed: () => set(() => from = to = null), child: const Text('Clear dates')),
+                      ],
+                    ),
                     const SizedBox(height: 8),
-                    Wrap(spacing: 8, runSpacing: 8, children: [
-                      OutlinedButton(
-                        onPressed: () async {
-                          final t = await pickTime(fromTime);
-                          if (t != null) set(() => fromTime = t);
-                        },
-                        child: Text(fromTime == null ? 'Time from: any' : 'From $fromTime'),
-                      ),
-                      OutlinedButton(
-                        onPressed: () async {
-                          final t = await pickTime(toTime);
-                          if (t != null) set(() => toTime = t);
-                        },
-                        child: Text(toTime == null ? 'Time until: any' : 'Until $toTime'),
-                      ),
-                      if (fromTime != null || toTime != null)
-                        TextButton(onPressed: () => set(() => fromTime = toTime = null), child: const Text('Clear times')),
-                    ]),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        OutlinedButton(
+                          onPressed: () async {
+                            final t = await pickTime(fromTime);
+                            if (t != null) set(() => fromTime = t);
+                          },
+                          child: Text(fromTime == null ? 'Time from: any' : 'From $fromTime'),
+                        ),
+                        OutlinedButton(
+                          onPressed: () async {
+                            final t = await pickTime(toTime);
+                            if (t != null) set(() => toTime = t);
+                          },
+                          child: Text(toTime == null ? 'Time until: any' : 'Until $toTime'),
+                        ),
+                        if (fromTime != null || toTime != null)
+                          TextButton(onPressed: () => set(() => fromTime = toTime = null), child: const Text('Clear times')),
+                      ],
+                    ),
                   ],
                   TextField(
                     controller: every,
@@ -326,48 +354,82 @@ class _WallScreenState extends State<WallScreen> {
     await _run(() => setWallState({'now': out.toRow(), 'now_at': at, 'now_until': null}));
   }
 
+  /// Identify (10 s, big code on each screen) or Test pattern (60 s), on one screen or 'all'. Above everything else.
+  Future<void> _overlay(String kind, String code) {
+    final until = DateTime.now().toUtc().add(Duration(seconds: kind == 'identify' ? 10 : 60)).toIso8601String();
+    return _run(
+      () => setWallState({
+        'overlay': {'kind': kind, 'code': code, 'until': until},
+      }),
+    );
+  }
+
+  Future<void> _screenMenu(String code) async {
+    final kind = await showDialog<String>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: Text('Screen ${code.toUpperCase()}'),
+        children: [
+          SimpleDialogOption(onPressed: () => Navigator.pop(context, 'identify'), child: const Text('Identify (10 s)')),
+          SimpleDialogOption(onPressed: () => Navigator.pop(context, 'test'), child: const Text('Test pattern (60 s)')),
+        ],
+      ),
+    );
+    if (kind != null) await _overlay(kind, code);
+  }
+
   Widget _grid() {
     final screens = ((status?['screens'] as Map?) ?? const {}).cast<String, dynamic>();
     if (screens.isEmpty) return const SizedBox.shrink();
     Color colour(Map s) => s['on'] != true
         ? Colors.grey
         : piPower(s['throttled'] as String?) != null || ((s['drift_ms'] as num?)?.abs() ?? 0) > 100
-            ? Colors.orange
-            : Colors.green;
+        ? Colors.orange
+        : Colors.green;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Builder(builder: (context) {
-            final bad = [
-              for (final e in screens.entries)
-                if ((e.value as Map)['on'] == true && piPower((e.value as Map)['throttled'] as String?) != null)
-                  '${e.key.toUpperCase()}: ${piPower((e.value as Map)['throttled'] as String?)}'
-            ];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text(bad.isEmpty ? 'Power: all screens on clean power' : 'Power: ${bad.join(' · ')}',
-                  style: TextStyle(color: bad.isEmpty ? null : Colors.orange.shade800)),
-            );
-          }),
-          for (final row in wallGrid(screens.keys))
-            Row(children: [
-              for (final c in row)
-                Tooltip(
-                  message: '${c.toUpperCase()}: ${(screens[c] as Map)['on'] == true ? 'on' : 'off'}'
-                      '${piPower((screens[c] as Map)['throttled'] as String?) == null ? '' : ' · ${piPower((screens[c] as Map)['throttled'] as String?)}'}'
-                      ' · drift ${(screens[c] as Map)['drift_ms'] ?? '?'} ms · ${(screens[c] as Map)['temp'] ?? '?'} °C',
-                  child: Container(
-                    margin: const EdgeInsets.all(2),
-                    width: 34,
-                    height: 26,
-                    alignment: Alignment.center,
-                    color: colour(screens[c] as Map),
-                    child: Text(c.toUpperCase(), style: const TextStyle(color: Colors.white, fontSize: 11)),
-                  ),
+          Builder(
+            builder: (context) {
+              final bad = [
+                for (final e in screens.entries)
+                  if ((e.value as Map)['on'] == true && piPower((e.value as Map)['throttled'] as String?) != null)
+                    '${e.key.toUpperCase()}: ${piPower((e.value as Map)['throttled'] as String?)}',
+              ];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  bad.isEmpty ? 'Power: all screens on clean power' : 'Power: ${bad.join(' · ')}',
+                  style: TextStyle(color: bad.isEmpty ? null : Colors.orange.shade800),
                 ),
-            ]),
+              );
+            },
+          ),
+          for (final row in wallGrid(screens.keys))
+            Row(
+              children: [
+                for (final c in row)
+                  InkWell(
+                    onTap: () => _screenMenu(c),
+                    child: Tooltip(
+                      message:
+                          '${c.toUpperCase()}: ${(screens[c] as Map)['on'] == true ? 'on' : 'off'}'
+                          '${piPower((screens[c] as Map)['throttled'] as String?) == null ? '' : ' · ${piPower((screens[c] as Map)['throttled'] as String?)}'}'
+                          ' · drift ${(screens[c] as Map)['drift_ms'] ?? '?'} ms · ${(screens[c] as Map)['temp'] ?? '?'} °C',
+                      child: Container(
+                        margin: const EdgeInsets.all(2),
+                        width: 34,
+                        height: 26,
+                        alignment: Alignment.center,
+                        color: colour(screens[c] as Map),
+                        child: Text(c.toUpperCase(), style: const TextStyle(color: Colors.white, fontSize: 11)),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
         ],
       ),
     );
@@ -390,69 +452,77 @@ class _WallScreenState extends State<WallScreen> {
       body: error != null
           ? Center(child: Text(error!))
           : list == null
-              ? const Center(child: CircularProgressIndicator())
-              : Column(
-                  children: [
-                    Builder(builder: (context) {
-                      final st = wallStatusLine(status, DateTime.now());
-                      return ListTile(
-                        dense: true,
-                        leading: Icon(st.ok ? Icons.check_circle : Icons.warning, color: st.ok ? Colors.green : Colors.red),
-                        title: Text(st.text, style: TextStyle(color: st.ok ? null : Colors.red)),
-                      );
-                    }),
-                    _grid(),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Wrap(spacing: 8, runSpacing: 8, children: [
-                        FilledButton.tonal(
-                          style: blackout ? FilledButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white) : null,
-                          onPressed: () => _run(() => setWallState({'blackout': !blackout})),
-                          child: Text(blackout ? 'Blackout on: turn off' : 'Blackout'),
-                        ),
-                        FilledButton.tonal(
-                          onPressed: () => _run(() => setWallState({'playing': !playing})),
-                          child: Text(playing ? 'Stop' : 'Play'),
-                        ),
-                        FilledButton.tonal(onPressed: _showNow, child: const Text('Show now…')),
-                        if (hasNow)
-                          FilledButton.tonal(
-                            onPressed: () => _run(() => setWallState({'now': null, 'now_at': null, 'now_until': null})),
-                            child: const Text('Back to schedule'),
-                          ),
-                      ]),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(16, 8, 16, 4),
-                      child: SelectionArea(
-                        child: Text(
-                          'The wall plays these entries in this order, then starts again, with the TV\'s rules for dates, '
-                          'times, takeover and announcements. Drag to reorder, tap to edit, the switch hides an entry.\n'
-                          'Files: $tvFolder (the TV\'s folder)   ·   Setup page: $wallPage (lab network)',
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: list.isEmpty
-                          ? const Center(child: Text('No entries yet: the wall shows its test images.'))
-                          : ReorderableListView(
-                              padding: const EdgeInsets.only(bottom: 88),
-                              onReorderItem: _reorder,
-                              children: [
-                                for (final s in list)
-                                  ListTile(
-                                    key: ValueKey(s.id),
-                                    leading: Switch(value: s.active, onChanged: (v) => _run(() => saveWallSlide(s..active = v))),
-                                    title: Text(s.title.isNotEmpty ? s.title : (s.mediaNames.isEmpty ? 'All files' : s.mediaNames.first)),
-                                    subtitle: Text(_subtitle(s),
-                                        style: TextStyle(color: _render(s).startsWith('failed') ? Colors.red : null)),
-                                    onTap: () => _edit(s),
-                                  ),
-                              ],
-                            ),
-                    ),
-                  ],
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                Builder(
+                  builder: (context) {
+                    final st = wallStatusLine(status, DateTime.now());
+                    return ListTile(
+                      dense: true,
+                      leading: Icon(st.ok ? Icons.check_circle : Icons.warning, color: st.ok ? Colors.green : Colors.red),
+                      title: Text(st.text, style: TextStyle(color: st.ok ? null : Colors.red)),
+                    );
+                  },
                 ),
+                _grid(),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      FilledButton.tonal(
+                        style: blackout ? FilledButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white) : null,
+                        onPressed: () => _run(() => setWallState({'blackout': !blackout})),
+                        child: Text(blackout ? 'Blackout on: turn off' : 'Blackout'),
+                      ),
+                      FilledButton.tonal(
+                        onPressed: () => _run(() => setWallState({'playing': !playing})),
+                        child: Text(playing ? 'Stop' : 'Play'),
+                      ),
+                      FilledButton.tonal(onPressed: _showNow, child: const Text('Show now…')),
+                      OutlinedButton(onPressed: () => _overlay('identify', 'all'), child: const Text('Identify all')),
+                      OutlinedButton(onPressed: () => _overlay('test', 'all'), child: const Text('Test pattern')),
+                      if (hasNow)
+                        FilledButton.tonal(
+                          onPressed: () => _run(() => setWallState({'now': null, 'now_at': null, 'now_until': null})),
+                          child: const Text('Back to schedule'),
+                        ),
+                    ],
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(16, 8, 16, 4),
+                  child: SelectionArea(
+                    child: Text(
+                      'The wall plays these entries in this order, then starts again, with the TV\'s rules for dates, '
+                      'times, takeover and announcements. Drag to reorder, tap to edit, the switch hides an entry. '
+                      'Tap a screen square for Identify or Test pattern on that screen.\n'
+                      'Files: $tvFolder (the TV\'s folder)   ·   Setup page: $wallPage (lab network)',
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: list.isEmpty
+                      ? const Center(child: Text('No entries yet: the wall shows its test images.'))
+                      : ReorderableListView(
+                          padding: const EdgeInsets.only(bottom: 88),
+                          onReorderItem: _reorder,
+                          children: [
+                            for (final s in list)
+                              ListTile(
+                                key: ValueKey(s.id),
+                                leading: Switch(value: s.active, onChanged: (v) => _run(() => saveWallSlide(s..active = v))),
+                                title: Text(s.title.isNotEmpty ? s.title : (s.mediaNames.isEmpty ? 'All files' : s.mediaNames.first)),
+                                subtitle: Text(_subtitle(s), style: TextStyle(color: _render(s).startsWith('failed') ? Colors.red : null)),
+                                onTap: () => _edit(s),
+                              ),
+                          ],
+                        ),
+                ),
+              ],
+            ),
     );
   }
 }

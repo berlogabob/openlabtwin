@@ -138,6 +138,7 @@ Students drop project ideas at https://berlogabob.github.io/openlabtwin/ideas/. 
 
 Office → the grid button (Video wall). The top line says what the wall plays and how many screens are on; the coloured squares are the screens (green on, orange on but with a power or sync warning, grey off).
 
+- **Identify all** shows each screen's code in big letters (10 s); **Test pattern** shows the alignment grid across the wall (60 s). Tap a screen square to do either on that screen only.
 - **Blackout** turns every screen black; press again to turn it off. **Stop** shows the logo (or black) until **Play**.
 - **Show now…** plays one thing immediately, above the playlist: Videowall (one file over all screens) or Mosaic (one file per screen, ticked files or all), with Fit (whole picture), Fill (cover, edges cut) or Center. **Back to schedule** returns to the playlist.
 - **The playlist** works like the TV slides: order, dates, times of day, takeover, announcements ("show every … seconds") and "play during a schedule event". The same event linked on the TV and the wall starts on both in the same second. A videowall entry can draw a title, credits, the logo and a black frame (matte) across the screens.

@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(10);
+select plan(12);
 
 select ok((select bool_and(relrowsecurity) from pg_class where relname in ('wall_slides', 'wall_state', 'wall_status')),
           'RLS on the three wall tables');
@@ -19,4 +19,8 @@ select throws_like($$ insert into wall_slides (mode, media_names, seconds, every
 select throws_like($$ insert into wall_slides (mode, media_names, from_time, to_time) values ('mosaic', '{}', '20:00', '17:00') $$,
                    '%wall_slides_time_order%', 'the end time is after the start time');
 select throws_like($$ insert into wall_slides (mode, fit) values ('mosaic', 'stretch') $$, '%check%', 'fit is fit, fill or center');
+select lives_ok($$ update wall_state set overlay = '{"kind": "identify", "code": "all", "until": "2026-10-01T10:00:00Z"}' $$,
+                'the office can ask for Identify on every screen');
+select throws_like($$ update wall_state set overlay = '{"kind": "reboot", "code": "a1", "until": "x"}' $$, '%check%',
+                   'only identify or test');
 select * from finish();
