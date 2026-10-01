@@ -93,6 +93,35 @@ class _WallScreenState extends State<WallScreen> {
 
   String _render(WallSlide s) => ((status?['slides'] as Map?) ?? const {})['${s.id}'] as String? ?? '';
 
+  Widget _today() {
+    final timeline = status?['timeline'];
+    if (timeline is! List || timeline.isEmpty) return const SizedBox.shrink();
+    String hm(dynamic value) => hhmm(DateTime.parse(value as String).toLocal());
+    return Card(
+      margin: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const ListTile(dense: true, title: Text('Today')),
+          SizedBox(
+            height: 160,
+            child: ListView(
+              children: [
+                for (final row in timeline.whereType<Map>())
+                  ListTile(
+                    dense: true,
+                    visualDensity: VisualDensity.compact,
+                    title: Text('${hm(row['at'])}–${hm(row['until'])}  ${row['label']}'),
+                    subtitle: row['level'] == null ? null : Text('${row['level']}'),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   String _subtitle(WallSlide s) => [
     wallModes[s.mode]!.split(':').first,
     s.mediaNames.isEmpty ? 'all files' : s.mediaNames.join(', '),
@@ -499,6 +528,7 @@ class _WallScreenState extends State<WallScreen> {
                   padding: const EdgeInsets.all(12),
                   child: Image.network(previewUrl!, height: 180, fit: BoxFit.contain),
                 ),
+                _today(),
                 _grid(),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
