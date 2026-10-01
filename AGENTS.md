@@ -19,3 +19,7 @@ Gotchas the code doesn't show (details in `docs/OPERATIONS.md`):
 - The node's Postgres (`openlabtwin`) is a read-only mirror, rebuilt nightly by `scripts/mirror.py`; write only to Supabase. An empty table's backup has no columns, so a table a mirror view reads needs its columns in `mirror.EMPTY`.
 - New database tests take the next free number in `supabase/tests/database/` (they run in name order).
 - In `supabase/tests/database/*.sql`, top-level pgTAP calls start a line with `select`, and every other `select` is indented (`sqltest.py` captures those lines).
+
+Project record rules (openlabtwin is the record location):
+- A commit that makes, changes or reverses a decision adds a decision record in openlabtwin `docs/decisions` (a reversal adds a new record and marks the old one superseded) and carries the trailer `Decision: NNNN short title`.
+- Each working day gets a `docs/LOG.md` entry in openlabtwin (newest first).
