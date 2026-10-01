@@ -89,6 +89,7 @@ class _WallScreenState extends State<WallScreen> {
       final result = await FilePicker.platform.pickFiles(type: FileType.media, withData: true);
       final file = result?.files.single;
       if (file == null) return;
+      if (file.size > 500 * 1024 * 1024) throw Exception('${file.name} is over 500 MB; copy it to the TV folder on the lab network instead.');
       final bytes = file.bytes;
       if (bytes == null) throw Exception('Could not read ${file.name}');
       if (!mounted) return;
