@@ -91,6 +91,7 @@ class _WallScreenState extends State<WallScreen> {
       if (file == null) return;
       final bytes = file.bytes;
       if (bytes == null) throw Exception('Could not read ${file.name}');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Uploading…')));
       await db.storage.from('wall-upload').uploadBinary(file.name, bytes);
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Uploaded. It will appear in the file list shortly.')));
