@@ -136,7 +136,7 @@ Students drop project ideas at https://berlogabob.github.io/openlabtwin/ideas/. 
 
 ## The video wall
 
-Office → the grid button (Video wall). The top line says what the wall plays and how many screens are on; the coloured squares are the screens (green on, orange on but with a power or sync warning, grey off).
+Office → the grid button (Video wall). The top line says what the wall plays and how many screens are on. If the server has stopped reporting for over a minute, it shows a grey “Wall off or server down since …” line with the last screen count; grey squares show each screen's last seen time. The coloured squares are green when on, orange when on with a power or sync warning, and grey when off or the server is stale.
 
 - **Identify all** shows each screen's code in big letters (10 s); **Test pattern** shows the alignment grid across the wall (60 s). Tap a screen square to do either on that screen only.
 - **Blackout** turns every screen black; press again to turn it off. **Stop** shows the logo (or black) until **Play**.

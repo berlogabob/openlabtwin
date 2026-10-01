@@ -679,6 +679,17 @@ class WallSlide {
   );
 }
 
+/// A calm operator message when the wall server has stopped reporting.
+String? wallStaleLine(Map? status, DateTime now) {
+  String hm(DateTime d) => '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+  final seen = status?['seen_at'] == null ? null : DateTime.parse(status!['seen_at'] as String).toLocal();
+  if (seen == null) return 'Wall server has not reported yet';
+  if (now.difference(seen).inSeconds <= 60) return null;
+  final screens = (status!['screens'] as Map?) ?? const {};
+  final on = screens.values.where((s) => (s as Map)['on'] == true).length;
+  return 'Wall off or server down since ${hm(seen)} · last $on/${screens.length} screens on';
+}
+
 /// Screen codes as rows of the wall: letter = column, number = row (a1 top left). The server owns the grid size;
 /// the office only lays out the codes it reports.
 List<List<String>> wallGrid(Iterable<String> codes) {

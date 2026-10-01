@@ -381,7 +381,13 @@ class _WallScreenState extends State<WallScreen> {
   Widget _grid() {
     final screens = ((status?['screens'] as Map?) ?? const {}).cast<String, dynamic>();
     if (screens.isEmpty) return const SizedBox.shrink();
-    Color colour(Map s) => s['on'] != true
+    final stale = wallStaleLine(status, DateTime.now()) != null;
+    String hm(DateTime d) => '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+    String lastSeen(Map s) {
+      final at = s['seen_at'] ?? status?['seen_at'];
+      return at == null ? 'last seen unknown' : 'last seen ${hm(DateTime.parse(at as String).toLocal())}';
+    }
+    Color colour(Map s) => stale || s['on'] != true
         ? Colors.grey
         : piPower(s['throttled'] as String?) != null || ((s['drift_ms'] as num?)?.abs() ?? 0) > 100
         ? Colors.orange
@@ -414,8 +420,9 @@ class _WallScreenState extends State<WallScreen> {
                   InkWell(
                     onTap: () => _screenMenu(c),
                     child: Tooltip(
-                      message:
-                          '${c.toUpperCase()}: ${(screens[c] as Map)['on'] == true ? 'on' : 'off'}'
+                      message: stale
+                          ? lastSeen(screens[c] as Map)
+                          : '${c.toUpperCase()}: ${(screens[c] as Map)['on'] == true ? 'on' : 'off'}'
                           '${piPower((screens[c] as Map)['throttled'] as String?) == null ? '' : ' · ${piPower((screens[c] as Map)['throttled'] as String?)}'}'
                           ' · drift ${(screens[c] as Map)['drift_ms'] ?? '?'} ms · ${(screens[c] as Map)['temp'] ?? '?'} °C',
                       child: Container(
@@ -457,11 +464,13 @@ class _WallScreenState extends State<WallScreen> {
               children: [
                 Builder(
                   builder: (context) {
-                    final st = wallStatusLine(status, DateTime.now());
+                    final now = DateTime.now();
+                    final stale = wallStaleLine(status, now);
+                    final st = wallStatusLine(status, now);
                     return ListTile(
                       dense: true,
-                      leading: Icon(st.ok ? Icons.check_circle : Icons.warning, color: st.ok ? Colors.green : Colors.red),
-                      title: Text(st.text, style: TextStyle(color: st.ok ? null : Colors.red)),
+                      leading: stale == null ? Icon(st.ok ? Icons.check_circle : Icons.warning, color: st.ok ? Colors.green : Colors.red) : null,
+                      title: Text(stale ?? st.text, style: TextStyle(color: stale != null ? Colors.grey : (st.ok ? null : Colors.red))),
                     );
                   },
                 ),

@@ -344,6 +344,11 @@ void main() {
     expect(wallStatusLine(failing, now).text, contains('offline'));
     expect(wallStatusLine(failing, now).ok, isFalse);
     expect(wallStatusLine(null, now).ok, isFalse);
+    expect(wallStaleLine(good, now), isNull);
+    final ten = {...good, 'screens': {for (var i = 0; i < 10; i++) 'a${i + 1}': {'on': true}}};
+    expect(wallStaleLine(ten, now.add(const Duration(seconds: 61))),
+        'Wall off or server down since 11:00 · last 10/10 screens on');
+    expect(wallStaleLine(null, now), 'Wall server has not reported yet');
     expect(wallGrid(['b2', 'a1', 'e1', 'a2', 'c1', 'b1']), [['a1', 'b1', 'c1', 'e1'], ['a2', 'b2']]);
   });
 
