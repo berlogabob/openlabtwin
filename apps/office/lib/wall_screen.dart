@@ -467,6 +467,17 @@ class _WallScreenState extends State<WallScreen> {
     );
   }
 
+  Future<void> _adjustBezel(String axis, int delta) {
+    final saved = state?['bezel'];
+    final active = status?['bezel'];
+    final bezel = saved is Map ? saved : active is Map ? active : const {};
+    final value = (((bezel[axis] as num?) ?? 0).round() + delta).clamp(0, 400);
+    return _run(() => setWallState({'bezel': {
+      'x': axis == 'x' ? value : ((bezel['x'] as num?) ?? 0).round(),
+      'y': axis == 'y' ? value : ((bezel['y'] as num?) ?? 0).round(),
+    }}));
+  }
+
   Future<void> _command(String kind, String code) => _run(
     () => setWallState({
       'command': {'kind': kind, 'code': code, 'at': DateTime.now().toUtc().toIso8601String()},
@@ -672,6 +683,25 @@ class _WallScreenState extends State<WallScreen> {
                           child: const Text('Back to schedule'),
                         ),
                     ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('Bezel gap: ${state?['bezel'] is Map ? '${(state!['bezel'] as Map)['x']} × ${(state!['bezel'] as Map)['y']} px' : 'server default'}'),
+                    for (final axis in ['x', 'y'])
+                      Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [
+                        SizedBox(width: 24, child: Text(axis.toUpperCase())),
+                        for (final step in [-10, -2, 2, 10])
+                          TextButton(onPressed: () => _adjustBezel(axis, step), child: Text(step > 0 ? '+$step' : '$step')),
+                      ]),
+                  ]),
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('Frame width between two pictures in mm ÷ 0.264 (720N pixel pitch). Show the Test pattern and adjust until the diagonals and the circle run straight across the frames.'),
                   ),
                 ),
                 if (list.any((s) => s.preset))

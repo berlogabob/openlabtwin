@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(5);
+select plan(7);
 
 select lives_ok($$ update wall_state set command = '{"kind": "restart", "code": "a1", "at": "2026-10-02T10:00:00Z"}' $$,
                 'a per-screen restart command is valid');
@@ -12,5 +12,7 @@ select throws_like($$ update wall_state set command = '{"code": "a1", "at": "202
                    '%check%', 'commands need a kind');
 select throws_like($$ update wall_state set command = '{"kind": "reboot", "at": "2026-10-02T10:00:00Z"}' $$,
                    '%check%', 'commands need a screen code');
+select lives_ok($$ update wall_state set bezel = '{"x": 76, "y": 60}' $$, 'the office sets the bezel gaps');
+select throws_like($$ update wall_state set bezel = '{"x": "wide"}' $$, '%check%', 'bezel gaps are numbers');
 select * from finish();
 rollback;

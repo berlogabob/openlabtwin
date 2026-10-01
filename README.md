@@ -18,7 +18,7 @@ The IADE game lab's system of record: rooms, storage, equipment, people, booking
 
 - [Architecture](docs/ARCHITECTURE.md): the parts, how data flows, the three privacy layers, and why each decision was made.
 - [Operations](docs/OPERATIONS.md): the runbook. Publishing, secrets, staff and rooms, migrations, tests, troubleshooting.
-- [Staff guide](docs/STAFF-GUIDE.md): for lab technicians using the back office (bookings, inventory, places and stocktake, labels), the TV and the public site.
+- [Staff guide](docs/STAFF-GUIDE.md): for lab technicians using the back office (bookings, inventory, places and stocktake, labels), the TV and the public site, including live video wall bezel tuning.
 - [Edge node](docs/edge-node.md): the always-on lab machine (TechLAB-01): publishing, idea AI, the showcase TV, backups and the read-only database mirror; the lab network, Tailscale, the TV computer.
 - [Roadmap](docs/ROADMAP.md): what's next.
 - History: the design spec and the per-milestone implementation plans in [`docs/superpowers/`](docs/superpowers/).
