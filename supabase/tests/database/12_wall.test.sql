@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(12);
+select plan(13);
 
 select ok((select bool_and(relrowsecurity) from pg_class where relname in ('wall_slides', 'wall_state', 'wall_status')),
           'RLS on the three wall tables');
@@ -14,6 +14,7 @@ select is((select count(*)::int from wall_state), 1, 'the control row exists');
 select throws_like($$ insert into wall_slides (mode, media_names) values ('videowall', '{a.mp4,b.mp4}') $$,
                    '%wall_slides_one_file%', 'a videowall slide shows exactly one file');
 select lives_ok($$ insert into wall_slides (mode, media_names) values ('mosaic', '{}') $$, 'a mosaic of every file');
+select is((select preset from wall_slides where mode = 'mosaic' order by id desc limit 1), false, 'presets default to off');
 select throws_like($$ insert into wall_slides (mode, media_names, seconds, every_seconds) values ('videowall', '{a.jpg}', 20, 10) $$,
                    '%wall_slides_every%', 'an announcement gap is longer than its seconds');
 select throws_like($$ insert into wall_slides (mode, media_names, from_time, to_time) values ('mosaic', '{}', '20:00', '17:00') $$,

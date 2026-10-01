@@ -106,7 +106,7 @@ class _WallScreenState extends State<WallScreen> {
     final seconds = TextEditingController(text: s.seconds?.toString() ?? ''),
         cycle = TextEditingController(text: s.cycleSeconds?.toString() ?? '');
     final every = TextEditingController(text: s.every?.toString() ?? ''), matte = TextEditingController(text: '${s.matte}');
-    var mode = s.mode, fit = s.fit, showTitle = s.showTitle, logo = s.logo, takeover = s.takeover;
+    var mode = s.mode, fit = s.fit, showTitle = s.showTitle, logo = s.logo, takeover = s.takeover, preset = s.preset;
     var names = [...s.mediaNames];
     DateTime? from = s.startsOn, to = s.endsOn;
     String? fromTime = s.fromTime, toTime = s.toTime;
@@ -217,6 +217,12 @@ class _WallScreenState extends State<WallScreen> {
                   ),
                 ],
                 if (!now) ...[
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Show as a preset button'),
+                    value: preset,
+                    onChanged: (v) => set(() => preset = v),
+                  ),
                   DropdownButtonFormField<int?>(
                     initialValue: activityId,
                     isExpanded: true,
@@ -332,6 +338,7 @@ class _WallScreenState extends State<WallScreen> {
       takeover: takeover,
       every: int.tryParse(every.text.trim()),
       activityId: activityId,
+      preset: preset,
     );
     final problem = out.problem();
     if (problem != null) {
@@ -352,6 +359,11 @@ class _WallScreenState extends State<WallScreen> {
     // 3 s ahead: time for the Pis to fetch the first tiles, so all screens start together
     final at = DateTime.now().toUtc().add(const Duration(seconds: 3)).toIso8601String();
     await _run(() => setWallState({'now': out.toRow(), 'now_at': at, 'now_until': null}));
+  }
+
+  Future<void> _showSlideNow(WallSlide slide) async {
+    final at = DateTime.now().toUtc().add(const Duration(seconds: 3)).toIso8601String();
+    await _run(() => setWallState({'now': slide.toRow(), 'now_at': at, 'now_until': null}));
   }
 
   /// Identify (10 s, big code on each screen) or Test pattern (60 s), on one screen or 'all'. Above everything else.
@@ -501,6 +513,24 @@ class _WallScreenState extends State<WallScreen> {
                     ],
                   ),
                 ),
+                if (list.any((s) => s.preset))
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final s in list.where((s) => s.preset))
+                            FilledButton.tonal(
+                              onPressed: () => _showSlideNow(s),
+                              child: Text(s.title.isNotEmpty ? s.title : (s.mediaNames.isEmpty ? 'All files' : s.mediaNames.first)),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
                 const Padding(
                   padding: EdgeInsets.fromLTRB(16, 8, 16, 4),
                   child: SelectionArea(
@@ -523,6 +553,11 @@ class _WallScreenState extends State<WallScreen> {
                               ListTile(
                                 key: ValueKey(s.id),
                                 leading: Switch(value: s.active, onChanged: (v) => _run(() => saveWallSlide(s..active = v))),
+                                trailing: IconButton(
+                                  tooltip: 'Show now',
+                                  icon: const Icon(Icons.play_arrow),
+                                  onPressed: () => _showSlideNow(s),
+                                ),
                                 title: Text(s.title.isNotEmpty ? s.title : (s.mediaNames.isEmpty ? 'All files' : s.mediaNames.first)),
                                 subtitle: Text(_subtitle(s), style: TextStyle(color: _render(s).startsWith('failed') ? Colors.red : null)),
                                 onTap: () => _edit(s),

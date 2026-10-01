@@ -316,12 +316,14 @@ void main() {
       'fit': 'fill', 'show_title': true, 'credits': ' Lab ', 'logo': true, 'matte': 40, 'position': 1, 'active': true,
       'starts_on': '2026-10-01', 'ends_on': null, 'from_time': '17:00:00', 'to_time': '20:00:00', 'takeover': true,
       'every_seconds': null, 'activity_id': null,
+      'preset': true,
     });
     expect(s.toRow(), {
       'mode': 'videowall', 'title': 'PROTO26', 'media_names': ['proto.mp4'], 'seconds': null, 'cycle_seconds': null,
       'fit': 'fill', 'show_title': true, 'credits': 'Lab', 'logo': true, 'matte': 40, 'position': 1, 'active': true,
       'starts_on': '2026-10-01', 'ends_on': null, 'from_time': '17:00', 'to_time': '20:00', 'takeover': true,
       'every_seconds': null, 'activity_id': null,
+      'preset': true,
     });
     expect(s.problem(), isNull);
     expect(WallSlide(mode: 'videowall').problem(), contains('one file'));

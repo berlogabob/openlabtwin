@@ -583,6 +583,7 @@ class WallSlide {
     this.takeover = false,
     this.every,
     this.activityId,
+    this.preset = false,
   }) : mediaNames = mediaNames ?? [];
 
   factory WallSlide.fromRow(Map<String, dynamic> r) => WallSlide(
@@ -606,6 +607,7 @@ class WallSlide {
         takeover: r['takeover'] as bool? ?? false,
         every: r['every_seconds'] as int?,
         activityId: r['activity_id'] as int?,
+        preset: r['preset'] as bool? ?? false,
       );
 
   int? id;
@@ -613,7 +615,7 @@ class WallSlide {
   String title, fit, credits; // fit: fit (bars), fill (cut), center (no scaling)
   List<String> mediaNames; // videowall: exactly one; mosaic: empty = every file in the folder
   int? seconds, cycleSeconds, every, activityId;
-  bool showTitle, logo, active, takeover;
+  bool showTitle, logo, active, takeover, preset;
   int matte, position;
   DateTime? startsOn, endsOn;
   String? fromTime, toTime;
@@ -638,6 +640,7 @@ class WallSlide {
         'takeover': takeover,
         'every_seconds': every,
         'activity_id': activityId,
+        'preset': preset,
       };
 
   /// The first thing to fix before saving, or null.
