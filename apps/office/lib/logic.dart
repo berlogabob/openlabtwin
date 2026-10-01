@@ -689,3 +689,18 @@ List<List<String>> wallGrid(Iterable<String> codes) {
   }
   return [for (final r in (rows.keys.toList()..sort())) rows[r]!..sort()];
 }
+
+/// A Pi's power and heat from `vcgencmd get_throttled` (hex). Low bits: happening now; bits 16-19: since boot.
+/// null when everything is clean or unknown.
+String? piPower(String? throttled) {
+  final v = int.tryParse((throttled ?? '').replaceFirst('0x', ''), radix: 16);
+  if (v == null || v == 0) return null;
+  final parts = [
+    if (v & 0x1 != 0) 'under-voltage now',
+    if (v & 0x1 == 0 && v & 0x10000 != 0) 'under-voltage since boot',
+    if (v & 0x4 != 0) 'throttled now',
+    if (v & 0x8 != 0) 'too hot now',
+    if (v & 0x8 == 0 && v & 0x80000 != 0) 'hit heat limit since boot',
+  ];
+  return parts.isEmpty ? 'throttled since boot' : parts.join(', ');
+}

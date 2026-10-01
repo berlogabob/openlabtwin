@@ -346,4 +346,13 @@ void main() {
     expect(wallStatusLine(null, now).ok, isFalse);
     expect(wallGrid(['b2', 'a1', 'e1', 'a2', 'c1', 'b1']), [['a1', 'b1', 'c1', 'e1'], ['a2', 'b2']]);
   });
+
+  test('Pi power flags', () {
+    expect(piPower('0x0'), isNull);
+    expect(piPower(null), isNull);
+    expect(piPower('0x50000'), 'under-voltage since boot');
+    expect(piPower('0x50005'), 'under-voltage now, throttled now');
+    expect(piPower('0x80000'), 'hit heat limit since boot');
+    expect(piPower('0x80008'), 'too hot now');
+  });
 }

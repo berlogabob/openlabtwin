@@ -331,7 +331,7 @@ class _WallScreenState extends State<WallScreen> {
     if (screens.isEmpty) return const SizedBox.shrink();
     Color colour(Map s) => s['on'] != true
         ? Colors.grey
-        : (s['throttled'] != null && s['throttled'] != '0x0') || ((s['drift_ms'] as num?)?.abs() ?? 0) > 100
+        : piPower(s['throttled'] as String?) != null || ((s['drift_ms'] as num?)?.abs() ?? 0) > 100
             ? Colors.orange
             : Colors.green;
     return Padding(
@@ -339,11 +339,25 @@ class _WallScreenState extends State<WallScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Builder(builder: (context) {
+            final bad = [
+              for (final e in screens.entries)
+                if ((e.value as Map)['on'] == true && piPower((e.value as Map)['throttled'] as String?) != null)
+                  '${e.key.toUpperCase()}: ${piPower((e.value as Map)['throttled'] as String?)}'
+            ];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(bad.isEmpty ? 'Power: all screens on clean power' : 'Power: ${bad.join(' · ')}',
+                  style: TextStyle(color: bad.isEmpty ? null : Colors.orange.shade800)),
+            );
+          }),
           for (final row in wallGrid(screens.keys))
             Row(children: [
               for (final c in row)
                 Tooltip(
-                  message: '$c: ${screens[c]}',
+                  message: '${c.toUpperCase()}: ${(screens[c] as Map)['on'] == true ? 'on' : 'off'}'
+                      '${piPower((screens[c] as Map)['throttled'] as String?) == null ? '' : ' · ${piPower((screens[c] as Map)['throttled'] as String?)}'}'
+                      ' · drift ${(screens[c] as Map)['drift_ms'] ?? '?'} ms · ${(screens[c] as Map)['temp'] ?? '?'} °C',
                   child: Container(
                     margin: const EdgeInsets.all(2),
                     width: 34,
