@@ -406,6 +406,35 @@ class _WallScreenState extends State<WallScreen> {
     await _run(() => setWallState({'now': slide.toRow(), 'now_at': at, 'now_until': null}));
   }
 
+  Future<void> _emergencyMessage() async {
+    final text = TextEditingController();
+    final message = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Emergency message'),
+        content: TextField(
+          controller: text,
+          autofocus: true,
+          minLines: 3,
+          maxLines: 8,
+          decoration: const InputDecoration(labelText: 'Message', hintText: 'Type the message for every screen'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(context, text.text.trim()), child: const Text('Show on wall')),
+        ],
+      ),
+    );
+    text.dispose();
+    if (message == null) return;
+    if (message.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a message first.')));
+      return;
+    }
+    await _run(() => setWallState({'now': {'mode': 'videowall', 'text': message, 'fit': 'fit'}, 'now_until': null}));
+  }
+
   /// Identify (10 s, big code on each screen) or Test pattern (60 s), on one screen or 'all'. Above everything else.
   Future<void> _overlay(String kind, String code) {
     final until = DateTime.now().toUtc().add(Duration(seconds: kind == 'identify' ? 10 : 60)).toIso8601String();
@@ -572,6 +601,7 @@ class _WallScreenState extends State<WallScreen> {
                         child: Text(playing ? 'Stop' : 'Play'),
                       ),
                       FilledButton.tonal(onPressed: _showNow, child: const Text('Show now…')),
+                      OutlinedButton(onPressed: _emergencyMessage, child: const Text('Emergency message…')),
                       OutlinedButton(onPressed: () => _overlay('identify', 'all'), child: const Text('Identify all')),
                       OutlinedButton(onPressed: () => _overlay('test', 'all'), child: const Text('Test pattern')),
                       OutlinedButton(onPressed: _rebootAll, child: const Text('Reboot all (30 s apart)')),
