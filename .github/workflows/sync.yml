@@ -64,7 +64,7 @@ jobs:
         working-directory: apps/office
         run: |
           flutter pub get
-          flutter build web --release --base-href /openlabtwin/office/ \
+          flutter build web --release --no-web-resources-cdn --base-href /openlabtwin/office/ \
             --dart-define=SUPABASE_URL=${{ vars.SUPABASE_URL }} --dart-define=SUPABASE_ANON_KEY=${{ vars.SUPABASE_ANON_KEY }}
           cp -R build/web ../site/build/jaspr/office
       - name: Lab TV (the node's TV page with its public playlist and files from the tv-public branch)

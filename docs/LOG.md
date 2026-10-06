@@ -9,6 +9,7 @@ Git is the source of truth. Entries cover work committed in openlabtwin and vide
 - Reel (6.5 min) plays as a videowall over 5×3 with 900×720 tiles at 2.5 Mb/s ([0042](decisions/0042-video-tiles-at-900x720.md)): 44–57 °C, drift −28 to −2 ms, 0 dropped frames. Render 12 min for 15 tiles; download through the 2.4 GHz Wi-Fi bridge about 11 MB/s in total.
 - Fixed: a LAN-page change wrote the whole state back and undid a Play from the same 2 s poll (videowall `79e1ec0`).
 - TV: announcement slide 175 switched off; the TV Pi had lost Wi-Fi and showed its cached page of 1 October; back on Wi-Fi at 192.168.1.194.
+- Wall: office Wall screen restructured as the only control UI ([0044](decisions/0044-office-is-the-only-wall-control-ui.md)), office build self-hosts CanvasKit (blank page when gstatic is blocked); mosaic tiles 900×720, measured loop period, calmer sync, gap defaults 132/151 px ([0045](decisions/0045-mosaic-tiles-900x720-and-calmer-sync.md)); `announcement*` files play only on direct request. Not deployed.
 - Found: Claude Code's command sandbox, not macOS, blocked writes to the repos from this session.
 
 ## 2026-10-04 (Sunday)

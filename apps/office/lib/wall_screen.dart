@@ -9,7 +9,6 @@ import 'data.dart';
 import 'logic.dart';
 import 'tv_screen.dart' show mmss, tvFolder;
 
-const wallPage = 'http://192.168.1.131:8080/';
 const wallModes = {'videowall': 'Videowall: one picture over all screens', 'mosaic': 'Mosaic: one file per screen'};
 const wallFits = {'fit': 'Fit (whole picture, black bars)', 'fill': 'Fill (cover, cut the edges)', 'center': 'Center (no scaling)'};
 
@@ -25,7 +24,10 @@ class _WallScreenState extends State<WallScreen> {
   List<Rec> media = [], events = [];
   Rec? state, status;
   String? error;
-  String? previewUrl, previewAt;
+  String? previewUrl, previewAt, selectedFile;
+  DateTime previewMade = DateTime.fromMillisecondsSinceEpoch(0);
+  String mode = 'videowall', fit = 'fit';
+  int previewRequest = 0;
   Timer? timer;
 
   @override
@@ -45,24 +47,22 @@ class _WallScreenState extends State<WallScreen> {
     try {
       final r = await Future.wait([wallSlides(), tvMedia(), wallState(), wallStatus(), tvEvents()]);
       if (!mounted) return;
+      final request = ++previewRequest;
       setState(() {
         slides = r[0] as List<WallSlide>;
         media = r[1] as List<Rec>;
+        if (selectedFile != null && !media.any((m) => m['name'] == selectedFile && !_announcement(m))) selectedFile = null;
         state = r[2] as Rec?;
         status = r[3] as Rec?;
-        final nextPreviewAt = status?['preview_at'] as String?;
-        if (nextPreviewAt != previewAt) {
-          previewAt = nextPreviewAt;
-          previewUrl = null;
-          if (nextPreviewAt != null) {
-            wallPreviewUrl().then((url) {
-              if (mounted && previewAt == nextPreviewAt) setState(() => previewUrl = url);
-            }).catchError((_) {});
-          }
-        }
         events = r[4] as List<Rec>;
         error = null;
       });
+      // a new signed URL only when the picture changed or the old one is close to its 60 s expiry (a new URL reloads the image)
+      final at = (r[3] as Rec?)?['preview_at'] as String?;
+      if (previewUrl == null || at != previewAt || DateTime.now().difference(previewMade).inSeconds > 45) {
+        final url = await wallPreviewUrl();
+        if (mounted && request == previewRequest) setState(() { previewUrl = url; previewAt = at; previewMade = DateTime.now(); });
+      }
     } catch (e) {
       if (mounted) setState(() => error = '$e');
     }
@@ -102,7 +102,11 @@ class _WallScreenState extends State<WallScreen> {
     }
   }
 
-  Rec? _file(String name) => media.where((m) => m['name'] == name).firstOrNull;
+  bool _announcement(Rec m) => (m['name'] as String).toLowerCase().startsWith('announcement');
+  Rec? _file(String name) => media.where((m) => m['name'] == name && !_announcement(m)).firstOrNull;
+
+  Future<void> _putOnScreen(String name) async => _showSlideNow(WallSlide(mode: 'videowall', mediaNames: [name], fit: 'fit'));
+
 
   String _eventLabel(int? id) {
     final e = events.where((e) => e['id'] == id).firstOrNull;
@@ -159,8 +163,7 @@ class _WallScreenState extends State<WallScreen> {
     if (_render(s).isNotEmpty) _render(s),
   ].join(' · ');
 
-  /// Editor for a playlist entry, or (now: true) a one-off "show this now" without a row.
-  Future<WallSlide?> _form(WallSlide s, {bool now = false}) async {
+  Future<WallSlide?> _form(WallSlide s) async {
     final title = TextEditingController(text: s.title), credits = TextEditingController(text: s.credits);
     final seconds = TextEditingController(text: s.seconds?.toString() ?? ''),
         cycle = TextEditingController(text: s.cycleSeconds?.toString() ?? '');
@@ -186,7 +189,7 @@ class _WallScreenState extends State<WallScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, set) => AlertDialog(
-          title: Text(now ? 'Show now' : (s.id == null ? 'Add to the wall playlist' : 'Edit wall entry')),
+          title: Text(s.id == null ? 'Add to the wall playlist' : 'Edit wall entry'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -206,7 +209,7 @@ class _WallScreenState extends State<WallScreen> {
                     isExpanded: true,
                     decoration: const InputDecoration(labelText: 'File from the TV folder'),
                     items: [
-                      for (final m in media)
+                      for (final m in media.where((m) => !_announcement(m)))
                         DropdownMenuItem<String?>(
                           value: m['name'] as String,
                           child: Text(
@@ -222,7 +225,7 @@ class _WallScreenState extends State<WallScreen> {
                     padding: const EdgeInsets.only(top: 8),
                     child: Row(children: [const Expanded(child: Text('Files (none ticked: every file in the folder)')), TextButton.icon(onPressed: _upload, icon: const Icon(Icons.upload), label: const Text('Upload'))]),
                   ),
-                  for (final m in media)
+                  for (final m in media.where((m) => !_announcement(m)))
                     CheckboxListTile(
                       dense: true,
                       contentPadding: EdgeInsets.zero,
@@ -242,8 +245,7 @@ class _WallScreenState extends State<WallScreen> {
                   items: [for (final e in wallFits.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
                   onChanged: (v) => set(() => fit = v!),
                 ),
-                if (!now)
-                  TextField(
+                TextField(
                     controller: seconds,
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
@@ -278,8 +280,7 @@ class _WallScreenState extends State<WallScreen> {
                     decoration: const InputDecoration(labelText: 'Matte: black frame in px (0 to 400)'),
                   ),
                 ],
-                if (!now) ...[
-                  SwitchListTile(
+                SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Show as a preset button'),
                     value: preset,
@@ -362,14 +363,13 @@ class _WallScreenState extends State<WallScreen> {
                     value: takeover,
                     onChanged: (v) => set(() => takeover = v),
                   ),
-                ],
               ],
             ),
           ),
           actions: [
-            if (s.id != null && !now) TextButton(onPressed: () => Navigator.pop(context, 'delete'), child: const Text('Delete')),
+            if (s.id != null) TextButton(onPressed: () => Navigator.pop(context, 'delete'), child: const Text('Delete')),
             TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-            FilledButton(onPressed: () => Navigator.pop(context, 'save'), child: Text(now ? 'Show now' : 'Save')),
+            FilledButton(onPressed: () => Navigator.pop(context, 'save'), child: const Text('Save')),
           ],
         ),
       ),
@@ -416,11 +416,8 @@ class _WallScreenState extends State<WallScreen> {
   }
 
   Future<void> _showNow() async {
-    final out = await _form(WallSlide(), now: true);
-    if (out == null) return;
-    // 3 s ahead: time for the Pis to fetch the first tiles, so all screens start together
-    final at = DateTime.now().toUtc().add(const Duration(seconds: 3)).toIso8601String();
-    await _run(() => setWallState({'now': out.toRow(), 'now_at': at, 'now_until': null}));
+    if (mode == 'videowall' && selectedFile == null) return;
+    await _showSlideNow(WallSlide(mode: mode, mediaNames: selectedFile == null ? [] : [selectedFile!], fit: fit));
   }
 
   Future<void> _showSlideNow(WallSlide slide) async {
@@ -631,7 +628,7 @@ class _WallScreenState extends State<WallScreen> {
           ? Center(child: Text(error!))
           : list == null
           ? const Center(child: CircularProgressIndicator())
-          : Column(
+          : ListView(
               children: [
                 Builder(
                   builder: (context) {
@@ -645,9 +642,48 @@ class _WallScreenState extends State<WallScreen> {
                     );
                   },
                 ),
-                if (previewUrl != null) Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Image.network(previewUrl!, height: 180, fit: BoxFit.contain),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(children: [
+                    DropdownButtonFormField<String>(
+                      initialValue: mode,
+                      decoration: const InputDecoration(labelText: 'Mode'),
+                      items: [for (final e in wallModes.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
+                      onChanged: (v) => setState(() => mode = v!),
+                    ),
+                    DropdownButtonFormField<String?>(
+                      initialValue: selectedFile,
+                      isExpanded: true,
+                      decoration: const InputDecoration(labelText: 'File'),
+                      items: [
+                        const DropdownMenuItem<String?>(value: null, child: Text('All files (Mosaic)')),
+                        for (final m in media.where((m) => !_announcement(m))) DropdownMenuItem<String?>(value: m['name'] as String, child: Text(m['name'] as String, overflow: TextOverflow.ellipsis)),
+                      ],
+                      onChanged: (v) => setState(() => selectedFile = v),
+                    ),
+                    DropdownButtonFormField<String>(
+                      initialValue: fit,
+                      decoration: const InputDecoration(labelText: 'Fit'),
+                      items: [for (final e in wallFits.entries) DropdownMenuItem(value: e.key, child: Text(e.value))],
+                      onChanged: (v) => setState(() => fit = v!),
+                    ),
+                    Align(alignment: Alignment.centerRight, child: FilledButton(onPressed: _showNow, child: const Text('Show now'))),
+                    Card(child: Padding(padding: const EdgeInsets.all(12), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text('Files: $tvFolder'),
+                      Align(alignment: Alignment.centerRight, child: TextButton.icon(onPressed: _upload, icon: const Icon(Icons.upload), label: const Text('Upload'))),
+                    ]))),
+                    if (media.any(_announcement)) Card(child: Column(children: [
+                      const ListTile(dense: true, title: Text('Announcements')),
+                      for (final m in media.where(_announcement)) ListTile(dense: true, title: Text(m['name'] as String), trailing: TextButton(onPressed: () => _putOnScreen(m['name'] as String), child: const Text('Put on screen'))),
+                    ])),
+                    Card(child: Padding(padding: const EdgeInsets.all(12), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text('Bezel gap: ${state?['bezel'] is Map ? '${(state!['bezel'] as Map)['x']} × ${(state!['bezel'] as Map)['y']} px' : 'server default'}'),
+                      for (final axis in ['x', 'y']) Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [SizedBox(width: 24, child: Text(axis.toUpperCase())), for (final step in [-10, -2, 2, 10]) TextButton(onPressed: () => _adjustBezel(axis, step), child: Text(step > 0 ? '+$step' : '$step'))]),
+                      SwitchListTile(contentPadding: EdgeInsets.zero, title: const Text('Test pattern'), value: (state?['overlay'] as Map?)?['kind'] == 'test', onChanged: (v) => v ? _overlay('test', 'all') : _run(() => setWallState({'overlay': null}))),
+                      const Text('Frame width between two pictures in mm ÷ 0.264 (720N pixel pitch). Adjust until the pattern runs straight across frames.'),
+                    ]))),
+                    if (previewUrl != null) Padding(padding: const EdgeInsets.all(8), child: Image.network(previewUrl!, height: 180, fit: BoxFit.contain)),
+                  ]),
                 ),
                 _today(),
                 _grid(),
@@ -672,10 +708,8 @@ class _WallScreenState extends State<WallScreen> {
                         onPressed: () => _run(() => setWallState({'playing': !playing})),
                         child: Text(playing ? 'Stop' : 'Play'),
                       ),
-                      FilledButton.tonal(onPressed: _showNow, child: const Text('Show now…')),
                       OutlinedButton(onPressed: _emergencyMessage, child: const Text('Emergency message…')),
                       OutlinedButton(onPressed: () => _overlay('identify', 'all'), child: const Text('Identify all')),
-                      OutlinedButton(onPressed: () => _overlay('test', 'all'), child: const Text('Test pattern')),
                       OutlinedButton(onPressed: _rebootAll, child: const Text('Reboot all (30 s apart)')),
                       if (hasNow)
                         FilledButton.tonal(
@@ -683,25 +717,6 @@ class _WallScreenState extends State<WallScreen> {
                           child: const Text('Back to schedule'),
                         ),
                     ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('Bezel gap: ${state?['bezel'] is Map ? '${(state!['bezel'] as Map)['x']} × ${(state!['bezel'] as Map)['y']} px' : 'server default'}'),
-                    for (final axis in ['x', 'y'])
-                      Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [
-                        SizedBox(width: 24, child: Text(axis.toUpperCase())),
-                        for (final step in [-10, -2, 2, 10])
-                          TextButton(onPressed: () => _adjustBezel(axis, step), child: Text(step > 0 ? '+$step' : '$step')),
-                      ]),
-                  ]),
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text('Frame width between two pictures in mm ÷ 0.264 (720N pixel pitch). Show the Test pattern and adjust until the diagonals and the circle run straight across the frames.'),
                   ),
                 ),
                 if (list.any((s) => s.preset))
@@ -729,14 +744,16 @@ class _WallScreenState extends State<WallScreen> {
                       'The wall plays these entries in this order, then starts again, with the TV\'s rules for dates, '
                       'times, takeover and announcements. Drag to reorder, tap to edit, the switch hides an entry. '
                       'Tap a screen square for Identify or Test pattern on that screen.\n'
-                      'Files: $tvFolder (the TV\'s folder)   ·   Setup page: $wallPage (lab network)',
+                      'Files: $tvFolder (the TV\'s folder)',
                     ),
                   ),
                 ),
-                Expanded(
-                  child: list.isEmpty
-                      ? const Center(child: Text('No entries yet: the wall shows its test images.'))
-                      : ReorderableListView(
+                if (list.isEmpty)
+                  const ListTile(title: Text('No entries yet: the wall shows its test images.'))
+                else
+                      ReorderableListView(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
                           padding: const EdgeInsets.only(bottom: 88),
                           onReorderItem: _reorder,
                           children: [
@@ -755,7 +772,6 @@ class _WallScreenState extends State<WallScreen> {
                               ),
                           ],
                         ),
-                ),
               ],
             ),
     );
