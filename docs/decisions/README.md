@@ -46,3 +46,5 @@ Dates are decision dates; records are numbered chronologically. Reversals add a 
 | [0039](0039-wall-playlist-uses-its-own-table-and-shared-event-timing.md) | 2026-10-01 | Wall playlist uses its own table and shared event timing | accepted |
 | [0040](0040-keep-the-project-record-in-git-and-index-it-locally.md) | 2026-10-02 | Keep the project record in git and index it locally | accepted |
 | [0041](0041-tune-bezel-gaps-live-from-the-office.md) | 2026-10-02 | Tune bezel gaps live from the office | accepted |
+| [0042](0042-video-tiles-at-900x720.md) | 2026-10-06 | Video tiles at 900×720 to stay below the soft temperature limit | accepted |
+| [0043](0043-power-the-wall-by-rows.md) | 2026-10-02 | Power the wall by rows; network on its own switch; max 2 Pis per charger | accepted |

@@ -2,6 +2,23 @@
 
 Git is the source of truth. Entries cover work committed in openlabtwin and videowall; decision links point to the records.
 
+## 2026-10-06 (Tuesday)
+
+- Rows 1–3 rebuilt on the per-row power layout ([0043](decisions/0043-power-the-wall-by-rows.md)); D2 fixed by a new LAN cable; D3 and E3 reflashed and set up; 15 of 15 Pis of rows 1–3 online.
+- Reel (6.5 min) plays as a videowall over 5×3 with 900×720 tiles at 2.5 Mb/s ([0042](decisions/0042-video-tiles-at-900x720.md)): 44–57 °C, drift −28 to −2 ms, 0 dropped frames. Render 12 min for 15 tiles; download through the 2.4 GHz Wi-Fi bridge about 11 MB/s in total.
+- Fixed: a LAN-page change wrote the whole state back and undid a Play from the same 2 s poll (videowall `79e1ec0`).
+- TV: announcement slide 175 switched off; the TV Pi had lost Wi-Fi and showed its cached page of 1 October; back on Wi-Fi at 192.168.1.194.
+- Found: Claude Code's command sandbox, not macOS, blocked writes to the repos from this session.
+
+## 2026-10-04 (Sunday)
+
+- The wall had played for about 2 days; rows 1–2 at 60–67 °C (soft limit). Playback stopped from home: 45–56 °C within 10 min.
+- Display off: `vcgencmd display_power 0` has no effect under the KMS driver; stopping mpv and `echo 1 > /sys/class/graphics/fb0/blank` gives DPMS Off (videowall `05f3da3`).
+
+## 2026-10-03 (Saturday)
+
+- Rows 1–3 partly online (12 Pis). A3 and B3 under-voltage at that moment (0x50005); D2, D3, E3 not on the network.
+
 ## 2026-10-02 (Friday)
 
 - openlabtwin: `8f999b1` Live bezel tuning: gaps set from the office or LAN page while the test pattern shows (task 19, Codex gpt-6-luna)
