@@ -21,7 +21,7 @@ class BookPageState extends State<BookPage> {
   Slot? picked;
   String name = '', email = '', number = '', need = '', website = '';
   String? error, token;
-  bool sending = false;
+  bool sending = false, needTime = false;
 
   @override
   void initState() {
@@ -46,7 +46,12 @@ class BookPageState extends State<BookPage> {
     final problem = picked == null
         ? 'Pick a time first.'
         : formProblem(name: name, email: email, number: number, need: need);
-    if (problem != null) return setState(() => error = problem);
+    if (problem != null) {
+      return setState(() {
+        error = problem;
+        needTime = picked == null;
+      });
+    }
     setState(() {
       sending = true;
       error = null;
@@ -87,7 +92,8 @@ class BookPageState extends State<BookPage> {
             p([a(href: link, [.text(link)])]),
           ])
         else ...[
-          p([.text('Book time with Andrey in the Tech Lab. Pick a free slot.')]),
+          p([.text('Book time with Andrey in the Tech Lab. Pick a free slot below (required), then fill in your details.')]),
+          if (needTime) p(classes: 'error', [.text(error!)]),
           if (slots == null && error == null) p(classes: 'empty', [.text('Loading free times…')]),
           if (slots != null && slots!.isEmpty) p(classes: 'empty', [.text('No free times this week. Please check again later.')]),
           if (slots != null)
@@ -99,11 +105,18 @@ class BookPageState extends State<BookPage> {
                     button(
                       type: ButtonType.button,
                       classes: picked?.iso == s.iso ? 'slot on' : 'slot',
-                      onClick: () => setState(() => picked = s),
+                      onClick: () => setState(() {
+                        picked = s;
+                        needTime = false;
+                        error = null;
+                      }),
                       [.text('${_time(s.start)}–${_time(s.end)}')],
                     ),
                 ]),
               ]),
+          p(classes: picked == null ? 'picked error' : 'picked', [
+            .text(picked == null ? 'No time picked yet. Choose one above.' : 'Your time: ${dayName(iso(picked!.start))} ${_time(picked!.start)}–${_time(picked!.end)}'),
+          ]),
           div(classes: 'form', [
             _field('Name', name, (v) => name = v),
             _field('Email', email, (v) => email = v, type: InputType.email),
@@ -115,7 +128,7 @@ class BookPageState extends State<BookPage> {
               input<String>(type: InputType.text, value: website, attributes: {'tabindex': '-1', 'autocomplete': 'off'}, onInput: (v) => website = v),
             ]),
             button(type: ButtonType.button, disabled: sending, onClick: _send, [.text(sending ? 'Sending…' : 'Send request')]),
-            if (error != null) p(classes: 'error', [.text(error!)]),
+            if (error != null && !needTime) p(classes: 'error', [.text(error!)]),
             p(classes: 'note', [.text('Your request is saved in your lab history, visible to lab staff only.')]),
             p(classes: 'note', [.text('Need equipment for a class, lab work or a project? '), a(href: 'kit/', [.text('Ask for it here')])]),
           ]),

@@ -140,6 +140,7 @@ main > .cal, main > .month { grid-column: 1 / -1; }
 .book .form input, .book .form textarea { font: inherit; color: var(--fg); background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: .4rem .5rem; }
 .book .form > button { align-self: flex-start; font: inherit; padding: .5rem 1.2rem; color: var(--card); background: var(--accent); border: 0; border-radius: 999px; cursor: pointer; }
 .book .error { color: var(--accent); }
+.book .picked { font-weight: 600; margin: 1.5rem 0 0; }
 .book .note { font-size: .8rem; color: var(--muted); }
 .book .status { font-size: 1.3rem; }
 .hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }

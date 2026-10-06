@@ -4,6 +4,7 @@ Git is the source of truth. Entries cover work committed in openlabtwin and vide
 
 ## 2026-10-06 (Tuesday)
 
+- Book me (`/book/`): the "Pick a time first" error appeared only under Send, far from the slots; it now also shows above the slots, with a "Your time" line above the form and "(required)" in the intro.
 - Rows 1–3 rebuilt on the per-row power layout ([0043](decisions/0043-power-the-wall-by-rows.md)); D2 fixed by a new LAN cable; D3 and E3 reflashed and set up; 15 of 15 Pis of rows 1–3 online.
 - Reel (6.5 min) plays as a videowall over 5×3 with 900×720 tiles at 2.5 Mb/s ([0042](decisions/0042-video-tiles-at-900x720.md)): 44–57 °C, drift −28 to −2 ms, 0 dropped frames. Render 12 min for 15 tiles; download through the 2.4 GHz Wi-Fi bridge about 11 MB/s in total.
 - Fixed: a LAN-page change wrote the whole state back and undid a Play from the same 2 s poll (videowall `79e1ec0`).
