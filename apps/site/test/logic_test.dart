@@ -94,6 +94,24 @@ void main() {
     expect(opts['room'], ['Lab A', 'Lab B'], reason: "a field's own filter doesn't narrow its list");
   });
 
+  test('any mode merges room and professor; other fields still AND; lists do not narrow each other', () {
+    final lessons = [
+      Lesson(date: '2026-09-21', start: '09:00', end: '10:00', course: 'Computação', teachers: ['José'], rooms: ['Lab A']),
+      Lesson(date: '2026-09-21', start: '10:00', end: '11:00', course: 'Design', teachers: ['Rui'], rooms: ['Lab B']),
+      Lesson(date: '2026-09-22', start: '10:00', end: '11:00', course: 'Robotics', teachers: ['Ana'], rooms: ['Lab C']),
+    ];
+    final known = knownValues(lessons);
+    final w = {'room': ['Lab A'], 'teacher': ['Rui']};
+    List<String> courses(Map<String, List<String>> w, {bool any = true}) =>
+        [for (final l in run(lessons, w, known, '', '', any: any).hits) l.course];
+    expect(courses(w), ['Computação', 'Design']);
+    expect(courses(w, any: false), isEmpty);
+    expect(courses({...w, 'course': ['Design']}), ['Design']);
+    expect(run(lessons, w, known, '', '', any: true).options['teacher'], ['Ana', 'José', 'Rui']);
+    expect(Filters.parse('?match=all').any, isFalse);
+    expect(Filters.parse('?room=x').any, isTrue);
+  });
+
   test('picking a professor drops the untouched default room, keeps a chosen one', () {
     final v = <String, List<String>>{'room': [defaultRoom]};
     pickValue(v, 'teacher', 'Rui');

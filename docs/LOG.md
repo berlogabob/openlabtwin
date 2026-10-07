@@ -5,6 +5,7 @@ Git is the source of truth. Entries cover work committed in openlabtwin and vide
 ## 2026-10-07 (Wednesday)
 
 - Schedule: the preselected Tech Lab room hid professors from other rooms, so room and professor looked exclusive; picking any other filter now drops the untouched default room ([0046](decisions/0046-default-room-yields-to-other-filters.md)).
+- Schedule: new **Room / professor** switch, Any (merge, default) or All; Any ORs rooms and professors to show merged busy times for planning a booking ([0047](decisions/0047-room-and-professor-filters-merge-by-default.md)).
 
 ## 2026-10-06 (Tuesday)
 

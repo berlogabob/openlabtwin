@@ -196,7 +196,7 @@ class SchedulePageState extends State<SchedulePage> {
 
   Component _filters(List<Lesson> all) {
     final (from, to) = f.view == 'list' ? (f.from, f.to) : periodRange(f.view, f.date);
-    final options = run(all, _wanted, known, from, to).options;
+    final options = run(all, _wanted, known, from, to, any: f.any).options;
     final desc = _describe(f);
     return details(
       id: 'filters-box',
@@ -248,6 +248,17 @@ class SchedulePageState extends State<SchedulePage> {
               onAdd: (v) => _pick(k, v),
               onRemove: (v) => _update(() => f.values[k]!.remove(v)),
             ),
+          label(classes: 'date-field', [
+            .text('Room / professor'),
+            select(
+              value: f.any ? 'any' : 'all',
+              onChange: (v) => _update(() => f.any = v.first == 'any'),
+              [
+                option(value: 'any', [.text('Any of them (merge)')]),
+                option(value: 'all', [.text('All of them (both)')]),
+              ],
+            ),
+          ]),
           if (f.view == 'list') ...[
             label(classes: 'date-field', [
               .text('From'),
@@ -265,7 +276,7 @@ class SchedulePageState extends State<SchedulePage> {
 
   List<Component> _results(List<Lesson> all) {
     final (from, to) = f.view == 'list' ? (f.from, f.to) : periodRange(f.view, f.date);
-    final hits = run(all, _wanted, known, from, to).hits;
+    final hits = run(all, _wanted, known, from, to, any: f.any).hits;
     return switch (f.view) {
       'list' => _list(hits),
       'month' => [_month(hits)],

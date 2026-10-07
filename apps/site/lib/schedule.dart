@@ -95,12 +95,15 @@ bool matchesField(List<String> have, List<String> wanted, Set<String> known) =>
     wanted.any((w) => known.contains(w) ? have.contains(w) : have.any((v) => plain(v).contains(plain(w))));
 
 class Filters {
-  Filters({Map<String, List<String>>? values, this.from = '', this.to = '', this.view = 'list', this.date = ''})
+  Filters({Map<String, List<String>>? values, this.from = '', this.to = '', this.view = 'list', this.date = '', this.any = true})
       : values = values ?? {};
 
   /// field -> chosen values. A present-but-empty 'room' means "any room" (absent means the default lab).
   final Map<String, List<String>> values;
   String from, to, view, date;
+
+  /// Room and professor are ORed (merged busy times); false = all filters ANDed. URL: match=all.
+  bool any;
 
   factory Filters.parse(String query) {
     final all = Uri(query: query.startsWith('?') ? query.substring(1) : query).queryParametersAll;
@@ -115,6 +118,7 @@ class Filters {
       to: one('to'),
       view: const ['day', 'week', 'month'].contains(view) ? view : 'list',
       date: RegExp(r'^\d{4}-\d\d-\d\d$').hasMatch(one('date')) ? one('date') : '',
+      any: one('match') != 'all',
     );
   }
 
@@ -132,6 +136,7 @@ class Filters {
     }
     if (from.isNotEmpty) add('from', from);
     if (to.isNotEmpty) add('to', to);
+    if (!any) add('match', 'all');
     if (view != 'list') {
       add('view', view);
       add('date', date);
@@ -140,7 +145,7 @@ class Filters {
   }
 
   Filters copy() => Filters(
-      values: {for (final e in values.entries) e.key: [...e.value]}, from: from, to: to, view: view, date: date);
+      values: {for (final e in values.entries) e.key: [...e.value]}, from: from, to: to, view: view, date: date, any: any);
 }
 
 class Result {
@@ -151,19 +156,27 @@ class Result {
   final Map<String, List<String>> options;
 }
 
+const _orGroup = {'room', 'teacher'};
+
 Result run(List<Lesson> lessons, Map<String, List<String>> wanted, Map<String, Set<String>> known, String from,
-    String to) {
+    String to, {bool any = false}) {
   final names = fields.keys.toList();
   final hits = <Lesson>[];
   final opts = {for (final n in names) n: <String>{}};
+  final groupOn = any && _orGroup.where((n) => (wanted[n] ?? const []).isNotEmpty).length > 1;
   for (final l in lessons) {
     final pass = [for (final n in names) matchesField(fields[n]!(l), wanted[n] ?? const [], known[n]!)];
     final inDates = (from.isEmpty || l.date.compareTo(from) >= 0) && (to.isEmpty || l.date.compareTo(to) <= 0);
-    final fails = pass.where((p) => !p).length + (inDates ? 0 : 1);
+    // ponytail: with both room and professor chosen, one of them matching is enough (merged schedules)
+    final inGroup = [for (var j = 0; j < names.length; j++) groupOn && _orGroup.contains(names[j])];
+    final groupPass = [for (var j = 0; j < names.length; j++) if (inGroup[j] && (wanted[names[j]] ?? const []).isNotEmpty) pass[j]].contains(true);
+    final others = [for (var j = 0; j < names.length; j++) if (!inGroup[j]) pass[j]].where((p) => !p).length + (inDates ? 0 : 1);
+    final fails = others + (groupOn && !groupPass ? 1 : 0);
     if (fails == 0) hits.add(l);
     if (fails > 1) continue;
     for (var j = 0; j < names.length; j++) {
-      if (fails == 0 || !pass[j]) opts[names[j]]!.addAll(fields[names[j]]!(l).where((v) => v.isNotEmpty));
+      // group fields don't narrow each other's lists: they are alternatives
+      if (fails == 0 || (inGroup[j] ? others == 0 : !pass[j])) opts[names[j]]!.addAll(fields[names[j]]!(l).where((v) => v.isNotEmpty));
     }
   }
   return Result(hits, {
