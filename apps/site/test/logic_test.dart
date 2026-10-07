@@ -94,6 +94,15 @@ void main() {
     expect(opts['room'], ['Lab A', 'Lab B'], reason: "a field's own filter doesn't narrow its list");
   });
 
+  test('picking a professor drops the untouched default room, keeps a chosen one', () {
+    final v = <String, List<String>>{'room': [defaultRoom]};
+    pickValue(v, 'teacher', 'Rui');
+    expect(v, {'room': <String>[], 'teacher': ['Rui']});
+    final w = <String, List<String>>{'room': ['Lab A']};
+    pickValue(w, 'teacher', 'Rui');
+    expect(w['room'], ['Lab A']);
+  });
+
   test('book me: slots grouped by local day in time order', () {
     Slot at(String iso) => (iso: iso, start: DateTime.parse(iso), end: DateTime.parse(iso).add(const Duration(minutes: 30)));
     final g = byDay([at('2026-10-02T15:00:00'), at('2026-10-01T14:30:00'), at('2026-10-01T14:00:00')]);

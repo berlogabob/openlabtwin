@@ -94,8 +94,7 @@ class SchedulePageState extends State<SchedulePage> {
       };
 
   void _pick(String field, String value) => _update(() {
-        final vs = f.values.putIfAbsent(field, () => []);
-        if (value.isNotEmpty && !vs.contains(value)) vs.add(value);
+        pickValue(f.values, field, value);
         drafts.remove(field);
       });
 

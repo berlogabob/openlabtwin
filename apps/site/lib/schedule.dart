@@ -3,6 +3,16 @@ import 'dart:convert';
 
 const defaultRoom = 'Lab. e Estudo de Jogos - Tech Lab (Oriente)';
 
+/// Picking another filter while the room is still the untouched default drops the default, so room and professor combine.
+void pickValue(Map<String, List<String>> values, String field, String value) {
+  final vs = values.putIfAbsent(field, () => []);
+  if (value.isNotEmpty && !vs.contains(value)) vs.add(value);
+  if (field != 'room' && value.isNotEmpty) {
+    final room = values['room'];
+    if (room != null && room.length == 1 && room.first == defaultRoom) values['room'] = [];
+  }
+}
+
 class Lesson {
   const Lesson({
     required this.date,

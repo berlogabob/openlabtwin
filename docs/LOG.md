@@ -2,6 +2,10 @@
 
 Git is the source of truth. Entries cover work committed in openlabtwin and videowall; decision links point to the records.
 
+## 2026-10-07 (Wednesday)
+
+- Schedule: the preselected Tech Lab room hid professors from other rooms, so room and professor looked exclusive; picking any other filter now drops the untouched default room ([0046](decisions/0046-default-room-yields-to-other-filters.md)).
+
 ## 2026-10-06 (Tuesday)
 
 - Book me (`/book/`): the "Pick a time first" error appeared only under Send, far from the slots; it now also shows above the slots, with a "Your time" line above the form and "(required)" in the intro.
