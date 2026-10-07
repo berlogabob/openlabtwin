@@ -4,6 +4,7 @@ import 'package:jaspr/jaspr.dart';
 import 'package:universal_web/web.dart' as web;
 
 import '../book.dart';
+import '../calendar.dart';
 
 @client
 class BookPage extends StatefulComponent {
@@ -80,8 +81,27 @@ class BookPageState extends State<BookPage> {
           p([.text('Book time with Andrey in the Tech Lab. Ask for any date and time; you get an answer on your private link, and a different time may be proposed.')]),
           if (needTime) p(classes: 'error', [.text(error!)]),
           div(classes: 'form', [
-            _field('Date', date, (v) => setState(() => date = v), type: InputType.date),
-            _field('Time', time, (v) => setState(() => time = v), type: InputType.time),
+            // Jaspr hands date/time inputs a DateTime, not a String: read the raw value instead
+            label([
+              .text('Date'),
+              input<String>(
+                type: InputType.date,
+                value: date,
+                attributes: {'min': iso(DateTime.now())},
+                events: {'input': (e) => setState(() => date = (e.target as web.HTMLInputElement).value)},
+              ),
+            ]),
+            label([
+              .text('Time'),
+              select(
+                value: time,
+                onChange: (v) => setState(() => time = v.first),
+                [
+                  option(value: '', [.text('Choose a time')]),
+                  for (final t in times) option(value: t, [.text(t)]),
+                ],
+              ),
+            ]),
             label([
               .text('Length'),
               select(

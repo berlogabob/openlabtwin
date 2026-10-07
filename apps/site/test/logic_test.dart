@@ -121,6 +121,13 @@ void main() {
     expect(w['room'], ['Lab A']);
   });
 
+  test('book me: start times every 15 minutes', () {
+    expect(times.first, '08:00');
+    expect(times[1], '08:15');
+    expect(times.last, '21:00');
+    expect(times.length, 53);
+  });
+
   test('book me: form checks mirror request_consultation()', () {
     String? check({String name = 'Ana', String email = 'ana@example.com', String number = '20190001', String need = 'Help with a 3D print'}) =>
         formProblem(name: name, email: email, number: number, need: need, start: DateTime(2026, 10, 9, 15), now: DateTime(2026, 10, 7));

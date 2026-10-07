@@ -23,6 +23,9 @@ String? contactProblem({required String name, required String email, String link
   return null;
 }
 
+/// Start times offered, every 15 minutes from 08:00 to 21:00.
+final times = [for (var m = 8 * 60; m <= 21 * 60; m += 15) '${'${m ~/ 60}'.padLeft(2, '0')}:${'${m % 60}'.padLeft(2, '0')}'];
+
 /// Lengths a student can ask for, in minutes.
 const lengths = [15, 30, 45, 60, 90];
 
