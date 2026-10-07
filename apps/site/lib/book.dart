@@ -1,24 +1,11 @@
-// "Book me": slot grouping, form checks (mirroring request_consultation()), and the three public RPC calls.
+// "Book me": form checks (mirroring request_consultation()) and the public RPC call.
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-import 'calendar.dart';
-
-/// Public by design: anon has no table grants; it can only call the three functions below.
+/// Public by design: anon has no table grants; it can only call the functions in the database that the forms use.
 const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
 const supabaseKey = String.fromEnvironment('SUPABASE_ANON_KEY');
-
-typedef Slot = ({String iso, DateTime start, DateTime end}); // iso: exactly what free_slots returned, sent back as is
-
-/// Slots grouped by local date, in order.
-Map<String, List<Slot>> byDay(List<Slot> slots) {
-  final out = <String, List<Slot>>{};
-  for (final s in slots..sort((a, b) => a.start.compareTo(b.start))) {
-    out.putIfAbsent(iso(s.start), () => []).add(s);
-  }
-  return out;
-}
 
 /// The label every public form uses for the student number: the lab's local ID for a person (staff give their staff number).
 const numberLabel = 'Student number (staff: your staff number)';
@@ -36,15 +23,26 @@ String? contactProblem({required String name, required String email, String link
   return null;
 }
 
-/// The first problem with the Book me form, or null (mirrors request_consultation()).
-String? formProblem({required String name, required String email, required String number, required String need}) {
+/// Lengths a student can ask for, in minutes.
+const lengths = [15, 30, 45, 60, 90];
+
+/// The first problem with the Book me form, or null (mirrors request_consultation()). [start] is the local time asked for.
+String? formProblem(
+    {required String name, required String email, required String number, required String need, DateTime? start, DateTime? now}) {
   final n = need.trim();
   return contactProblem(name: name, email: email, number: number) ??
-      (n.length < 3 || n.length > 300 ? 'Say in a line what you need (3–300 characters).' : null);
+      (n.length < 3 || n.length > 300
+          ? 'Say in a line what you need (3–300 characters).'
+          : start == null
+              ? 'Pick a date and time.'
+              : start.isBefore((now ?? DateTime.now()).add(const Duration(hours: 1)))
+                  ? 'Please pick a time at least an hour from now.'
+                  : null);
 }
 
 const statusLabels = {
   'requested': 'Requested: waiting for an answer',
+  'proposed': 'A new time is proposed',
   'approved': 'Approved',
   'rejected': 'Declined',
   'cancelled': 'Cancelled',
@@ -62,8 +60,3 @@ Future<Object?> rpc(String fn, Map<String, Object?> args) async {
   }
   return body;
 }
-
-Future<List<Slot>> freeSlots(String from, String to) async => [
-      for (final s in (await rpc('free_slots', {'p_from': from, 'p_to': to}) as List).cast<Map<String, dynamic>>())
-        (iso: s['starts_at'] as String, start: DateTime.parse(s['starts_at'] as String).toLocal(), end: DateTime.parse(s['ends_at'] as String).toLocal())
-    ];

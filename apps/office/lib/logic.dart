@@ -39,6 +39,8 @@ class Activity {
     this.purpose = '',
     this.publicNote = '',
     this.contactLink = '',
+    this.proposedStart,
+    this.proposedEnd,
   })  : placeIds = placeIds ?? [],
         exdates = exdates ?? [];
 
@@ -62,6 +64,8 @@ class Activity {
         purpose: r['purpose'] as String? ?? '',
         publicNote: r['public_note'] as String? ?? '',
         contactLink: r['contact_link'] as String? ?? '',
+        proposedStart: _local(r['proposed_starts_at']),
+        proposedEnd: _local(r['proposed_ends_at']),
       );
 
   int? id, requesterId, ownerStaffId, organizationId, attendees;
@@ -71,6 +75,7 @@ class Activity {
   List<String> exdates;
   DateTime start, end;
   DateTime? repeatUntil; // null = one-off
+  DateTime? proposedStart, proposedEnd; // a time staff propose; the student answers on the private link
 
   Map<String, dynamic> toRow() => {
         'title': title.trim(),
@@ -90,6 +95,8 @@ class Activity {
         'attendees': attendees,
         'purpose': _blank(purpose),
         'public_note': _blank(publicNote),
+        'proposed_starts_at': status == 'proposed' ? proposedStart?.toUtc().toIso8601String() : null,
+        'proposed_ends_at': status == 'proposed' ? proposedEnd?.toUtc().toIso8601String() : null,
       };
 
   /// Start of every occurrence: weekly until repeatUntil, minus the skipped dates.
@@ -107,6 +114,8 @@ class Activity {
     return '${isoDate(start)} ${hhmm(start)}–${hhmm(end)}$repeat';
   }
 }
+
+DateTime? _local(Object? v) => v == null ? null : DateTime.parse(v as String).toLocal();
 
 int _min(String t) => int.parse(t.substring(0, 2)) * 60 + int.parse(t.substring(3, 5));
 

@@ -12,6 +12,7 @@ import 'pick.dart';
 
 const statusColors = {
   'requested': Colors.orange,
+  'proposed': Colors.purple,
   'approved': Colors.green,
   'rejected': Colors.grey,
   'cancelled': Colors.grey,
@@ -188,6 +189,40 @@ class _BookingFormState extends State<BookingForm> {
   }
 
   void _say(String text) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+
+  /// Staff propose another time: pick a date and start, keep the length; the student accepts or declines on their link.
+  Future<void> _propose() async {
+    final d = await showDatePicker(
+        context: context, initialDate: a.start, firstDate: DateTime.now(), lastDate: DateTime(2030));
+    if (d == null || !mounted) return;
+    final t = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(a.start));
+    if (t == null) return;
+    a
+      ..proposedStart = DateTime(d.year, d.month, d.day, t.hour, t.minute)
+      ..proposedEnd = DateTime(d.year, d.month, d.day, t.hour, t.minute).add(a.end.difference(a.start));
+    await _save('proposed');
+    _say('Proposed ${a.proposedStart!.toString().substring(0, 16)}. Send the student their status link; they accept or decline there.');
+  }
+
+  /// Lessons of the lab rooms and of the master programme on the day asked for (and the day proposed), to judge a time.
+  Widget _dayPanel(DateTime day, String label) => FutureBuilder<List<Rec>>(
+        future: dayLessons(isoDate(day), [
+          for (final r in refs.rooms)
+            if (a.placeIds.contains(r['id'])) (r['iade_name'] ?? r['name']) as String
+        ]),
+        builder: (context, snap) {
+          final rows = snap.data;
+          return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('$label ${isoDate(day)}: lessons that day', style: Theme.of(context).textTheme.labelLarge),
+            if (rows == null) const Text('Loading…') else if (rows.isEmpty) const Text('None in the lab rooms or in your master.'),
+            for (final r in rows ?? const <Rec>[])
+              Text(
+                '${(r['start_time'] as String).substring(0, 5)}–${(r['end_time'] as String).substring(0, 5)} · ${r['course']} · '
+                '${[if ((r['rooms'] as List).any((x) => refs.rooms.any((p) => (p['iade_name'] ?? p['name']) == x && a.placeIds.contains(p['id'])))) 'lab room', if ((r['programmes'] as List).contains(myProgramme)) 'my class'].join(' + ')}',
+              ),
+          ]);
+        },
+      );
 
   Future<void> _pickDate() async {
     final d = await showDatePicker(
@@ -418,6 +453,19 @@ class _BookingFormState extends State<BookingForm> {
           OutlinedButton(onPressed: () => _pickTime(true), child: Text('from ${hhmm(a.start)}')),
           OutlinedButton(onPressed: () => _pickTime(false), child: Text('to ${hhmm(a.end)}')),
         ]),
+        if (a.kind == 'consultation') ...[
+          _dayPanel(a.start, 'Asked for'),
+          if (a.proposedStart != null && a.status == 'proposed') ...[
+            const SizedBox(height: 8),
+            Text('Proposed: ${a.proposedStart.toString().substring(0, 16)} (waiting for the student)'),
+            _dayPanel(a.proposedStart!, 'Proposed'),
+          ],
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+                onPressed: busy ? null : _propose, icon: const Icon(Icons.schedule_send), label: const Text('Propose another time')),
+          ),
+        ],
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           title: const Text('Repeats weekly'),
@@ -476,7 +524,7 @@ class _BookingFormState extends State<BookingForm> {
           FilledButton(onPressed: busy ? null : () => _save(), child: const Text('Save')),
           if (a.status != 'approved')
             FilledButton.tonal(onPressed: busy ? null : () => _save('approved'), child: const Text('Approve')),
-          if (a.status == 'requested') OutlinedButton(onPressed: busy ? null : () => _save('rejected'), child: const Text('Reject')),
+          if (a.status == 'requested' || a.status == 'proposed') OutlinedButton(onPressed: busy ? null : () => _save('rejected'), child: const Text('Reject')),
           if (a.status == 'approved') OutlinedButton(onPressed: busy ? null : () => _save('cancelled'), child: const Text('Cancel booking')),
           if (a.status == 'approved') OutlinedButton(onPressed: busy ? null : () => _save('done'), child: const Text('Mark done')),
         ]),

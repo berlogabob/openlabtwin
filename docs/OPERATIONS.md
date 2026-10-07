@@ -50,10 +50,11 @@ Sign-in links may only return to `https://berlogabob.github.io/openlabtwin/offic
 
 ## The public write path ("Book me")
 
-Anonymous visitors can read and write no table. They can call exactly three functions, all `security definer`, defined in `supabase/migrations/20260924100000_book_me.sql`:
-- `free_slots` lists free slots;
-- `request_consultation` checks every field, the free slot and the limits (2 open per email, 20 in total), then files the student under `people` by email;
-- `consultation_status` returns only status and time for a private token.
+Anonymous visitors can read and write no table. They can call a few `security definer` functions (`supabase/migrations/20260924100000_book_me.sql`, reworked in `20261007100000_book_me_any_time.sql`):
+- `request_consultation` checks every field, that the time is 1 hour to 120 days ahead, the length (15–120 min) and the limits (2 open per email, 20 in total, *requested* and *proposed* count), then files the student under `people` by email;
+- `consultation_status` returns only status, time and any proposed time for a private token;
+- `answer_proposal` accepts or declines a proposed time, by token only;
+- `free_slots` still exists but the site no longer uses it.
 
 The form's hidden "website" field is a honeypot: bots that fill it in get a fake token and nothing is stored. If spam gets through anyway, add a captcha. Student data is kept, identifiable, as their lab history (a decision of 2026-09-24).
 

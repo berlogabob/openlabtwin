@@ -60,6 +60,21 @@ Future<int> saveActivity(Activity a) async {
   return (await db.from('activities').insert(a.toRow()).select('id').single())['id'] as int;
 }
 
+/// Lessons on [day] (YYYY-MM-DD) that bear on a consultation: in the lab rooms, and of the staff member's own master
+/// programme (they study there). Private: office only.
+Future<List<Rec>> dayLessons(String day, List<String> roomNames) async {
+  final rows = await db
+      .from('lessons')
+      .select('start_time,end_time,course,rooms,programmes')
+      .eq('date', day)
+      .or('rooms.ov.{${roomNames.map((r) => '"$r"').join(',')}},programmes.cs.{"$myProgramme"}')
+      .order('start_time');
+  return [for (final r in rows) r];
+}
+
+/// The programme the lab's staff member studies (the master's), as it appears in the timetable.
+const myProgramme = 'Mestrado em Computação Criativa e Inteligência Artificial';
+
 Future<List<String>> clashWarnings(Activity a, Refs refs) async {
   if (a.placeIds.isEmpty) return [...await _stationaryClashes(a, refs), ...await _demand(a, refs)];
   final names = {

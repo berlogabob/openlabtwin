@@ -121,17 +121,13 @@ void main() {
     expect(w['room'], ['Lab A']);
   });
 
-  test('book me: slots grouped by local day in time order', () {
-    Slot at(String iso) => (iso: iso, start: DateTime.parse(iso), end: DateTime.parse(iso).add(const Duration(minutes: 30)));
-    final g = byDay([at('2026-10-02T15:00:00'), at('2026-10-01T14:30:00'), at('2026-10-01T14:00:00')]);
-    expect(g.keys, ['2026-10-01', '2026-10-02']);
-    expect([for (final s in g['2026-10-01']!) s.iso], ['2026-10-01T14:00:00', '2026-10-01T14:30:00']);
-  });
-
   test('book me: form checks mirror request_consultation()', () {
     String? check({String name = 'Ana', String email = 'ana@example.com', String number = '20190001', String need = 'Help with a 3D print'}) =>
-        formProblem(name: name, email: email, number: number, need: need);
+        formProblem(name: name, email: email, number: number, need: need, start: DateTime(2026, 10, 9, 15), now: DateTime(2026, 10, 7));
     expect(check(), isNull);
+    expect(formProblem(name: 'Ana', email: 'ana@example.com', number: '1', need: 'Help please'), contains('date and time'));
+    expect(formProblem(name: 'Ana', email: 'ana@example.com', number: '1', need: 'Help please', start: DateTime(2026, 10, 7, 9, 30), now: DateTime(2026, 10, 7, 9)),
+        contains('an hour'));
     expect(check(need: 'LED'), isNull);
     expect(check(name: 'A'), contains('name'));
     expect(check(email: 'ana@'), contains('email'));

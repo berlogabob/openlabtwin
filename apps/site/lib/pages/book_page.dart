@@ -1,12 +1,9 @@
-// "Book me" form (/book/): free slots of the next 7 days, name, email, one line, then the private status link.
+// "Book me" form (/book/): any date and time, a length, name, email, one line, then the private status link.
 import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
 import 'package:universal_web/web.dart' as web;
 
 import '../book.dart';
-import '../calendar.dart';
-
-String _time(DateTime d) => '${'${d.hour}'.padLeft(2, '0')}:${'${d.minute}'.padLeft(2, '0')}';
 
 @client
 class BookPage extends StatefulComponent {
@@ -17,9 +14,8 @@ class BookPage extends StatefulComponent {
 }
 
 class BookPageState extends State<BookPage> {
-  List<Slot>? slots;
-  Slot? picked;
-  String name = '', email = '', number = '', need = '', website = '';
+  String date = '', time = '', name = '', email = '', number = '', need = '', website = '';
+  int minutes = 30;
   String? error, token;
   bool sending = false, needTime = false;
 
@@ -29,27 +25,17 @@ class BookPageState extends State<BookPage> {
     if (!kIsWeb) return;
     final p = Uri.parse(web.window.location.href).queryParameters['project'] ?? ''; // from "Book a consultation about this idea"
     need = p.length > 300 ? p.substring(0, 300) : p;
-    _load();
   }
 
-  Future<void> _load() async {
-    final today = iso(DateTime.now());
-    try {
-      final s = await freeSlots(today, shift('day', today, 6));
-      setState(() => slots = s);
-    } catch (e) {
-      setState(() => error = 'Could not load free times: $e');
-    }
-  }
+  /// The asked-for local time, or null while the date or time is empty.
+  DateTime? get _start => date.isEmpty || time.isEmpty ? null : DateTime.tryParse('${date}T$time');
 
   Future<void> _send() async {
-    final problem = picked == null
-        ? 'Pick a time first.'
-        : formProblem(name: name, email: email, number: number, need: need);
+    final problem = formProblem(name: name, email: email, number: number, need: need, start: _start);
     if (problem != null) {
       return setState(() {
         error = problem;
-        needTime = picked == null;
+        needTime = _start == null;
       });
     }
     setState(() {
@@ -58,13 +44,12 @@ class BookPageState extends State<BookPage> {
     });
     try {
       final t = await rpc('request_consultation', {
-        'p_name': name, 'p_email': email, 'p_project': need, 'p_link': '', 'p_starts_at': picked!.iso,
+        'p_name': name, 'p_email': email, 'p_project': need, 'p_link': '', 'p_starts_at': _start!.toUtc().toIso8601String(), 'p_minutes': minutes,
         'p_student_number': number, 'p_website': website,
       });
       setState(() => token = t as String);
     } catch (e) {
       setState(() => error = '$e'.replaceFirst('Exception: ', ''));
-      _load(); // the slot may have gone; show what is free now
     } finally {
       setState(() => sending = false);
     }
@@ -92,30 +77,19 @@ class BookPageState extends State<BookPage> {
             p([a(href: link, [.text(link)])]),
           ])
         else ...[
-          p([.text('Book time with Andrey in the Tech Lab. Pick a free slot below (required), then fill in your details.')]),
+          p([.text('Book time with Andrey in the Tech Lab. Ask for any date and time; you get an answer on your private link, and a different time may be proposed.')]),
           if (needTime) p(classes: 'error', [.text(error!)]),
-          if (slots == null && error == null) p(classes: 'empty', [.text('Loading free times…')]),
-          if (slots != null && slots!.isEmpty) p(classes: 'empty', [.text('No free times this week. Please check again later.')]),
-          if (slots != null)
-            for (final e in byDay(slots!).entries)
-              section([
-                h2([.text(dayName(e.key))]),
-                div(classes: 'slots', [
-                  for (final s in e.value)
-                    button(
-                      type: ButtonType.button,
-                      classes: picked?.iso == s.iso ? 'slot on' : 'slot',
-                      onClick: () => setState(() {
-                        picked = s;
-                        needTime = false;
-                        error = null;
-                      }),
-                      [.text('${_time(s.start)}–${_time(s.end)}')],
-                    ),
-                ]),
-              ]),
-          p(classes: picked == null ? 'picked error' : 'picked', [
-            .text(picked == null ? 'No time picked yet. Choose one above.' : 'Your time: ${dayName(iso(picked!.start))} ${_time(picked!.start)}–${_time(picked!.end)}'),
+          div(classes: 'form', [
+            _field('Date', date, (v) => setState(() => date = v), type: InputType.date),
+            _field('Time', time, (v) => setState(() => time = v), type: InputType.time),
+            label([
+              .text('Length'),
+              select(
+                value: '$minutes',
+                onChange: (v) => setState(() => minutes = int.parse(v.first)),
+                [for (final m in lengths) option(value: '$m', [.text('$m minutes')])],
+              ),
+            ]),
           ]),
           div(classes: 'form', [
             _field('Name', name, (v) => name = v),
