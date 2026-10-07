@@ -114,6 +114,15 @@ LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
 DESCRIPTION:José Graça\nGroups: LTCR003D01\nP
 END:VEVENT
 BEGIN:VEVENT
+UID:6f20864d39d266ff803237de5e909f48ac2f2083@iade-lab-schedule
+DTSTAMP:20260921T000000Z
+DTSTART;TZID=Europe/Lisbon:20261008T111500
+DTEND;TZID=Europe/Lisbon:20261008T114500
+SUMMARY:Consultation
+LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
+DESCRIPTION:Andrey Dyakov\nGroups: \nConsultation
+END:VEVENT
+BEGIN:VEVENT
 UID:0b929ce34613f4ca3b36e263bdf34a0b04175860@iade-lab-schedule
 DTSTAMP:20260921T000000Z
 DTSTART;TZID=Europe/Lisbon:20261008T140000
@@ -121,6 +130,15 @@ DTEND;TZID=Europe/Lisbon:20261008T160000
 SUMMARY:Projeto Multijogador / Multiplayer Project
 LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
 DESCRIPTION:Bernardo Rodrigues\nGroups: LDJO005D01\nP
+END:VEVENT
+BEGIN:VEVENT
+UID:d4e84bb8e65e493e7112d90102020b7bc8894886@iade-lab-schedule
+DTSTAMP:20260921T000000Z
+DTSTART;TZID=Europe/Lisbon:20261009T120000
+DTEND;TZID=Europe/Lisbon:20261009T123000
+SUMMARY:Consultation
+LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
+DESCRIPTION:Andrey Dyakov\nGroups: \nConsultation
 END:VEVENT
 BEGIN:VEVENT
 UID:35eb36cbb5b612b6fc2a56006273a50c4ab7c217@iade-lab-schedule
