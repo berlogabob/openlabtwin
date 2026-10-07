@@ -121,11 +121,9 @@ void main() {
     expect(w['room'], ['Lab A']);
   });
 
-  test('book me: start times every 15 minutes', () {
-    expect(times.first, '08:00');
-    expect(times[1], '08:15');
-    expect(times.last, '21:00');
-    expect(times.length, 53);
+  test('book me: the time wheel is 08-21 by quarter hours', () {
+    expect([hours.first, hours.last, hours.length], ['08', '21', 14]);
+    expect(minutesOfHour, ['00', '15', '30', '45']);
   });
 
   test('book me: form checks mirror request_consultation()', () {
@@ -136,11 +134,12 @@ void main() {
     expect(formProblem(name: 'Ana', email: 'ana@example.com', number: '1', need: 'Help please', start: DateTime(2026, 10, 7, 9, 30), now: DateTime(2026, 10, 7, 9)),
         contains('an hour'));
     expect(check(need: 'LED'), isNull);
+    expect(check(name: '', email: '', need: ''), isNull, reason: 'only the student number is required');
     expect(check(name: 'A'), contains('name'));
     expect(check(email: 'ana@'), contains('email'));
     expect(check(need: 'hi'), contains('3–300'));
     expect(check(need: 'x' * 301), contains('3–300'));
-    expect(check(number: ''), contains('student number'), reason: 'the local ID is required on every public form');
+    expect(check(number: ''), contains('student number'), reason: 'the local ID is always required');
     expect(check(number: 'A 1'), contains('letters, digits'));
   });
 

@@ -32,7 +32,13 @@ class _PickState<T> extends State<Pick<T>> {
   }
 
   @override
-  Widget build(BuildContext context) => DropdownMenu<T?>(
+  // the outlined label floats above the border: the top gap keeps it off the field above
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(top: 12, bottom: 4),
+        child: _menu(),
+      );
+
+  Widget _menu() => DropdownMenu<T?>(
         controller: controller,
         label: Text(widget.label),
         enableFilter: true,

@@ -37,7 +37,7 @@ class _HoursPageState extends State<HoursPage> {
               items: [for (var i = 1; i <= 7; i++) DropdownMenuItem(value: i, child: Text(weekdays[i - 1]))],
               onChanged: (v) => set(() => weekday = v!),
             ),
-            Row(children: [
+            Wrap(children: [
               TextButton(
                 onPressed: () async {
                   final t = await showTimePicker(context: context, initialTime: from);

@@ -581,7 +581,7 @@ class _WallScreenState extends State<WallScreen> {
             },
           ),
           for (final row in wallGrid(screens.keys))
-            Row(
+            Wrap(
               children: [
                 for (final c in row)
                   InkWell(

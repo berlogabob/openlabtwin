@@ -150,3 +150,12 @@ main > .cal, main > .month { grid-column: 1 / -1; }
 .book details { margin: .6rem 0; color: var(--muted); }
 .book .idea-title { margin: 1rem 0 .3rem; font-size: 1.4rem; font-weight: 600; }
 
+/* Book me time wheel: two scroll-snap columns (hours, quarter-hour minutes); the middle row is the pick */
+.book .wheel-box { display: flex; flex-direction: column; gap: .2rem; font-size: .85rem; color: var(--muted); }
+.wheel { position: relative; display: flex; align-items: center; justify-content: center; gap: .3rem; width: 11rem; background: var(--card); border: 1px solid var(--line); border-radius: 6px; }
+.wheel::after { content: ""; position: absolute; left: 0; right: 0; top: 36px; height: 36px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); pointer-events: none; }
+.wheel-col { box-sizing: border-box; height: 108px; padding: 36px 0; width: 4rem; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; text-align: center; }
+.wheel-col::-webkit-scrollbar { display: none; }
+.wheel-item { height: 36px; line-height: 36px; scroll-snap-align: center; font-size: 1.1rem; color: var(--muted); font-variant-numeric: tabular-nums; cursor: pointer; }
+.wheel-item.on { color: var(--fg); font-weight: 600; }
+.wheel-sep { font-size: 1.1rem; color: var(--fg); }

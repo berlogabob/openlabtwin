@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(18);
+select plan(22);
 
 -- a clean slate inside this rolled-back transaction: one staff member with hours is the default owner and room
 delete from consultation_hours;
@@ -53,5 +53,13 @@ select throws_like($$ select request_consultation('Cat Test', 'cat@example.com',
                    'the request needs at least a short line');
 select throws_like($$ select request_consultation('Dan Test', 'dan@example.com', 'Right now please', null, now(), 'D-1') $$, '%an hour%',
                    'a time in the past or within the hour is refused');
+-- only the student number is required: name, email and the line are optional
+select lives_ok($$ select request_consultation(null, null, null, null, pg_temp.at('10:00'), 'E-77') $$, 'only the student number is needed');
+select is((select p.email from activities a join people p on p.id = a.requester_id where p.student_number = 'E-77'), 'e-77@iade.pt',
+          'no email: the number plus @iade.pt');
+select is((select p.name from activities a join people p on p.id = a.requester_id where p.student_number = 'E-77'), 'E-77',
+          'no name: the number stands in');
+select throws_like($$ select request_consultation('Fay', 'fay@example.com', null, null, pg_temp.at('10:30'), '') $$, '%student number%',
+                   'the student number is still required');
 select * from finish();
 rollback;

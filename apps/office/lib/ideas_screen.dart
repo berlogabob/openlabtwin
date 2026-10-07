@@ -41,8 +41,8 @@ class _IdeasScreenState extends State<IdeasScreen> {
                   rows = ideas(status);
                 }),
               ),
-              SizedBox(
-                width: 260,
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 260),
                 child: TextField(decoration: const InputDecoration(labelText: 'Filter by keyword'), onChanged: (v) => setState(() => filter = v)),
               ),
             ]),

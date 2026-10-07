@@ -51,7 +51,7 @@ Sign-in links may only return to `https://berlogabob.github.io/openlabtwin/offic
 ## The public write path ("Book me")
 
 Anonymous visitors can read and write no table. They can call a few `security definer` functions (`supabase/migrations/20260924100000_book_me.sql`, reworked in `20261007100000_book_me_any_time.sql`):
-- `request_consultation` checks every field, that the time is 1 hour to 120 days ahead, the length (15–120 min) and the limits (2 open per email, 20 in total, *requested* and *proposed* count), then files the student under `people` by email;
+- `request_consultation` checks the student number (required; name, email and the line are optional, email defaults to `<number>@iade.pt`), that the time is 1 hour to 120 days ahead, the length (15–120 min) and the limits (2 open per email, 20 in total, *requested* and *proposed* count), then files the student under `people` by email;
 - `consultation_status` returns only status, time and any proposed time for a private token;
 - `answer_proposal` accepts or declines a proposed time, by token only;
 - `free_slots` still exists but the site no longer uses it.

@@ -379,7 +379,7 @@ class _PlacePageState extends State<PlacePage> {
             children: [
               ListTile(
                 title: Text([if (parent != null) 'in $parent', place['tier'] ?? place['kind'], _day(place['counted_at'])].join(' · ')),
-                trailing: counting
+                subtitle: counting
                     ? Wrap(
                         spacing: 8,
                         children: [
@@ -387,6 +387,9 @@ class _PlacePageState extends State<PlacePage> {
                           FilledButton(onPressed: () => _saveCount(untagged, tagged), child: const Text('Save count')),
                         ],
                       )
+                    : null,
+                trailing: counting
+                    ? null
                     : OutlinedButton.icon(
                         onPressed: () => _startCount(untagged),
                         icon: const Icon(Icons.fact_check_outlined),

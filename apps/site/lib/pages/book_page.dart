@@ -15,8 +15,9 @@ class BookPage extends StatefulComponent {
 }
 
 class BookPageState extends State<BookPage> {
-  String date = '', time = '', name = '', email = '', number = '', need = '', website = '';
-  int minutes = 30;
+  String date = '', name = '', email = '', number = '', need = '', website = '';
+  int minutes = 30, hourIdx = 0, minIdx = 0; // the wheel starts at 08:00
+
   String? error, token;
   bool sending = false, needTime = false;
 
@@ -29,14 +30,14 @@ class BookPageState extends State<BookPage> {
   }
 
   /// The asked-for local time, or null while the date or time is empty.
-  DateTime? get _start => date.isEmpty || time.isEmpty ? null : DateTime.tryParse('${date}T$time');
+  DateTime? get _start => date.isEmpty ? null : DateTime.tryParse('${date}T${hours[hourIdx]}:${minutesOfHour[minIdx]}');
 
   Future<void> _send() async {
     final problem = formProblem(name: name, email: email, number: number, need: need, start: _start);
     if (problem != null) {
       return setState(() {
         error = problem;
-        needTime = _start == null;
+        needTime = date.isEmpty;
       });
     }
     setState(() {
@@ -55,6 +56,25 @@ class BookPageState extends State<BookPage> {
       setState(() => sending = false);
     }
   }
+
+  /// One column of the time wheel: scroll (or click) to roll it; the middle row is the pick.
+  Component _wheel(List<String> items, int index, void Function(int) pick) => div(
+        classes: 'wheel-col',
+        events: {
+          'scroll': (e) {
+            final i = ((e.target as web.HTMLElement).scrollTop / 36).round().clamp(0, items.length - 1);
+            if (i != index) pick(i);
+          },
+        },
+        [
+          for (var i = 0; i < items.length; i++)
+            div(
+              classes: i == index ? 'wheel-item on' : 'wheel-item',
+              events: {'click': (e) => ((e.currentTarget as web.HTMLElement).parentElement as web.HTMLElement).scrollTop = i * 36},
+              [.text(items[i])],
+            ),
+        ],
+      );
 
   Component _field(String caption, String value, void Function(String) set, {InputType type = InputType.text}) =>
       label([
@@ -91,16 +111,13 @@ class BookPageState extends State<BookPage> {
                 events: {'input': (e) => setState(() => date = (e.target as web.HTMLInputElement).value)},
               ),
             ]),
-            label([
-              .text('Time'),
-              select(
-                value: time,
-                onChange: (v) => setState(() => time = v.first),
-                [
-                  option(value: '', [.text('Choose a time')]),
-                  for (final t in times) option(value: t, [.text(t)]),
-                ],
-              ),
+            div(classes: 'wheel-box', [
+              span([.text('Time')]),
+              div(classes: 'wheel', [
+                _wheel(hours, hourIdx, (n) => setState(() => hourIdx = n)),
+                span(classes: 'wheel-sep', [.text(':')]),
+                _wheel(minutesOfHour, minIdx, (n) => setState(() => minIdx = n)),
+              ]),
             ]),
             label([
               .text('Length'),
@@ -112,10 +129,10 @@ class BookPageState extends State<BookPage> {
             ]),
           ]),
           div(classes: 'form', [
-            _field('Name', name, (v) => name = v),
-            _field('Email', email, (v) => email = v, type: InputType.email),
+            _field('Name (optional)', name, (v) => name = v),
+            _field('Email (optional, else your number@iade.pt)', email, (v) => email = v, type: InputType.email),
             _field(numberLabel, number, (v) => number = v),
-            _field('What do you need?', need, (v) => need = v),
+            _field('What do you need? (optional)', need, (v) => need = v),
             // honeypot: hidden from people, bots fill it in
             label(classes: 'hp', attributes: {'aria-hidden': 'true'}, [
               .text('Website'),

@@ -23,24 +23,26 @@ String? contactProblem({required String name, required String email, String link
   return null;
 }
 
-/// Start times offered, every 15 minutes from 08:00 to 21:00.
-final times = [for (var m = 8 * 60; m <= 21 * 60; m += 15) '${'${m ~/ 60}'.padLeft(2, '0')}:${'${m % 60}'.padLeft(2, '0')}'];
+/// The time wheel: hours 08–21 and quarter-hour minutes.
+final hours = [for (var h = 8; h <= 21; h++) '$h'.padLeft(2, '0')];
+const minutesOfHour = ['00', '15', '30', '45'];
 
 /// Lengths a student can ask for, in minutes.
 const lengths = [15, 30, 45, 60, 90];
 
-/// The first problem with the Book me form, or null (mirrors request_consultation()). [start] is the local time asked for.
+/// The first problem with the Book me form, or null (mirrors request_consultation()): only the student number is
+/// required; a name, an email (else number@iade.pt) and the line about the need are optional. [start] is the local time asked for.
 String? formProblem(
-    {required String name, required String email, required String number, required String need, DateTime? start, DateTime? now}) {
-  final n = need.trim();
-  return contactProblem(name: name, email: email, number: number) ??
-      (n.length < 3 || n.length > 300
-          ? 'Say in a line what you need (3–300 characters).'
-          : start == null
-              ? 'Pick a date and time.'
-              : start.isBefore((now ?? DateTime.now()).add(const Duration(hours: 1)))
-                  ? 'Please pick a time at least an hour from now.'
-                  : null);
+    {String name = '', String email = '', required String number, String need = '', DateTime? start, DateTime? now}) {
+  final n = need.trim(), e = email.trim(), s = number.trim();
+  if (s.isEmpty) return 'Please give your student number (staff: your staff number).';
+  if (!RegExp(r'^[A-Za-z0-9-]{1,30}$').hasMatch(s)) return 'The student number can only have letters, digits and dashes.';
+  if (name.trim().isNotEmpty && (name.trim().length < 2 || name.trim().length > 100)) return 'The name is 2–100 characters, or leave it empty.';
+  if (e.isNotEmpty && (e.length > 200 || !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(e))) return 'Please give a valid email, or leave it empty.';
+  if (n.isNotEmpty && (n.length < 3 || n.length > 300)) return 'Keep it to a line (3–300 characters), or leave it empty.';
+  if (start == null) return 'Pick a date and time.';
+  if (start.isBefore((now ?? DateTime.now()).add(const Duration(hours: 1)))) return 'Please pick a time at least an hour from now.';
+  return null;
 }
 
 const statusLabels = {
