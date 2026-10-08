@@ -4,3 +4,5 @@ supabase/.temp/
 supabase/.branches/
 .env
 .pi-runs/
+.DS_Store
+/20??-??-??-*.txt
