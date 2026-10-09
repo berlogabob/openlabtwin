@@ -82,11 +82,14 @@ function videoSrc(s) {  // the largest copy not above the tier, else the smalles
   const fit = hs.filter(h => h <= tier);
   return s.renditions[fit.length ? fit[fit.length - 1] : hs[0]];
 }
-function judge(v) {  // after a video: more than 10% dropped frames -> lighter copies; 5 smooth plays -> heavier
+const lighter = () => { if (tier > 480) setTier(tier > 720 ? 720 : 480); };
+function judge(v) {  // after a video: more than 10% dropped frames, or nothing decoded (black) -> lighter copies; 5 smooth plays -> heavier
   const q = v.getVideoPlaybackQuality && v.getVideoPlaybackQuality();
-  if (!q || q.totalVideoFrames < 100) return;
+  if (!q) return;
+  if (q.totalVideoFrames === 0 && v.currentTime > 2) return lighter();  // it ran but drew nothing: this copy is too heavy
+  if (q.totalVideoFrames < 100) return;
   const drop = q.droppedVideoFrames / q.totalVideoFrames;
-  if (drop > 0.1 && tier > 480) setTier(tier > 720 ? 720 : 480);
+  if (drop > 0.1) lighter();
   else if (drop < 0.01 && ++smooth >= 5 && tier < 1080) setTier(tier < 720 ? 720 : 1080);
 }
 
@@ -261,6 +264,7 @@ function show(s, off) {
     if (v.readyState >= 1) { if (off > 0.5) v.currentTime = off; }
     else v.addEventListener('loadedmetadata', () => { if (off > 0.5) v.currentTime = off; }, { once: true });
     playing = v;
+    v.addEventListener('error', lighter, { once: true });  // a copy the Pi can't decode: the next play uses a lighter one
     frame.append(v);
     v.play().catch(() => {});
     return;
