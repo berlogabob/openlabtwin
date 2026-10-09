@@ -2,6 +2,10 @@
 
 Git is the source of truth. Entries cover work committed in openlabtwin and videowall; decision links point to the records.
 
+## 2026-10-09 (Friday)
+
+- Video wall: row 4 added (`wall-a4`…`wall-e4`), server runs 5×4 (20 Pis). Gap compensation defaults 132/150 px, Test pattern correct. Video is composed at 900×720 tiles (Reel render ~8 min instead of ~45); all 20 Pis play it in step, 0 dropped frames, 45–60 °C ([0045](decisions/0045-mosaic-tiles-900x720-and-calmer-sync.md)). Office Wall screen is the only control UI, CanvasKit self-hosted ([0044](decisions/0044-office-is-the-only-wall-control-ui.md)). Open: gap check at the wall, render queue priority, under-voltage on b3/c4/d4/e4, TV must skip `announcement*`; see videowall `docs/ROADMAP.md`.
+
 ## 2026-10-07 (Wednesday)
 
 - Book me: only the student number is required (name, email, need optional; email defaults to number@iade.pt) — migration `20261007110000_book_me_number_only.sql`, the other public forms unchanged; time is a two-column scroll wheel in 15-minute steps. Office: `Pick` gets vertical padding so its floating label no longer overlaps the field above; wall grid, count buttons, hours dialog and the ideas filter wrap instead of overflowing.
