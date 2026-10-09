@@ -10,11 +10,15 @@ Built on branch `wall` (2026-10-01): migrations `20261001100000_wall.sql` (`wall
 2. Merge `wall` into `main` (deploys the office).
 3. Start the wall server with the `.env` on the node ([edge-node.md → Video wall server](edge-node.md#video-wall-server)) and check its status line in the office.
 
+## Next: all screens
+
+Labs, the common TV, one media store for TV and wall, Book me with a lab choice, audit fixes: see [PLAN-screens.md](PLAN-screens.md) (tasks for local models). It replaces the TV items "Rooms" and "Preview link" below.
+
 ## Next: the TV computer (Raspberry Pi)
 
 The Pi 3 B is reinstalled and runs the kiosk (2026-09-29): see [edge-node.md → The TV computer](edge-node.md#the-tv-computer-raspberry-pi). Left:
 
-1. Rooms: run `scripts/tv-pi-setup.sh` again with the TV address and its `?room=` list (today it shows the default, the Tech Lab).
+1. Rooms: now Plan phase 1 (`/tv/techlab/`).
 2. Check that HDMI-CEC switches the Samsung (`echo 'standby 0' | cec-client -s -d 1`).
 3. Measure: which video level the TV settles on (its footer shows "video 480p/720p/1080p") and whether cards and slides stay smooth. If a Pi 3 can't manage, get a Pi 4 (2 GB+) or Pi 5, or an old laptop or mini-PC.
 4. Then retire the old site: point the TV at the new address for good, and follow [OPERATIONS → The old site](OPERATIONS.md#the-old-site) (the local branch `retire-to-openlabtwin` in `iade-lab-schedule` is ready and not pushed).

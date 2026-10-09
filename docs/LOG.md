@@ -9,7 +9,9 @@ Git is the source of truth. Entries cover work committed in openlabtwin and vide
 ## 2026-10-09 (Friday)
 
 - TV page: a video that runs but decodes no frames (black), or fires an error, steps the quality down one level (`judge()` only reacted to dropped frames, so a black video never did). Not seen on the Pi yet: it was offline.
-- Spec for labs and the common TV: `docs/superpowers/specs/2026-10-08-labs-and-common-tv-design.md`. Project audit done; findings pending.
+- Spec for labs and the common TV: `docs/superpowers/specs/2026-10-08-labs-and-common-tv-design.md`.
+- Project audit: all Python, office and site tests pass. Found: `file_student()` lets any public form change a stored student number; Book me overwrites names with numbers; no rate limit on public forms; backups only on the node; sign-ups on in `config.toml`. Fixes are Plan phase 4.
+- New [PLAN-screens.md](PLAN-screens.md): five phases of small tasks for Unsloth Studio ([0049](decisions/0049-local-models-on-unsloth-studio-only.md)). The TV Pi was off the network all day and is switched off; the step-down fix is untested on it.
 
 ## 2026-10-07 (Wednesday)
 

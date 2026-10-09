@@ -21,6 +21,7 @@ The IADE game lab's system of record: rooms, storage, equipment, people, booking
 - [Staff guide](docs/STAFF-GUIDE.md): for lab technicians using the back office (bookings, inventory, places and stocktake, labels), the TV and the public site, including live video wall bezel tuning.
 - [Edge node](docs/edge-node.md): the always-on lab machine (TechLAB-01): publishing, idea AI, the showcase TV, backups and the read-only database mirror; the lab network, Tailscale, the TV computer.
 - [Roadmap](docs/ROADMAP.md): what's next.
+- [Screens plan](docs/PLAN-screens.md): labs, the common TV, the media store and Book me labs, as small tasks for local models.
 - History: the design spec and the per-milestone implementation plans in [`docs/superpowers/`](docs/superpowers/).
 
 ## Repo map

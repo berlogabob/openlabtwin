@@ -1,7 +1,7 @@
 ---
 id: 0034
 date: 2026-10-01
-status: accepted
+status: superseded by 0049 (Codex part)
 repos: [videowall]
 commits: [95079bf]
 ---
