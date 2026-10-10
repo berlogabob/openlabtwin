@@ -193,20 +193,23 @@ def probe_cached(path, cache):
 
 
 
-def public_tv(tv, sizes, limit=95_000_000):
-    """The playlist for GitHub Pages: no node-only fields, and only files GitHub takes (it refuses files over 100 MB).
-    A video plays its copies there, never the original. Returns the playlist and the files it references."""
+def public_tv(tv, sizes, limit=15_000_000, small=None):
+    """The playlist for GitHub Pages: no node-only fields, light files only (480p video copy, `small` photo copies).
+    A video plays its 480p copy there, never the original; a photo without a small copy over the limit is skipped.
+    Returns the playlist and the files it references."""
+    small = small or {}
     fits = lambda p: sizes.get(p, limit + 1) <= limit  # noqa: E731
     slides, files = [], set()
     for s in tv["slides"]:
         s = dict(s)
         if s.get("video"):
-            s["renditions"] = {h: p for h, p in (s.get("renditions") or {}).items() if fits(p)}
+            s["renditions"] = {h: p for h, p in (s.get("renditions") or {}).items() if h == "480" and fits(p)}
             if not s["renditions"]:
                 continue
             s["src"] = s["renditions"][min(s["renditions"], key=int)]
             files |= set(s["renditions"].values())
         elif s.get("src"):
+            s["src"] = small.get(s["src"], s["src"])
             if not fits(s["src"]):
                 continue
             files.add(s["src"])
@@ -220,11 +223,35 @@ def local(path):
     return (MEDIA if top == "media" else OUT / top) / unquote(rest)
 
 
+def small_photos(tv):
+    """{photo src: path of its 1280 px JPEG copy in the hidden .tv folder}; makes the missing copies, drops stale ones."""
+    out = {}
+    for s in tv["slides"]:
+        src = s.get("src") or ""
+        if s.get("video") is False and src.startswith("media/") and Path(src).suffix.lower() in {".jpg", ".jpeg", ".png", ".webp"}:
+            f = local(src)
+            if f.exists():
+                st = f.stat()
+                out[src] = "media/.tv/" + quote(f"{f.stem}.{st.st_size:x}{int(st.st_mtime):x}.web.jpg")
+    for f in REND.glob("*.web.jpg"):
+        if "media/.tv/" + quote(f.name) not in out.values():
+            f.unlink()
+    for src, rel in out.items():
+        dest = local(rel)
+        if not dest.exists():
+            part = dest.with_name(dest.name + ".part")
+            subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(local(src)), "-vf", "scale='min(1280,iw)':-2", "-q:v", "5",
+                            "-frames:v", "1", "-f", "image2", str(part)], check=True, timeout=300)
+            part.replace(dest)
+    return out
+
+
 def write_public(tv):
     """~/tv-public: tv.json plus hard links to its files (no copies), for publish.sh to push."""
-    paths = {p for s in tv["slides"] for p in [s.get("src"), *(s.get("renditions") or {}).values()] if p}
+    small = small_photos(tv)
+    paths = {p for s in tv["slides"] for p in [small.get(s.get("src")) or s.get("src"), *(s.get("renditions") or {}).values()] if p}
     PUBLIC.mkdir(parents=True, exist_ok=True)
-    public, files = public_tv(tv, {p: local(p).stat().st_size for p in paths if local(p).exists()})
+    public, files = public_tv(tv, {p: local(p).stat().st_size for p in paths if local(p).exists()}, small=small)
     want = {unquote(f): local(f) for f in files}
     for p in PUBLIC.rglob("*"):
         rel = p.relative_to(PUBLIC).as_posix()

@@ -2,6 +2,10 @@
 
 Git is the source of truth. Entries cover work committed in openlabtwin and videowall; decision links point to the records.
 
+## 2026-10-10 (Saturday)
+
+- Supabase Storage quota: video wall media stays on the node. Office upload and the node's `wall-upload` download removed (videowall: `PUT /api/media/<name>` and an Upload button on the LAN page); migration `20261010100000_drop_wall_upload.sql` drops the policies. GitHub Pages TV: 480p video copy only, photos as 1280 px copies, 15 MB limit per file ([0050](decisions/0050-wall-media-stays-on-the-node.md)).
+
 ## 2026-10-09 (Friday)
 
 - Video wall: row 4 added (`wall-a4`…`wall-e4`), server runs 5×4 (20 Pis). Gap compensation defaults 132/150 px, Test pattern correct. Video is composed at 900×720 tiles (Reel render ~8 min instead of ~45); all 20 Pis play it in step, 0 dropped frames, 45–60 °C ([0045](decisions/0045-mosaic-tiles-900x720-and-calmer-sync.md)). Office Wall screen is the only control UI, CanvasKit self-hosted ([0044](decisions/0044-office-is-the-only-wall-control-ui.md)). Open: gap check at the wall, render queue priority, under-voltage on b3/c4/d4/e4, TV must skip `announcement*`; see videowall `docs/ROADMAP.md`.

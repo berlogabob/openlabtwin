@@ -194,4 +194,11 @@ assert pub["slides"][0]["src"] == "media/.tv/r.480p.mp4" and pub["slides"][0]["r
 assert [s.get("src") for s in pub["slides"]] == ["media/.tv/r.480p.mp4", "media/a%20b.png", None], "huge video dropped"
 assert files == ["media/.tv/r.480p.mp4", "media/a%20b.png"] and big["slides"][0]["src"] == "media/r.m4v", "input untouched"
 assert tv.local("media/a%20b.png") == tv.MEDIA / "a b.png" and tv.local("qr/1.svg") == tv.OUT / "qr" / "1.svg"
+pub, files = tv.public_tv({"ideas": [], "slides": [
+    {"kind": "media", "video": True, "src": "media/v.mp4", "renditions": {"480": "r480", "720": "r720", "1080": "r1080"}},
+    {"kind": "media", "video": False, "src": "media/big.png"}, {"kind": "media", "video": False, "src": "media/huge.png"}]},
+    {"r480": 5, "r720": 5, "r1080": 5, "media/big.png": 50, "media/s.jpg": 5, "media/huge.png": 50}, limit=10,
+    small={"media/big.png": "media/s.jpg"})
+assert pub["slides"][0]["renditions"] == {"480": "r480"} and [s["src"] for s in pub["slides"][1:]] == ["media/s.jpg"], pub
+assert files == ["media/s.jpg", "r480"]
 print("ok public copy")

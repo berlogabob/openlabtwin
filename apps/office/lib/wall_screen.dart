@@ -2,7 +2,6 @@
 // reads wall_state and wall_slides every 2 s and reports in wall_status every 10 s.
 import 'dart:async';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import 'data.dart';
@@ -82,24 +81,6 @@ class _WallScreenState extends State<WallScreen> {
     list.insert(to, list.removeAt(from));
     setState(() => slides = list);
     await _run(() => reorderWallSlides([for (final s in list) s.id!]));
-  }
-
-  Future<void> _upload() async {
-    try {
-      final result = await FilePicker.platform.pickFiles(type: FileType.media, withData: true);
-      final file = result?.files.single;
-      if (file == null) return;
-      if (file.size > 500 * 1024 * 1024) throw Exception('${file.name} is over 500 MB; copy it to the TV folder on the lab network instead.');
-      final bytes = file.bytes;
-      if (bytes == null) throw Exception('Could not read ${file.name}');
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Uploading…')));
-      await db.storage.from('wall-upload').uploadBinary(file.name, bytes);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Uploaded. It will appear in the file list shortly.')));
-      await _load();
-    } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
-    }
   }
 
   bool _announcement(Rec m) => (m['name'] as String).toLowerCase().startsWith('announcement');
@@ -223,7 +204,7 @@ class _WallScreenState extends State<WallScreen> {
                 else ...[
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
-                    child: Row(children: [const Expanded(child: Text('Files (none ticked: every file in the folder)')), TextButton.icon(onPressed: _upload, icon: const Icon(Icons.upload), label: const Text('Upload'))]),
+                    child: const Text('Files (none ticked: every file in the folder)'),
                   ),
                   for (final m in media.where((m) => !_announcement(m)))
                     CheckboxListTile(
@@ -670,7 +651,7 @@ class _WallScreenState extends State<WallScreen> {
                     Align(alignment: Alignment.centerRight, child: FilledButton(onPressed: _showNow, child: const Text('Show now'))),
                     Card(child: Padding(padding: const EdgeInsets.all(12), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Text('Files: $tvFolder'),
-                      Align(alignment: Alignment.centerRight, child: TextButton.icon(onPressed: _upload, icon: const Icon(Icons.upload), label: const Text('Upload'))),
+                      const Text('Add files on the lab network: open the wall server page and use Upload.'),
                     ]))),
                     if (media.any(_announcement)) Card(child: Column(children: [
                       const ListTile(dense: true, title: Text('Announcements')),
