@@ -2,6 +2,10 @@
 
 Git is the source of truth. Entries cover work committed in openlabtwin and videowall; decision links point to the records.
 
+## 2026-10-12 (Monday)
+
+- Schedule showed "No lessons" for the Tech Lab: the 12:15 scrape got an odd IADE index (952 pages, no programme tree) and overwrote programmes and rooms in `lessons`. Repaired with `timetable.py --force`; `timetable.py` now refuses a scrape with no programmes or a row count more than 25% from the stored one (`--force` overrides). Unrelated to the TV Pi work.
+
 ## 2026-10-10 (Saturday)
 
 - Supabase Storage quota: video wall media stays on the node. Office upload and the node's `wall-upload` download removed (videowall: `PUT /api/media/<name>` and an Upload button on the LAN page); migration `20261010100000_drop_wall_upload.sql` drops the policies. GitHub Pages TV: 480p video copy only, photos as 1280 px copies, 15 MB limit per file ([0050](decisions/0050-wall-media-stays-on-the-node.md)).

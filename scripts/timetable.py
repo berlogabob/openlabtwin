@@ -32,6 +32,14 @@ def plan_sync(existing_hashes, rows):
     return rows, sorted(set(existing_hashes) - {r["hash"] for r in rows})
 
 
+def check_scrape(n_existing, rows):
+    """Refuse a scrape that looks like a different source (12:15 on 2026-10-12: no programme tree, +45% rows)."""
+    if not any(r["programmes"] for r in rows):
+        sys.exit("No programmes found in the index. Source format may have changed.")
+    if n_existing and abs(len(rows) - n_existing) > n_existing // 4:
+        sys.exit(f"{len(rows)} lessons scraped vs {n_existing} stored (more than 25% apart). Check the source, then rerun.")
+
+
 def main():
     today = datetime.now(TZ).date()
     monday = monday_of(today).isoformat()
@@ -59,6 +67,8 @@ def main():
     rows = to_rows(lessons, group_programmes(index_html))
     db = connect()
     existing = [r["hash"] for r in select(db, "lessons", {"select": "hash", "date": f"gte.{monday}", "order": "id"})]
+    if "--force" not in sys.argv:  # after a term change, or to repair a bad scrape
+        check_scrape(len(existing), rows)
     upserts, deletes = plan_sync(existing, rows)
     for c in chunks(upserts):
         request(db, "POST", "lessons", {"on_conflict": "hash"}, c,

@@ -60,4 +60,16 @@ assert r["hash"] != timetable.to_rows([base | {"groups": ["G1"], "end": "13:00"}
 # --- sync plan: upsert everything scraped, delete what vanished from the source
 up, gone = timetable.plan_sync(["a", "b", "c"], [{"hash": "b"}, {"hash": "d"}])
 assert [x["hash"] for x in up] == ["b", "d"] and gone == ["a", "c"]
+
+# --- scrape guard: no programmes, or a row count far from what is stored, stops the run
+def refused(n, rows):
+    try:
+        timetable.check_scrape(n, rows)
+    except SystemExit:
+        return True
+    return False
+
+good = [{"programmes": ["P"]}] * 100
+assert not refused(0, good) and not refused(90, good)
+assert refused(100, [{"programmes": []}] * 100) and refused(60, good) and refused(150, good)
 print("ok")

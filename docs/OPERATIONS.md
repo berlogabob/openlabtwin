@@ -182,6 +182,7 @@ Run it after schema changes: Supabase dashboard → Advisors, or `GET https://ap
 | An approved booking isn't on the site | nothing has exported since | check the edge node log (`~/publish.log`), or run Actions → Sync and deploy by hand |
 | The site shows old lessons | the scheduled scrape didn't fire | run the workflow by hand; confirm the edge node's `--scrape` cron |
 | `sync.yml` fails at `timetable.py` with "Too few lessons" | the IADE site changed or is down | the published site keeps its last version; check the source site, fix `timetable_parse.py` |
+| `timetable.py` stops with "No programmes found" or "more than 25% apart" | the IADE index was different for one run (2026-10-12 12:15: 952 pages, no programme tree, programmes and Tech Lab rows overwritten) | nothing was written; rerun later. If the change is real (new term), run `uv run python scripts/timetable.py --force`. To repair a bad scrape that got through: rerun it with `--force` once the source is normal |
 | `supabase login` fails with "non-TTY" | it needs a real terminal | run it in Terminal.app, from any folder |
 | `sqltest.py` says "Cannot read migration history" | no or expired Supabase login | run `supabase login` again |
 | The office says "Could not start" | the build is missing `SUPABASE_URL` or `SUPABASE_ANON_KEY` | check the GitHub variables |
