@@ -5,6 +5,7 @@ Git is the source of truth. Entries cover work committed in openlabtwin and vide
 ## 2026-10-12 (Monday)
 
 - Schedule showed "No lessons" for the Tech Lab: the 12:15 scrape got an odd IADE index (952 pages, no programme tree) and overwrote programmes and rooms in `lessons`. Repaired with `timetable.py --force`; `timetable.py` now refuses a scrape with no programmes or a row count more than 25% from the stored one (`--force` overrides). Unrelated to the TV Pi work.
+- Schedule filters: only listed values can be pinned (no more chips for typed junk); the Room / professor switch is hidden, merge is always on. Edit drafted by Unsloth `ollama/ornith-1.5:35b`, fixed by hand.
 
 ## 2026-10-10 (Saturday)
 

@@ -240,6 +240,7 @@ class SchedulePageState extends State<SchedulePage> {
             ChipPicker(
               id: k,
               caption: labels[k]!,
+              free: false,
               // every value of the field counts as known (typing one picks it); the dropdown offers what still matches
               options: options[k]!,
               picked: f.values[k] ?? const [],
@@ -248,17 +249,6 @@ class SchedulePageState extends State<SchedulePage> {
               onAdd: (v) => _pick(k, v),
               onRemove: (v) => _update(() => f.values[k]!.remove(v)),
             ),
-          label(classes: 'date-field', [
-            .text('Room / professor'),
-            select(
-              value: f.any ? 'any' : 'all',
-              onChange: (v) => _update(() => f.any = v.first == 'any'),
-              [
-                option(value: 'any', [.text('Any of them (merge)')]),
-                option(value: 'all', [.text('All of them (both)')]),
-              ],
-            ),
-          ]),
           if (f.view == 'list') ...[
             label(classes: 'date-field', [
               .text('From'),
