@@ -49,3 +49,4 @@ Dates are decision dates; records are numbered chronologically. Reversals add a 
 | [0042](0042-video-tiles-at-900x720.md) | 2026-10-06 | Video tiles at 900×720 to stay below the soft temperature limit | accepted |
 | [0043](0043-power-the-wall-by-rows.md) | 2026-10-02 | Power the wall by rows; network on its own switch; max 2 Pis per charger | accepted |
 | [0049](0049-local-models-on-unsloth-studio-only.md) | 2026-10-09 | Local models on Unsloth Studio only | accepted |
+| [0051](0051-free-plan-only-with-a-request-budget.md) | 2026-10-21 | Free plan only, with a request budget | accepted |

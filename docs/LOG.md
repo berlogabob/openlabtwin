@@ -2,6 +2,10 @@
 
 Git is the source of truth. Entries cover work committed in openlabtwin and videowall; decision links point to the records.
 
+## 2026-10-21 (Wednesday)
+
+- Supabase org egress-restricted (about 264k REST requests in 7 days, mostly pollers), project paused, Pro not an option. New free org and project `ukelqvkanfimiafnomex`; migrations pushed and the 2026-10-12 backup loaded with `scripts/restore.py` (`audit_log` skipped; `people.auth_user_id` cleared, staff sign in again; data from 10-12 to the pause is lost). Node `.env`, GitHub secrets and variables repointed. Polling slowed: wall server 10 s / heartbeat 30 s, `tv.py` 5 min, `publish.sh` 30 min, `ideas_ai` and `archive_ocr` hourly ([0051](decisions/0051-free-plan-only-with-a-request-budget.md)). unidcom-iade is still paused in the old org.
+
 ## 2026-10-12 (Monday)
 
 - Schedule showed "No lessons" for the Tech Lab: the 12:15 scrape got an odd IADE index (952 pages, no programme tree) and overwrote programmes and rooms in `lessons`. Repaired with `timetable.py --force`; `timetable.py` now refuses a scrape with no programmes or a row count more than 25% from the stored one (`--force` overrides). Unrelated to the TV Pi work.

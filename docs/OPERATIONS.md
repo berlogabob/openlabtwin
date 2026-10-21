@@ -165,7 +165,10 @@ The lab machines sit on the lab's ASUS router (`192.168.1.0/24`); the Mac, the n
 
 ## Keeping the project alive, and backups
 
-- **Pausing:** free Supabase projects pause after 7 days of low activity, and any API request resets the timer. The edge node's 10-minute export keeps it awake. A paused project can be restored from the dashboard within a year.
+- **Free plan only, request budget:** the plan has 5.5 GB egress a month per org; exceeding it restricts the org and pauses its projects, and only Pro lifts that ([0051](decisions/0051-free-plan-only-with-a-request-budget.md)). Budget: under 2,000 REST requests a day. Check monthly: `supabase projects list` (status), and the 7-day count via the Management API `analytics/endpoints/usage.api-counts?interval=7day`. Never add a poller without stating its requests per day.
+- **If the org is restricted again:** `supabase orgs create`, `supabase projects create`, `supabase db push`, load the newest non-empty folder of `~/openlabtwin-backups` with `scripts/restore.py` (identity columns must be BY DEFAULT while loading), then repoint the node `.env` and the GitHub secret/variables `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `SUPABASE_ANON_KEY`.
+
+- **Pausing:** free Supabase projects pause after 7 days of low activity, and any API request resets the timer. The edge node's export keeps it awake. A paused project can be restored from the dashboard within a year.
 - **Backups:** the free plan keeps none. `scripts/backup.py` on the edge node writes a nightly JSON copy of every table ([edge-node.md → Backups](edge-node.md#backups)).
 
 ## Security advisor
