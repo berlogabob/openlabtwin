@@ -20,7 +20,7 @@ Staff ──email link──► apps/office (Flutter web) ──► Supabase (Po
 
 | Part | What it is | Talks to |
 |---|---|---|
-| Supabase project `openlabtwin` (ref `huqecytswaswkswofrqd`, eu-central-1) | Postgres with row-level security, email sign-in | everything |
+| Supabase project `openlabtwin` (ref `ukelqvkanfimiafnomex`, eu-central-1) | Postgres with row-level security, email sign-in | everything |
 | `scripts/timetable.py` | Scrapes every IADE class page and upserts `lessons` from this Monday on. Older lessons stay as history. | IADE site, Supabase REST |
 | `scripts/export.py` | Writes the public `all.json` and `lab.ics` from lessons and **approved** activities | Supabase REST |
 | `apps/site` | Jaspr static site: schedule page with multi-select filters, Book me, idea hub, equipment requests (`/tv/` is `apps/tv`, copied in by the deploy) | its own `data/all.json`; Supabase public functions |

@@ -40,7 +40,7 @@ step "5/10 secrets (.env, mode 600)"
 if [ ! -f "$DIR/.env" ]; then
   if [ "$DRY" = 1 ]; then echo "  would ask for the service role key and write $DIR/.env"
   else read -rsp "Supabase service role key (input hidden): " SK </dev/tty; echo
-    umask 077; printf 'SUPABASE_URL=https://huqecytswaswkswofrqd.supabase.co\nSUPABASE_SERVICE_KEY=%s\n' "$SK" > "$DIR/.env"; fi
+    umask 077; printf 'SUPABASE_URL=https://ukelqvkanfimiafnomex.supabase.co\nSUPABASE_SERVICE_KEY=%s\n' "$SK" > "$DIR/.env"; fi
 fi
 
 step "6/10 local AI for the idea hub (Ollama; ornith only with >= 16 GB RAM)"
