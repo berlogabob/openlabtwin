@@ -55,6 +55,9 @@ wk = fair | {"id": 4, "title": "Showcase", "public_note": "Semana 8 · José Gra
 wk_other = wk | {"id": 5, "title": "Other day", "starts_at": "2026-10-02T13:00:00+00:00", "ends_at": "2026-10-02T15:00:00+00:00"}
 both = tv.event_slides([fair, wk, wk_other], places, day)
 assert [(e["title"], e.get("tag"), e["body"]) for e in both] == [("Showcase", "Semana 8", "José Graça"), ("Open day", None, "Everyone welcome")], both
+wk3 = wk | {"id": 6, "title": "Talk", "public_note": "Semana 8 · Talks · Ana"}
+t = tv.event_slides([wk3], places, day)[0]
+assert (t["cat"], t["body"], t["tag"]) == ("Talks", "Ana", "Semana 8"), t
 ideas = [{"ai_title": "Micro robot arm", "ai_summary": "An ESP32 arm."}, {"ai_title": None, "ai_summary": None}]
 out = tv.build(slides, media, events, ideas, day, "2026-10-01T10:00:00+01:00")
 kinds = [(s["kind"], s["title"]) for s in out["slides"]]

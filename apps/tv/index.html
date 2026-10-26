@@ -28,8 +28,17 @@ article .time { font-weight: 600; font-variant-numeric: tabular-nums; margin-rig
 article .who { color: var(--muted); font-size: .89em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 article.booking { --c: var(--booking); }
 article.event { --c: var(--event); }
-article.week { --c: #e8590c; background: #fff4e6; }
-#frame .tag { align-self: flex-start; background: #e8590c; color: #fff; font-weight: 700; font-size: 1.2em; padding: .15em .7em; border-radius: 1em; }
+article.week { border-left-width: 8px; }
+/* Semana 8 poster look: deep indigo, yellow headline, the {010437} mark, the programme's colour for each section */
+#frame.week { --cat: #f2b32c; background: #2b1d47; color: #fff; border-left: .7em solid var(--cat); }
+#frame.week h1 { color: #fff; }
+#frame.week .body, #frame.week .place { color: #cfc8ea; }
+#frame.week .when { color: #f2b32c; font-size: 2.2em; }
+#frame .tag { margin: 0; color: #f2b32c; font-weight: 900; font-style: italic; font-size: 1.7em; letter-spacing: .02em; text-transform: lowercase; }
+#frame .tag small { font-style: normal; font-weight: 700; color: #fff; font-size: .6em; margin-left: .6em; text-transform: none; }
+#frame .chip { align-self: flex-start; margin: 0; background: var(--cat); color: #fff; font-weight: 700; font-size: 1.2em; padding: .15em .8em; border-radius: 1em; }
+#frame .mark { margin: auto 0 0; font-weight: 800; font-size: 1.6em; letter-spacing: .04em; }
+#frame .mark b:nth-child(1) { color: #5a5ab0; } #frame .mark b:nth-child(2) { color: #f15a22; } #frame .mark b:nth-child(3) { color: #f2b32c; }
 article.past { opacity: .4; }
 article.now { outline: 2px solid var(--c); outline-offset: -1px; }
 .empty { color: var(--muted); }
@@ -95,6 +104,9 @@ function judge(v) {  // after a video: more than 10% dropped frames, or nothing 
   else if (drop < 0.01 && ++smooth >= 5 && tier < 1080) setTier(tier < 720 ? 720 : 1080);
 }
 
+const CAT = { 'Exposição': '#5a31c9', 'Sessão orientada': '#04a0dc', 'Game Jam': '#6b2a8a', Showcase: '#6b2a8a', Talks: '#e30d24',
+              Workshops: '#f15a22', 'Sessão de Filmes': '#fcd800', Desafio: '#d4479a', Masterclass: '#04a0dc' };  // the Semana 8 programme's colours
+const weekCat = l => ((l.note || '').split(' · ')[1] || '');
 const pad = n => String(n).padStart(2, '0');
 const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const hm = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -136,10 +148,11 @@ function schedule() {
       if (i === line) nowLine();
       const cls = [l.layer !== 'lesson' && l.layer, week(l) && 'week', l.end <= clock && 'past', l.start <= clock && l.end > clock && 'now'];
       const a = el('article', cls.filter(Boolean).join(' '));
+      if (week(l) && CAT[weekCat(l)]) a.style.setProperty('--c', CAT[weekCat(l)]);
       const line1 = el('p', 'course');
       line1.append(el('span', 'time', `${l.start}–${l.end}`), l.course);
       a.append(line1);
-      const who = [l.teachers.join(', '), l.groups.join(', '), !l.rooms.includes(room) && l.rooms.join(', ')].filter(Boolean).join(' · ');
+      const who = [week(l) && weekCat(l), l.teachers.join(', '), l.groups.join(', '), !l.rooms.includes(room) && l.rooms.join(', ')].filter(Boolean).join(' · ');
       if (who) a.append(el('p', 'who', who));
       sec.append(a);
     }
@@ -254,7 +267,8 @@ function show(s, off) {
   current = s;
   document.body.classList.toggle('full', !!s.full);  // full screen: the page alone, schedule hidden
   const frame = document.getElementById('frame');
-  frame.className = s.kind;
+  frame.className = s.kind + (s.tag ? ' week' : '');
+  frame.style.setProperty('--cat', CAT[s.cat] || '#f2b32c');
   frame.replaceChildren();
   document.getElementById('caption').textContent = s.kind === 'media' ? s.title : '';
   fit();
@@ -280,11 +294,21 @@ function show(s, off) {
   }
   if (s.kind !== 'media') {
     const text = el('div', 'text');
-    if (s.tag) text.append(el('p', 'tag', s.tag));
+    if (s.tag) {
+      const tag = el('p', 'tag', 'semana 8');
+      tag.append(el('small', null, '26—30 Outubro'));
+      text.append(tag);
+      if (s.cat) text.append(el('p', 'chip', s.cat));
+    }
     if (s.when) text.append(el('p', 'when', s.when));
     text.append(el('h1', null, s.title || ''));
     if (s.place) text.append(el('p', 'place', s.place));
     if (s.body) text.append(el('p', 'body', s.body));
+    if (s.tag) {
+      const mark = el('p', 'mark', '{');
+      mark.append(el('b', null, '01'), el('b', null, '04'), el('b', null, '37'), '}');
+      text.append(mark);
+    }
     frame.append(text);
     fitText(text);
   }

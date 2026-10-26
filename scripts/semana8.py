@@ -71,12 +71,23 @@ PROGRAMME = [
 ]
 
 
+def category(title):
+    """The programme PDF's section for an event; the TV colours it (tv.py CATS, apps/tv/index.html CAT)."""
+    for start, cat in [("AMOSTRA", "Exposição"), ("Halloween", "Exposição"), ("First", "Sessão orientada"), ("IADE Game Jam", "Game Jam"),
+                       ("Showcase", "Showcase"), ("Seleção", "Sessão de Filmes"), ("Dia da Animação", "Sessão de Filmes"),
+                       ("AnimationJam", "Desafio"), ("IA Improvável", "Masterclass"), ("Workshop", "Workshops"),
+                       ("Oficina", "Workshops"), ("MixMedia", "Workshops"), ("Com Sentido", "Workshops")]:
+        if title.startswith(start):
+            return cat
+    return "Talks"
+
+
 def rows(lab_id):
     def at(day, hhmm):
         return datetime.fromisoformat(f"2026-10-{day}T{hhmm}").replace(tzinfo=TZ).isoformat()
     return [{"title": t, "layer": "event", "kind": "external", "status": "approved", "starts_at": at(d, a), "ends_at": at(d, b),
              "place_ids": [lab_id] if room == LAB else [], "location_text": None if room == LAB else room,
-             "public_note": f"Semana 8 · {who}"} for d, a, b, t, room, who in PROGRAMME]
+             "public_note": f"Semana 8 · {category(t)} · {who}"} for d, a, b, t, room, who in PROGRAMME]
 
 
 if __name__ == "__main__":

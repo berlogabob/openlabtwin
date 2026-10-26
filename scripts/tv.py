@@ -30,7 +30,8 @@ VIDEO = {".mp4", ".m4v", ".webm"}
 CODECS = {"h264", "vp8", "vp9", "av1"}  # what Chromium on Linux plays without licensed decoders
 EVENT_DAYS = 14
 SLIDE_KEYS = {"kind", "title", "body", "seconds", "src", "video", "w", "h", "when", "place", "length", "full", "renditions",
-              "from", "to", "takeover", "every", "tag"}
+              "from", "to", "takeover", "every", "tag", "cat"}
+CATS = {"Exposição", "Sessão orientada", "Game Jam", "Showcase", "Talks", "Workshops", "Sessão de Filmes", "Desafio", "Masterclass"}
 WEEK = "Semana 8"  # public_note prefix that marks the week's events (scripts/semana8.py): tagged, today only, first
 
 
@@ -95,9 +96,12 @@ def event_slides(activities, places, today):
         note = a.get("public_note") or ""
         week = note.startswith(WEEK)
         for s, e in occurrences(a, today, today if week else today + timedelta(days=EVENT_DAYS)):
+            cat, _, body = note.removeprefix(WEEK).lstrip(" ·").partition(" · ")
+            if cat not in CATS:
+                cat, body = "", note.removeprefix(WEEK).lstrip(" ·")
             slide = {"kind": "event", "title": a["title"], "when": f"{s:%a} {s.day} {s:%b} · {s:%H:%M}–{e:%H:%M}",
-                     "place": place, "body": note.removeprefix(WEEK).lstrip(" ·"), "seconds": 10}
-            out.append((not week, s, slide | {"tag": WEEK} if week else slide))
+                     "place": place, "body": body if week else note, "seconds": 10}
+            out.append((not week, s, slide | {"tag": WEEK, "cat": cat} if week else slide))
     return [slide for *_k, slide in sorted(out, key=lambda x: x[:2])]
 
 
