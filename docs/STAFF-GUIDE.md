@@ -181,3 +181,7 @@ Use **Upload** in the Files block (Mosaic or Videowall) to add a photo or video 
 - The TV reloads every minute. If the internet drops it keeps playing what it has; if the edge node is off, the showcase TV is dark and the public TV keeps playing its last version.
 - **The TV computer:** see [edge-node.md → The TV computer](edge-node.md#the-tv-computer-raspberry-pi); its setup is the next [roadmap](ROADMAP.md) item.
 - **Calendar:** `…/calendar/lab.ics` subscribes in Google Calendar, Apple Calendar or Outlook.
+
+## Semana 8 highlight
+
+Events whose public note starts with `Semana 8` get an orange tag on the TV (carousel, on their day) and an orange card in the day column. `uv run python scripts/semana8.py` loads or reloads the week's programme; delete the rows after 30 Oct.

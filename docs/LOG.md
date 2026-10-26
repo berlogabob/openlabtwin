@@ -2,6 +2,11 @@
 
 Git is the source of truth. Entries cover work committed in openlabtwin and videowall; decision links point to the records.
 
+## 2026-10-26 (Monday)
+
+- Semana 8: `scripts/semana8.py` loads the 49 programme events (26.10 from the corrected Day1 PDF) as schedule events; `public_note` prefix `Semana 8` makes `tv.py` tag them (today only, first in the carousel) and the TV colours them in the day column. Lab events (TechLab | GameStudio) carry the Tech Lab place. Not yet loaded: the Mac's `.env` still points at the old Supabase project ([0052](decisions/0052-semana-8-events-are-marked-by-a-public-note-prefix.md)).
+- Office sign-in on the new Supabase project: no auth user existed (created and linked to `people` id 4), and Site URL / redirect allow-list were defaults (links went to `localhost:3000`). Set with `supabase config push`; `config.toml` now matches the remote auth settings.
+
 ## 2026-10-21 (Wednesday)
 
 - Supabase org egress-restricted (about 264k REST requests in 7 days, mostly pollers), project paused, Pro not an option. New free org and project `ukelqvkanfimiafnomex`; migrations pushed and the 2026-10-12 backup loaded with `scripts/restore.py` (`audit_log` skipped; `people.auth_user_id` cleared, staff sign in again; data from 10-12 to the pause is lost). Node `.env`, GitHub secrets and variables repointed. Polling slowed: wall server 10 s / heartbeat 30 s, `tv.py` 5 min, `publish.sh` 30 min, `ideas_ai` and `archive_ocr` hourly ([0051](decisions/0051-free-plan-only-with-a-request-budget.md)). unidcom-iade is still paused in the old org.

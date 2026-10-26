@@ -46,7 +46,7 @@ To remove access, set `is_staff = false` (RLS then shows them nothing) or delete
 
 Current staff: Andrey Dyakov (people id 4).
 
-Sign-in links may only return to `https://berlogabob.github.io/openlabtwin/office/**` and `http://127.0.0.1:8765/**` (local tests). Both are set in Supabase Auth → URL configuration. Supabase's built-in mailer sends a few emails per hour. Enough for staff; if links stop arriving, configure custom SMTP.
+Sign-in links may only return to `https://berlogabob.github.io/openlabtwin/office/**` and `http://127.0.0.1:8765/**` (local tests). Both are set in Supabase Auth → URL configuration, and in `supabase/config.toml` (`site_url`, `additional_redirect_urls`); a new project needs `supabase config push --project-ref <ref>` (answer n to the storage prompt), or links land on `localhost:3000`. Supabase's built-in mailer sends a few emails per hour. Enough for staff; if links stop arriving, configure custom SMTP.
 
 ## The public write path ("Book me")
 

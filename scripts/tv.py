@@ -30,7 +30,8 @@ VIDEO = {".mp4", ".m4v", ".webm"}
 CODECS = {"h264", "vp8", "vp9", "av1"}  # what Chromium on Linux plays without licensed decoders
 EVENT_DAYS = 14
 SLIDE_KEYS = {"kind", "title", "body", "seconds", "src", "video", "w", "h", "when", "place", "length", "full", "renditions",
-              "from", "to", "takeover", "every"}
+              "from", "to", "takeover", "every", "tag"}
+WEEK = "Semana 8"  # public_note prefix that marks the week's events (scripts/semana8.py): tagged, today only, first
 
 
 def exif_orientation(path):
@@ -91,10 +92,13 @@ def event_slides(activities, places, today):
     out = []
     for a in activities:
         place = ", ".join(names[p] for p in a["place_ids"] if p in names) or a.get("location_text") or ""
-        for s, e in occurrences(a, today, today + timedelta(days=EVENT_DAYS)):
-            out.append((s, {"kind": "event", "title": a["title"], "when": f"{s:%a} {s.day} {s:%b} · {s:%H:%M}–{e:%H:%M}",
-                            "place": place, "body": a.get("public_note") or "", "seconds": 10}))
-    return [slide for _s, slide in sorted(out, key=lambda x: x[0])]
+        note = a.get("public_note") or ""
+        week = note.startswith(WEEK)
+        for s, e in occurrences(a, today, today if week else today + timedelta(days=EVENT_DAYS)):
+            slide = {"kind": "event", "title": a["title"], "when": f"{s:%a} {s.day} {s:%b} · {s:%H:%M}–{e:%H:%M}",
+                     "place": place, "body": note.removeprefix(WEEK).lstrip(" ·"), "seconds": 10}
+            out.append((not week, s, slide | {"tag": WEEK} if week else slide))
+    return [slide for *_k, slide in sorted(out, key=lambda x: x[:2])]
 
 
 def link_events(slides, activities, day):
