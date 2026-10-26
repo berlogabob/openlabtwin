@@ -126,18 +126,20 @@ function schedule() {
   for (const room of rooms) {
     const sec = el('section');
     if (rooms.length > 1) sec.append(el('h2', null, short(room)));  // one room: its name is already in the top line
-    const items = lessons.filter(l => l.date === day && l.rooms.includes(room)).sort((a, b) => a.start.localeCompare(b.start));
+    // Semana 8: every event of the day, in any room, joins the first room's column (its room in the second line); finished ones drop out
+    const week = l => (l.note || '').startsWith('Semana 8');
+    const items = lessons.filter(l => l.date === day && (l.rooms.includes(room) || (week(l) && room === rooms[0] && l.end > clock))).sort((a, b) => a.start.localeCompare(b.start));
     if (!items.length) sec.append(el('p', 'empty', 'Free all day'));
     const at = items.findIndex(l => l.start > clock), line = at < 0 ? items.length : at;  // before the first not yet started
     const nowLine = () => sec.append(el('div', 'now-line', clock));
     for (const [i, l] of items.entries()) {
       if (i === line) nowLine();
-      const cls = [l.layer !== 'lesson' && l.layer, (l.note || '').startsWith('Semana 8') && 'week', l.end <= clock && 'past', l.start <= clock && l.end > clock && 'now'];
+      const cls = [l.layer !== 'lesson' && l.layer, week(l) && 'week', l.end <= clock && 'past', l.start <= clock && l.end > clock && 'now'];
       const a = el('article', cls.filter(Boolean).join(' '));
       const line1 = el('p', 'course');
       line1.append(el('span', 'time', `${l.start}–${l.end}`), l.course);
       a.append(line1);
-      const who = [l.teachers.join(', '), l.groups.join(', ')].filter(Boolean).join(' · ');
+      const who = [l.teachers.join(', '), l.groups.join(', '), !l.rooms.includes(room) && l.rooms.join(', ')].filter(Boolean).join(' · ');
       if (who) a.append(el('p', 'who', who));
       sec.append(a);
     }

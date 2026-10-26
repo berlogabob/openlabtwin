@@ -184,4 +184,4 @@ Use **Upload** in the Files block (Mosaic or Videowall) to add a photo or video 
 
 ## Semana 8 highlight
 
-Events whose public note starts with `Semana 8` get an orange tag on the TV (carousel, on their day) and an orange card in the day column. `uv run python scripts/semana8.py` loads or reloads the week's programme; delete the rows after 30 Oct.
+Events whose public note starts with `Semana 8` get an orange tag on the TV (carousel, on their day) and an orange card in the day column. The day column lists every Semana 8 event of the day, in any room (its room on the second line); finished ones drop out. `uv run python scripts/semana8.py` loads or reloads the week's programme; delete the rows after 30 Oct.
