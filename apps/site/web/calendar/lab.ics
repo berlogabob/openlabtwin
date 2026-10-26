@@ -47,8 +47,8 @@ DTSTART;TZID=Europe/Lisbon:20261027T113000
 DTEND;TZID=Europe/Lisbon:20261027T133000
 SUMMARY:Projeto de Visualização de Informação
 LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
-DESCRIPTION:Ângela Isabel Maria Xavier Barros\nGroups: LEIIG07D01\, LIGS00
- 5D01\nP
+DESCRIPTION:Ângela Isabel Maria Xavier Barros\nGroups: LEIIGS07D01\, LIGS0
+ 05D01\nP
 END:VEVENT
 BEGIN:VEVENT
 UID:debeb99ab7f1282f8294b2f1afde4fffdd21d2df@iade-lab-schedule
@@ -85,6 +85,15 @@ DTEND;TZID=Europe/Lisbon:20261028T160000
 SUMMARY:Showcase de Jogos
 LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
 DESCRIPTION:Groups: \nExternal
+END:VEVENT
+BEGIN:VEVENT
+UID:836f2d5a10329977af51e41e77d1c77774e44874@iade-lab-schedule
+DTSTAMP:20260921T000000Z
+DTSTART;TZID=Europe/Lisbon:20261028T140000
+DTEND;TZID=Europe/Lisbon:20261028T160000
+SUMMARY:Tecnologias Emergentes para Jogos
+LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
+DESCRIPTION:David Mendes Ramos\nGroups: LDJO005D01\nP
 END:VEVENT
 BEGIN:VEVENT
 UID:819fbed3152feb369306bcd81d790c4b75e4eb08@iade-lab-schedule
@@ -192,8 +201,8 @@ DTSTART;TZID=Europe/Lisbon:20261103T113000
 DTEND;TZID=Europe/Lisbon:20261103T133000
 SUMMARY:Projeto de Visualização de Informação
 LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
-DESCRIPTION:Ângela Isabel Maria Xavier Barros\nGroups: LEIIG07D01\, LIGS00
- 5D01\nP
+DESCRIPTION:Ângela Isabel Maria Xavier Barros\nGroups: LEIIGS07D01\, LIGS0
+ 05D01\nP
 END:VEVENT
 BEGIN:VEVENT
 UID:c9d3375217575fdf544df5a610bf15f64665ab03@iade-lab-schedule
@@ -230,6 +239,15 @@ DTEND;TZID=Europe/Lisbon:20261104T133000
 SUMMARY:Projeto de Realidade Virtual/Virtual Reality Design
 LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
 DESCRIPTION:Eulerson Rodrigues\nGroups: LTCR003D01\nP
+END:VEVENT
+BEGIN:VEVENT
+UID:5c848675effb312f2dc753c6f082b7f0ee3a11ac@iade-lab-schedule
+DTSTAMP:20260921T000000Z
+DTSTART;TZID=Europe/Lisbon:20261104T140000
+DTEND;TZID=Europe/Lisbon:20261104T160000
+SUMMARY:Tecnologias Emergentes para Jogos
+LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
+DESCRIPTION:David Mendes Ramos\nGroups: LDJO005D01\nP
 END:VEVENT
 BEGIN:VEVENT
 UID:5a600f81112c91d83c18ad178dd641aa21a7780d@iade-lab-schedule
@@ -319,8 +337,8 @@ DTSTART;TZID=Europe/Lisbon:20261110T113000
 DTEND;TZID=Europe/Lisbon:20261110T133000
 SUMMARY:Projeto de Visualização de Informação
 LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
-DESCRIPTION:Ângela Isabel Maria Xavier Barros\nGroups: LEIIG07D01\, LIGS00
- 5D01\nP
+DESCRIPTION:Ângela Isabel Maria Xavier Barros\nGroups: LEIIGS07D01\, LIGS0
+ 05D01\nP
 END:VEVENT
 BEGIN:VEVENT
 UID:f246afc164dc61f0ce91dcc64c392bdf2352905e@iade-lab-schedule
@@ -357,6 +375,15 @@ DTEND;TZID=Europe/Lisbon:20261111T133000
 SUMMARY:Projeto de Realidade Virtual/Virtual Reality Design
 LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
 DESCRIPTION:Eulerson Rodrigues\nGroups: LTCR003D01\nP
+END:VEVENT
+BEGIN:VEVENT
+UID:cf219ee51c76d86cd06ec914498d492f0573f8ce@iade-lab-schedule
+DTSTAMP:20260921T000000Z
+DTSTART;TZID=Europe/Lisbon:20261111T140000
+DTEND;TZID=Europe/Lisbon:20261111T160000
+SUMMARY:Tecnologias Emergentes para Jogos
+LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
+DESCRIPTION:David Mendes Ramos\nGroups: LDJO005D01\nP
 END:VEVENT
 BEGIN:VEVENT
 UID:e76e28009e6424e5bdc731a03f61bb1bed7b1ab2@iade-lab-schedule
@@ -446,8 +473,8 @@ DTSTART;TZID=Europe/Lisbon:20261117T113000
 DTEND;TZID=Europe/Lisbon:20261117T133000
 SUMMARY:Projeto de Visualização de Informação
 LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
-DESCRIPTION:Ângela Isabel Maria Xavier Barros\nGroups: LEIIG07D01\, LIGS00
- 5D01\nP
+DESCRIPTION:Ângela Isabel Maria Xavier Barros\nGroups: LEIIGS07D01\, LIGS0
+ 05D01\nP
 END:VEVENT
 BEGIN:VEVENT
 UID:2de7d31a2bc006c03390cf005277fffa05e2e3e7@iade-lab-schedule
@@ -484,6 +511,15 @@ DTEND;TZID=Europe/Lisbon:20261118T133000
 SUMMARY:Projeto de Realidade Virtual/Virtual Reality Design
 LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
 DESCRIPTION:Eulerson Rodrigues\nGroups: LTCR003D01\nP
+END:VEVENT
+BEGIN:VEVENT
+UID:d7705e2a279552ec676b01c9a16f90ec754468ae@iade-lab-schedule
+DTSTAMP:20260921T000000Z
+DTSTART;TZID=Europe/Lisbon:20261118T140000
+DTEND;TZID=Europe/Lisbon:20261118T160000
+SUMMARY:Tecnologias Emergentes para Jogos
+LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
+DESCRIPTION:David Mendes Ramos\nGroups: LDJO005D01\nP
 END:VEVENT
 BEGIN:VEVENT
 UID:389b91f45167a1612757f2860efb852150c6a42a@iade-lab-schedule
@@ -573,8 +609,8 @@ DTSTART;TZID=Europe/Lisbon:20261124T113000
 DTEND;TZID=Europe/Lisbon:20261124T133000
 SUMMARY:Projeto de Visualização de Informação
 LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
-DESCRIPTION:Ângela Isabel Maria Xavier Barros\nGroups: LEIIG07D01\, LIGS00
- 5D01\nP
+DESCRIPTION:Ângela Isabel Maria Xavier Barros\nGroups: LEIIGS07D01\, LIGS0
+ 05D01\nP
 END:VEVENT
 BEGIN:VEVENT
 UID:ca0c1b817d70e6b1648791e5ffcfc3d3e9ba851c@iade-lab-schedule
@@ -611,6 +647,15 @@ DTEND;TZID=Europe/Lisbon:20261125T133000
 SUMMARY:Projeto de Realidade Virtual/Virtual Reality Design
 LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
 DESCRIPTION:Eulerson Rodrigues\nGroups: LTCR003D01\nP
+END:VEVENT
+BEGIN:VEVENT
+UID:4502fc878ea6b7daecd0bfd581b8b61e1c580dcf@iade-lab-schedule
+DTSTAMP:20260921T000000Z
+DTSTART;TZID=Europe/Lisbon:20261125T140000
+DTEND;TZID=Europe/Lisbon:20261125T160000
+SUMMARY:Tecnologias Emergentes para Jogos
+LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
+DESCRIPTION:David Mendes Ramos\nGroups: LDJO005D01\nP
 END:VEVENT
 BEGIN:VEVENT
 UID:48201d34105042460e875321fa73d6a6404351d5@iade-lab-schedule
@@ -703,6 +748,15 @@ LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
 DESCRIPTION:Eulerson Rodrigues\nGroups: LTCR003D01\nP
 END:VEVENT
 BEGIN:VEVENT
+UID:a94761ad5e0111493ed268cb6b12662395ef8d2b@iade-lab-schedule
+DTSTAMP:20260921T000000Z
+DTSTART;TZID=Europe/Lisbon:20261202T140000
+DTEND;TZID=Europe/Lisbon:20261202T160000
+SUMMARY:Tecnologias Emergentes para Jogos
+LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
+DESCRIPTION:David Mendes Ramos\nGroups: LDJO005D01\nP
+END:VEVENT
+BEGIN:VEVENT
 UID:7d1d6afb91b1fe302ddf045a89158c70fd03c527@iade-lab-schedule
 DTSTAMP:20260921T000000Z
 DTSTART;TZID=Europe/Lisbon:20261202T163000
@@ -793,6 +847,15 @@ LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
 DESCRIPTION:Eulerson Rodrigues\nGroups: LTCR003D01\nP
 END:VEVENT
 BEGIN:VEVENT
+UID:80908121f5aad86259ba2f54cdbc94d3c66fd802@iade-lab-schedule
+DTSTAMP:20260921T000000Z
+DTSTART;TZID=Europe/Lisbon:20261209T140000
+DTEND;TZID=Europe/Lisbon:20261209T160000
+SUMMARY:Tecnologias Emergentes para Jogos
+LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
+DESCRIPTION:David Mendes Ramos\nGroups: LDJO005D01\nP
+END:VEVENT
+BEGIN:VEVENT
 UID:da5873655bd64fb2706bf156dbb60e4b1d88dc22@iade-lab-schedule
 DTSTAMP:20260921T000000Z
 DTSTART;TZID=Europe/Lisbon:20261209T163000
@@ -862,8 +925,8 @@ DTSTART;TZID=Europe/Lisbon:20261215T113000
 DTEND;TZID=Europe/Lisbon:20261215T133000
 SUMMARY:Projeto de Visualização de Informação
 LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
-DESCRIPTION:Ângela Isabel Maria Xavier Barros\nGroups: LEIIG07D01\, LIGS00
- 5D01\nP
+DESCRIPTION:Ângela Isabel Maria Xavier Barros\nGroups: LEIIGS07D01\, LIGS0
+ 05D01\nP
 END:VEVENT
 BEGIN:VEVENT
 UID:c566aab4b192cefed4ccfc7daa6b3d463f2ed7bb@iade-lab-schedule
