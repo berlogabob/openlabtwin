@@ -268,6 +268,15 @@ LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
 DESCRIPTION:Rita Malaquias\nGroups: LTCR003D01\nP
 END:VEVENT
 BEGIN:VEVENT
+UID:d121c9308a76a5c9fdfaedba5a104905f6f78e45@iade-lab-schedule
+DTSTAMP:20260921T000000Z
+DTSTART;TZID=Europe/Lisbon:20261105T100000
+DTEND;TZID=Europe/Lisbon:20261105T113000
+SUMMARY:Consultation
+LOCATION:Lab. e Estudo de Jogos - Tech Lab (Oriente)
+DESCRIPTION:Andrey Dyakov\nGroups: \nConsultation
+END:VEVENT
+BEGIN:VEVENT
 UID:ecac46c54761c7ca03cd9f00a2f095b9ed2b5b2c@iade-lab-schedule
 DTSTAMP:20260921T000000Z
 DTSTART;TZID=Europe/Lisbon:20261105T110000
