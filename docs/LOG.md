@@ -2,6 +2,10 @@
 
 Git is the source of truth. Entries cover work committed in openlabtwin and videowall; decision links point to the records.
 
+## 2026-11-03 (Tuesday)
+
+- TV Pi `techlab-tv` reflashed with user `techlab` (same user, password and SSH key as the other lab Pis, was `tv`); set up again with `scripts/tv-pi-setup.sh`.
+
 ## 2026-10-26 (Monday)
 
 - Semana 8: `scripts/semana8.py` loads the 49 programme events (26.10 from the corrected Day1 PDF) as schedule events; `public_note` prefix `Semana 8` makes `tv.py` tag them (today only, first in the carousel) and the TV colours them in the day column. Lab events (TechLab | GameStudio) carry the Tech Lab place. Not yet loaded: the Mac's `.env` still points at the old Supabase project ([0052](decisions/0052-semana-8-events-are-marked-by-a-public-note-prefix.md)).
