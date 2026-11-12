@@ -93,6 +93,24 @@ From the Mac, in the repo: `uv run python scripts/labels.py --root R15` (one roo
 
 Use **Scan** in bookings or inventory to use the camera, USB scanner or typed code. Place labels open their place; tagged items show their current place or holder and recent movements. Unknown codes offer a search and instructions for tagging an item at its place. An asset label link also returns to its item after email sign-in.
 
+## Find an item, hand it out, take it back (one page for teachers)
+
+You need your phone and your staff sign-in. Nothing is typed twice: the label on the item or the shelf does the finding.
+
+**Find an item.**
+1. Open the office on your phone and tap **Scan**. Point the camera at the item's QR label (or the shelf's label if you only know where it should be). No label: tap **Inventory** and type part of the name in the search field.
+2. A shelf opens with what should be there; an item opens with where it is now, or who holds it, and its last movements. If it is not where the office says, scan the shelf you found it on and use **Found a tagged item** under **Count** ([Stocktake](#stocktake-count-a-place)).
+
+**Hand it out.**
+1. Scan the item's label, then **Record movement**, kind **issue**.
+2. Pick the person (or add them) and write the reason in the note ("class of ...", "take-home"). Check the date, then save.
+3. For a whole class kit use **Issue kit** on the booking instead ([Equipment for a booking](#equipment-for-a-booking)).
+
+**Take it back.**
+1. Scan the item's label, **Record movement**, kind **return**. Pick the shelf it goes onto (scan the shelf label if unsure) and save.
+2. If it came back broken, open the item, mark it **broken**, and say so in the note; it then shows in **Needs attention**.
+3. A mistake is never edited: record an **adjust** or a new movement, so the history stays true.
+
 ## Equipment requests (by QR or link)
 
 Anyone with an email can ask for equipment at https://berlogabob.github.io/openlabtwin/kit/ (QR: `apps/site/web/qr/kit.svg`), **for a class** (with "every week until" for a course), **for lab work** in the Tech Lab, or **to take home** for a project. They pick courses from the timetable and items from the lab's list the same way as the schedule filters (type to search, pick from the list, × to remove), set a quantity on each item, and can describe anything else. Every public form (equipment, Book me, ideas) asks for the **student number**: the lab's local ID for a person; staff give their staff number. It's optional: nothing else in the lab needs it.

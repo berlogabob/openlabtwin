@@ -7,5 +7,5 @@ Source plan: TyLog wave 34 (`TypstSeq/docs/plans/activity-plan.md`, section "Wav
 - [x] A2 `scripts/import_pairing.py`: register consoles from the final pairing CSV (dry run by default) — codex luna, ~5 min; fake-existing test green, never run with --apply
 - [ ] A3 Run A2 on the real result, print QR labels for consoles and boxes — left for main session
 - [ ] A4 Photo label reading (migration `label_reads`, edge job, office "Photo" button) — left for main session
-- [ ] A5 `docs/STAFF-GUIDE.md`: find an item / hand it out / take it back
+- [x] A5 `docs/STAFF-GUIDE.md`: find an item / hand it out / take it back — Sonnet, 4 min; page only, teacher walk-through left for main session
 - [ ] B1 `scripts/export_tylog.py`: catalogue into the TyLog vault as `equipment` / `place` notes (tested on a temp directory only)
