@@ -6,7 +6,7 @@ Gates: `cd apps/office && flutter analyze && flutter test`; Python: `uv run pyth
 
 ## Tasks
 
-- [ ] **S1** `resolveCode(code, refs)` pure function in `apps/office/lib/scan_logic.dart`: place QR text or URL, asset tag, `?asset=` URL, asset serial, else unknown. Ornith. Done when `test/scan_logic_test.dart` passes.
+- [x] **S1** `resolveCode(code, refs)` pure function in `apps/office/lib/scan_logic.dart`: place QR text or URL, asset tag, `?asset=` URL, asset serial, else unknown. Ornith. Done when `test/scan_logic_test.dart` passes. Done: 8 tests pass.
 - [ ] **S2** `mobile_scanner` dependency and `CodeCapture` widget (`scan_widget.dart`): camera on web, plus a text field that also takes USB scanners (Enter submits). terra. Done when `flutter analyze` is clean and `flutter build web` succeeds.
 - [ ] **S3** `ScanPage` + asset screen (`scan_screen.dart`): Scan button on Bookings and Inventory app bars; place opens `PlacePage`; asset opens its screen (place or holder, condition, history); unknown offers search / add. `?asset=` deep link in `main.dart`. terra. Done when analyze + tests pass and a widget test covers the unknown-code state.
 - [ ] **S4** Stocktake by scanning: in a place's Count mode a scan button feeds the existing Found here path (ticks listed items). luna. Done when analyze + tests pass.
