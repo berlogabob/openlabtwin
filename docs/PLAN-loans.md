@@ -8,4 +8,4 @@ Source plan: TyLog wave 34 (`TypstSeq/docs/plans/activity-plan.md`, section "Wav
 - [ ] A3 Run A2 on the real result, print QR labels for consoles and boxes — left for main session
 - [ ] A4 Photo label reading (migration `label_reads`, edge job, office "Photo" button) — left for main session
 - [x] A5 `docs/STAFF-GUIDE.md`: find an item / hand it out / take it back — Sonnet, 4 min; page only, teacher walk-through left for main session
-- [ ] B1 `scripts/export_tylog.py`: catalogue into the TyLog vault as `equipment` / `place` notes (tested on a temp directory only)
+- [x] B1 `scripts/export_tylog.py`: catalogue into the TyLog vault as `equipment` / `place` notes (tested on a temp directory only) — codex terra, ~6 min; exact-text + typst-compile test green; never run on the real vault or live db
