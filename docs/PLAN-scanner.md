@@ -15,6 +15,6 @@ Gates: `cd apps/office && flutter analyze && flutter test`; Python: `uv run pyth
 - [x] **S7** `bookingReport(activities, lines, movements, people)` pure function + CSV in `report_logic.dart`, equipment requests by period: request, requester, items, status, issued/returned/outstanding. Ornith. Done when `test/report_logic_test.dart` passes. Done: 8 tests pass (Ornith draft failed to compile; terra retry).
 - [x] **S8** `ReportScreen` in the office (period picker, table, Download CSV), linked from Usage. luna. Done when analyze + tests pass. Done: analyze clean, 55 tests pass.
 - [x] **S9** `scripts/booking_report.py` (same columns, service key, like `usage_export.py`) + `tests/test_booking_report.py`. luna. Done when the unittest passes. Done: 2 unittests pass offline.
-- [ ] **S10** Docs: STAFF-GUIDE (Scan, count by scanning, Pairing, Booking report), ARCHITECTURE office row, ROADMAP (item 7 of Smart storage done; scanner link), README docs index if needed. luna. Done when the sections exist.
+- [x] **S10** Docs: STAFF-GUIDE (Scan, count by scanning, Pairing, Booking report), ARCHITECTURE office row, ROADMAP (item 7 of Smart storage done; scanner link), README docs index if needed. luna. Done when the sections exist. Done.
 
 Left for a person: camera test in a real browser (HTTPS or localhost), and a USB scanner test.

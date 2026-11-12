@@ -103,6 +103,10 @@ Anyone with an email can ask for equipment at https://berlogabob.github.io/openl
 - A kit still out a day after its booking ended shows in **Needs attention** as *kit not returned*.
 - The requester's private link shows the status, the dates and the items.
 
+### Equipment requests report
+
+In Usage, tap the assignment icon to open **Equipment requests report**. Choose an inclusive date range (defaults to this month through today), then reload to see requests, their items and issue/return totals. **Download CSV** saves the displayed report; outstanding is the total quantity still out.
+
 ## The paper loan archive
 
 The old A4 sheets of what students took home become data for statistics, in three steps:
@@ -118,10 +122,6 @@ The old A4 sheets of what students took home become data for statistics, in thre
 The AI's version is never used without your check. Historic loans don't change today's stock.
 
 **Usage** (chart icon on the Inventory page) shows what was used most (archive and today's loans), what ran out (the most out at once reached what the lab owns: a candidate to buy more of), and use by course.
-
-### Equipment requests report
-
-In Usage, tap the assignment icon to open **Equipment requests report**. Choose an inclusive date range (defaults to this month through today), then reload to see requests, their items and issue/return totals. **Download CSV** saves the displayed report; outstanding is the total quantity still out.
 
 ## "Book me": students request consultations by QR
 
