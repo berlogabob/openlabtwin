@@ -1,0 +1,71 @@
+# DRAFT - CONFIRM shelf counts before running scripts/seed_places.py --apply
+# CONFIRM main storage room is R15; existing R15-L/R15-R cabinets are left untouched.
+places:
+  - code: STORE2
+    name: Storage room between TechLab and Physical Computing
+    kind: room
+    tier: null
+    parent: null
+  - code: B2-UNMAPPED
+    name: Downstairs storage (unmapped)
+    kind: storage
+    tier: long
+    parent: B2
+
+cabinets:
+  - code: ARM1
+    name: Armario 1
+    parent: R15
+    tier: fast
+    doors: [L, R]
+    shelves: 3 # CONFIRM shelves per door
+    note: Floor cabinet, 2 locking doors
+  - code: ARM2
+    name: Armario 2
+    parent: R15
+    tier: fast
+    doors: [L, R]
+    shelves: 3 # CONFIRM shelves per door
+    note: Floor cabinet, 2 locking doors
+  - code: ARM3
+    name: Armario 3
+    parent: R15
+    tier: fast
+    doors: [L, R]
+    shelves: 3 # CONFIRM shelves per door
+    note: Floor cabinet, 2 locking doors
+  - code: ARM4
+    name: Armario 4
+    parent: R15
+    tier: fast
+    doors: [L, R]
+    shelves: 3 # CONFIRM shelves per door
+    note: Floor cabinet, 2 locking doors
+  - code: SOLDA-A
+    name: Solda A
+    parent: R15
+    tier: fast
+    doors: [L, R]
+    shelves: 3 # CONFIRM shelves per door
+    note: Hanging cabinet, 2 doors, 1 lock
+  - code: SOLDA-B
+    name: Solda B
+    parent: R15
+    tier: fast
+    doors: [L, R]
+    shelves: 3 # CONFIRM shelves per door
+    note: Hanging cabinet, 2 doors, 1 lock
+  - code: SOLDA-C
+    name: Solda C
+    parent: R15
+    tier: fast
+    doors: [L, R]
+    shelves: 3 # CONFIRM shelves per door
+    note: Hanging cabinet, 2 doors, 1 lock
+  - code: SOLDA-D
+    name: Solda D
+    parent: R15
+    tier: fast
+    doors: [L, R]
+    shelves: 3 # CONFIRM shelves per door
+    note: Hanging cabinet, 2 doors, 1 lock
