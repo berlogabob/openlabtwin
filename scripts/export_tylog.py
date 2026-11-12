@@ -95,12 +95,39 @@ def atomic_write(path, content):
             os.unlink(name)
 
 
+_STR = r'"((?:\\.|[^"\\])*)"'
+
+
+def _unescape(raw):
+    return re.sub(r'\\(.)', lambda m: '\n' if m.group(1) == 'n' else m.group(1), raw)
+
+
+def keep_user_edits(content, old):
+    """Generated note text plus what the user added in TyLog to the existing note:
+    aliases the generator did not produce (appended, in their order) and a `color`
+    property when the source data provides none."""
+    gen = re.search(r'^  aliases: \((.*)\),$', content, re.M)
+    mine = re.search(r'^  aliases: \((.*)\),$', old, re.M)
+    if gen and mine:
+        known = [_unescape(m) for m in re.findall(_STR, gen.group(1))]
+        extra = [a for a in (_unescape(m) for m in re.findall(_STR, mine.group(1))) if a not in known]
+        if extra:
+            content = content[:gen.start()] + f'  aliases: {tuple_str(known + extra)},' + content[gen.end():]
+    color = re.search(r'^  properties: \(.*?\bcolor: ' + _STR, old, re.M)
+    if color and not re.search(r'^  properties: \(.*?\bcolor: ', content, re.M):
+        content = content.replace(', source: "openlabtwin"',
+                                  f', color: {typ_str(_unescape(color.group(1)))}, source: "openlabtwin"', 1)
+    return content
+
+
 def write_notes(directory, notes, dry_run=False):
     directory = Path(directory)
     new = changed = unchanged = 0
     for id, content in notes.items():
         path = directory / f'{id}.typ'
         old = path.read_text(encoding='utf-8') if path.exists() else None
+        if old is not None:
+            content = keep_user_edits(content, old)
         if old is None:
             new += 1
         elif old != content:

@@ -102,6 +102,24 @@ with tempfile.TemporaryDirectory() as tmp:
     changed['asset_place'][0]['place_id'] = 1
     assert export.write_notes(inventory, export.build_notes(changed)) == (0, 1, len(notes) - 1, [])
     assert all((inventory / name).stat().st_mtime_ns == stamp for name, stamp in mtimes.items() if name != 'TL-0003.typ')
+    # Aliases and colour the user added in TyLog survive a re-export.
+    export.write_notes(inventory, notes)
+    path = inventory / 'TL-0002.typ'
+    edited = path.read_text(encoding='utf-8')
+    edited = edited.replace('"TL-0002",)', '"TL-0002", "yellow \\"glasses\\"", "жёлтый шлем",)')
+    edited = edited.replace(', source: "openlabtwin"', ', color: "yellow", source: "openlabtwin"')
+    path.write_text(edited, encoding='utf-8')
+    assert export.write_notes(inventory, notes) == (0, 0, len(notes), [])
+    assert path.read_text(encoding='utf-8') == edited  # byte-identical: nothing to change
+    # A removed generated alias comes back; user extras follow generated ones, order stable.
+    path.write_text(edited.replace('"VR glasses 2", ', ''), encoding='utf-8')
+    export.write_notes(inventory, notes)
+    assert path.read_text(encoding='utf-8') == edited
+    # Source-provided colour wins over the user's.
+    withcolor = {**notes, 'TL-0002': notes['TL-0002'].replace(', source:', ', color: "blue", source:')}
+    export.write_notes(inventory, withcolor)
+    assert 'color: "blue"' in path.read_text(encoding='utf-8') and 'color: "yellow"' not in path.read_text(encoding='utf-8')
+    path.write_text(edited, encoding='utf-8')
     orphan = inventory / 'old.typ'
     orphan.write_text('source: "openlabtwin"', encoding='utf-8')
     assert export.write_notes(inventory, notes)[3] == ['old.typ'] and orphan.exists()
