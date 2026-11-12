@@ -119,6 +119,10 @@ The AI's version is never used without your check. Historic loans don't change t
 
 **Usage** (chart icon on the Inventory page) shows what was used most (archive and today's loans), what ran out (the most out at once reached what the lab owns: a candidate to buy more of), and use by course.
 
+### Equipment requests report
+
+In Usage, tap the assignment icon to open **Equipment requests report**. Choose an inclusive date range (defaults to this month through today), then reload to see requests, their items and issue/return totals. **Download CSV** saves the displayed report; outstanding is the total quantity still out.
+
 ## "Book me": students request consultations by QR
 
 Students scan the QR code (`apps/site/web/qr/book.svg`, served at `…/openlabtwin/qr/book.svg`, ready to print) or open https://berlogabob.github.io/openlabtwin/book/. Students and professors ask for any date and time (a time wheel (hours and minutes, every 15 minutes, 08:00–21:00), and a length of 15–90 minutes), and give their **student number (the only required field)**. Name, email and a line about what they need are optional: with no email the request is filed under `<number>@iade.pt`, with no name under the number. There's no slot list: you decide. That line lands in **Purpose and notes (private)**; add your own notes there, and a link or student number if it matters.
