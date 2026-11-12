@@ -4,6 +4,8 @@ Git is the source of truth. Entries cover work committed in openlabtwin and vide
 
 ## 2026-11-12 (Thursday)
 
+- Added a local staff-only equipment booking CSV report with requester and issue/return details.
+
 - Office pairs scanned PlayStation boxes and consoles, with CSV results and printable move stickers.
 
 - Office scan screen opens place and asset labels, shows current location and movement history, and helps find unknown codes.
