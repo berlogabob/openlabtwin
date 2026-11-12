@@ -21,7 +21,7 @@ class _PairingPageState extends State<PairingPage> {
   Widget build(BuildContext context) {
     final scans = step == 0 ? boxes : consoles;
     final unique = scans
-        .map((s) => s.trim().toUpperCase())
+        .map((s) => normaliseSerial(s))
         .where((s) => s.isNotEmpty)
         .toSet();
     final result = matchPairs(boxes, consoles);
@@ -46,9 +46,7 @@ class _PairingPageState extends State<PairingPage> {
                 title: Text(serial),
                 trailing: const Icon(Icons.close),
                 onTap: () => setState(
-                  () => scans.removeWhere(
-                    (s) => s.trim().toUpperCase() == serial,
-                  ),
+                  () => scans.removeWhere((s) => normaliseSerial(s) == serial),
                 ),
               ),
             FilledButton(

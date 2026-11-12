@@ -4,6 +4,8 @@ Git is the source of truth. Entries cover work committed in openlabtwin and vide
 
 ## 2026-11-12 (Thursday)
 
+- Office serial comparisons now ignore punctuation and case; began PS4 label photo calibration, which does not yet reliably decode the sample labels.
+
 - Added a local staff-only equipment booking CSV report with requester and issue/return details.
 
 - Office pairs scanned PlayStation boxes and consoles, with CSV results and printable move stickers.

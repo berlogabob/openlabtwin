@@ -1,3 +1,4 @@
+import 'pairing_logic.dart' show normaliseSerial;
 // Places: the storage tree (rooms, cabinets, shelves, boxes), each place's contents, and the stocktake.
 // A place's code is on its QR label (office/?place=CODE) and is the node name in the Godot twin: keep it once printed.
 import 'package:material_ui/material_ui.dart';
@@ -311,7 +312,7 @@ class _PlacePageState extends State<PlacePage> {
   /// Count mode: a tagged unit that is here but recorded elsewhere (or on loan, or nowhere) is brought here and ticked.
   Future<void> _found(List<Rec> where, [String? code]) async {
     final typed = (code ?? found.text).trim();
-    final a = refs.assets.where((a) => a['tag'] == typed.toUpperCase() || a['serial'] == typed).firstOrNull;
+    final a = refs.assets.where((a) => a['tag'] == typed.toUpperCase() || (a['serial'] != null && normaliseSerial(typed).isNotEmpty && normaliseSerial(a['serial'] as String) == normaliseSerial(typed))).firstOrNull;
     if (a == null) return say(context, 'No tagged item "$typed". Tag it first (QR button at the top).');
     try {
       final rows = foundRows(a, where.where((w) => w['asset_id'] == a['id']).firstOrNull, id, byStaff: refs.me);

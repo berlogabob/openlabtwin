@@ -1,3 +1,5 @@
+import 'pairing_logic.dart' show normaliseSerial;
+
 enum ScanKind { place, asset, unknown }
 
 class ScanResult {
@@ -10,7 +12,16 @@ class ScanResult {
 bool _same(String? value, String code) =>
     value != null && value.toLowerCase() == code.toLowerCase();
 
-ScanResult resolveCode(String raw, List<Map<String, dynamic>> places, List<Map<String, dynamic>> assets) {
+bool _sameSerial(String? value, String code) =>
+    value != null &&
+    normaliseSerial(code).isNotEmpty &&
+    normaliseSerial(value) == normaliseSerial(code);
+
+ScanResult resolveCode(
+  String raw,
+  List<Map<String, dynamic>> places,
+  List<Map<String, dynamic>> assets,
+) {
   final trimmed = raw.trim();
   if (trimmed.isEmpty) {
     return ScanResult(ScanKind.unknown, '');
@@ -37,7 +48,7 @@ ScanResult resolveCode(String raw, List<Map<String, dynamic>> places, List<Map<S
         if (_same(a['tag'] as String?, code)) {
           return ScanResult(ScanKind.asset, code, a);
         }
-        if (_same(a['serial'] as String?, code)) {
+        if (_sameSerial(a['serial'] as String?, code)) {
           return ScanResult(ScanKind.asset, code, a);
         }
       }
@@ -54,7 +65,7 @@ ScanResult resolveCode(String raw, List<Map<String, dynamic>> places, List<Map<S
     if (_same(a['tag'] as String?, code)) {
       return ScanResult(ScanKind.asset, code, a);
     }
-    if (_same(a['serial'] as String?, code)) {
+    if (_sameSerial(a['serial'] as String?, code)) {
       return ScanResult(ScanKind.asset, code, a);
     }
   }

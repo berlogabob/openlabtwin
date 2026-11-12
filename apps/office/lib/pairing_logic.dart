@@ -21,12 +21,20 @@ class PairingResult {
   });
 }
 
-/// Normalise a raw serial: trim surrounding whitespace and upper-case it.
-String _normalise(String serial) => serial.trim().toUpperCase();
+/// Normalise serials printed with or without separators.
+String normaliseSerial(String serial) =>
+    serial.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), '');
+
+/// Extract a complete PS4 serial from an OCR result.
+String? parsePs4Serial(String text) {
+  final match = RegExp(r'(?:^|[^0-9])([0-9]{2}-?[0-9]{8}-?[0-9]{7})(?![0-9])')
+      .firstMatch(text);
+  return match == null ? null : normaliseSerial(match.group(1)!);
+}
 
 /// Match boxes against consoles.
 ///
-/// Every serial is trimmed and upper-cased before comparison. Empty serials
+/// Every serial is stripped of separators and upper-cased before comparison. Empty serials
 /// are dropped. A serial scanned twice in one list counts once (kept in first
 /// scan order) and is listed in that side's duplicate list once.
 ///
@@ -39,7 +47,7 @@ PairingResult matchPairs(List<String> boxSerials, List<String> consoleSerials) {
   final List<String> boxes = <String>[];
   final Set<String> boxSeen = <String>{};
   for (final String raw in boxSerials) {
-    final String serial = _normalise(raw);
+    final String serial = normaliseSerial(raw);
     if (serial.isEmpty) continue;
     if (boxSeen.contains(serial)) continue;
     boxSeen.add(serial);
@@ -49,7 +57,7 @@ PairingResult matchPairs(List<String> boxSerials, List<String> consoleSerials) {
   final List<String> consoles = <String>[];
   final Set<String> consoleSeen = <String>{};
   for (final String raw in consoleSerials) {
-    final String serial = _normalise(raw);
+    final String serial = normaliseSerial(raw);
     if (serial.isEmpty) continue;
     if (consoleSeen.contains(serial)) continue;
     consoleSeen.add(serial);
@@ -59,7 +67,7 @@ PairingResult matchPairs(List<String> boxSerials, List<String> consoleSerials) {
   final List<String> duplicateBoxes = <String>[];
   final Set<String> seenBoxes = <String>{};
   for (final String raw in boxSerials) {
-    final String serial = _normalise(raw);
+    final String serial = normaliseSerial(raw);
     if (serial.isEmpty) continue;
     if (!seenBoxes.add(serial)) {
       if (!duplicateBoxes.contains(serial)) {
@@ -71,7 +79,7 @@ PairingResult matchPairs(List<String> boxSerials, List<String> consoleSerials) {
   final List<String> duplicateConsoles = <String>[];
   final Set<String> seenConsoles = <String>{};
   for (final String raw in consoleSerials) {
-    final String serial = _normalise(raw);
+    final String serial = normaliseSerial(raw);
     if (serial.isEmpty) continue;
     if (!seenConsoles.add(serial)) {
       if (!duplicateConsoles.contains(serial)) {

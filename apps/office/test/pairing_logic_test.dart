@@ -2,7 +2,22 @@ import 'package:office/pairing_logic.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('extracts complete PS4 serials from OCR text', () {
+    expect(parsePs4Serial('Serial 03-27452573-6951476\n'), '03274525736951476');
+    expect(parsePs4Serial('15274525959784902'), '15274525959784902');
+    expect(parsePs4Serial('123456789012345678'), isNull);
+    expect(parsePs4Serial('unreadable'), isNull);
+  });
   group('matchPairs', () {
+    test('serial separators do not affect matching or duplicates', () {
+      final result = matchPairs(
+        ['15-27452595-9784902', '15 27452595 9784902'],
+        ['15274525959784902'],
+      );
+      expect(result.matched, ['15274525959784902']);
+      expect(result.duplicateBoxes, ['15274525959784902']);
+      expect(normaliseSerial(' a-b.12 '), 'AB12');
+    });
     test('all matched', () {
       final result = matchPairs(['A', 'B', 'C'], ['A', 'B', 'C']);
       expect(result.matched, ['A', 'B', 'C']);

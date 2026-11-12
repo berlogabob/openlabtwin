@@ -58,7 +58,7 @@ For a tagged item (a console, a headset, a lab PC), pick it in **Tagged one** af
 
 ### Pair PlayStation boxes with consoles
 
-In Inventory, open **Pair boxes and consoles** (arrows icon). Scan or type all box serials, then all console serials; tap a scanned entry to remove it. Review matches, moves, leftovers and repeated scans. **Download CSV** saves the results. **Print stickers** downloads an HTML page: open it and print it on A4; stickers are only for consoles that need moving. The pairing stays in the browser and does not change inventory records.
+In Inventory, open **Pair boxes and consoles** (arrows icon). Scan or type all box serials, then all console serials; tap a scanned entry to remove it. Serial matching ignores punctuation and letter case. Review matches, moves, leftovers and repeated scans. **Download CSV** saves the results. **Print stickers** downloads an HTML page: open it and print it on A4; stickers are only for consoles that need moving. The pairing stays in the browser and does not change inventory records.
 
 ### Places and QR labels
 
