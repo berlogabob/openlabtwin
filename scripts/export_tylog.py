@@ -139,7 +139,7 @@ def main():
     except ValueError as exc:
         parser.error(str(exc))
     if args.vault:
-        result = write_notes(args.vault / 'labs/inventory', notes)
+        result = write_notes(args.vault / 'notes/labs/inventory', notes)
         merge_kinds(args.vault / '_system/settings/kinds.json')
     else:
         result = (len(notes), 0, 0, [])

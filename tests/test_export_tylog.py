@@ -88,7 +88,7 @@ except ValueError:
 
 with tempfile.TemporaryDirectory() as tmp:
     root = Path(tmp)
-    inventory = root / 'labs/inventory'
+    inventory = root / 'notes/labs/inventory'
     assert export.write_notes(inventory, notes) == (len(notes), 0, 0, [])
     mtimes = {p.name: p.stat().st_mtime_ns for p in inventory.iterdir()}
     assert export.write_notes(inventory, notes) == (0, 0, len(notes), [])
