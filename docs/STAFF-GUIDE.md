@@ -72,7 +72,7 @@ On a place's screen:
 The spreadsheet from the previous team isn't trusted, so every place starts as **never counted**. To count one, open it (scan its label) and tap **Count**:
 1. Type how many of each untagged item are really there.
 2. Tick every tagged item you can see. Unticked ones are marked **missing**.
-3. A tagged item that's here but not on the list (recorded on another shelf, still marked as lent, or never placed): type its tag or serial under **Found a tagged item that is not listed?** and tap **Found here**. It's moved here and ticked.
+3. A tagged item that's here but not on the list (recorded on another shelf, still marked as lent, or never placed): type its tag or serial under **Found a tagged item that is not listed?** and tap **Found here**, or use the scan button beside it to scan several items in a row. It's moved here and ticked.
 4. **Save count.** The differences are recorded as adjust movements (marked "stocktake"), and the place shows today's date. A tagged item you didn't find stays in the stock, marked missing, until a later count ticks it.
 
 Something that's here but not on the list: cancel the count, **Record movement** → receive, then count.

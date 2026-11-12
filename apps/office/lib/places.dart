@@ -7,6 +7,7 @@ import 'data.dart';
 import 'inventory.dart';
 import 'logic.dart';
 import 'pick.dart';
+import 'scan_widget.dart';
 
 String _day(Object? at) => at == null ? 'never counted' : 'counted ${isoDate(DateTime.parse(at as String).toLocal())}';
 
@@ -308,8 +309,8 @@ class _PlacePageState extends State<PlacePage> {
   }
 
   /// Count mode: a tagged unit that is here but recorded elsewhere (or on loan, or nowhere) is brought here and ticked.
-  Future<void> _found(List<Rec> where) async {
-    final typed = found.text.trim();
+  Future<void> _found(List<Rec> where, [String? code]) async {
+    final typed = (code ?? found.text).trim();
     final a = refs.assets.where((a) => a['tag'] == typed.toUpperCase() || a['serial'] == typed).firstOrNull;
     if (a == null) return say(context, 'No tagged item "$typed". Tag it first (QR button at the top).');
     try {
@@ -325,6 +326,26 @@ class _PlacePageState extends State<PlacePage> {
       if (mounted) say(context, 'Could not record: $e');
     }
   }
+
+  void _scanFound(List<Rec> where) => showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    builder: (sheetContext) => SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CodeCapture(onCode: (code) => _found(where, code)),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(onPressed: () => Navigator.pop(sheetContext), child: const Text('Done')),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -408,7 +429,17 @@ class _PlacePageState extends State<PlacePage> {
                     decoration: const InputDecoration(labelText: 'Found a tagged item that is not listed? Its tag or serial'),
                     onSubmitted: (_) => _found(loaded.$2),
                   ),
-                  trailing: TextButton(onPressed: () => _found(loaded.$2), child: const Text('Found here')),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextButton(onPressed: () => _found(loaded.$2), child: const Text('Found here')),
+                      IconButton(
+                        tooltip: 'Scan tagged items',
+                        onPressed: () => _scanFound(loaded.$2),
+                        icon: const Icon(Icons.qr_code_scanner),
+                      ),
+                    ],
+                  ),
                 ),
               if (total.isEmpty && !counting) const ListTile(title: Text('Nothing recorded here.')),
               for (final e in (counting ? untagged : total).entries)
