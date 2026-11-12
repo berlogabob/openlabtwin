@@ -182,6 +182,10 @@ Future<void> addMovements(List<Rec> rows) => db.from('movements').insert(rows);
 /// Where each tagged item is now (its latest movement): place_id, or person_id while on loan.
 Future<List<Rec>> assetPlaces() => db.from('asset_place').select('asset_id,place_id,person_id');
 
+Future<List<Rec>> assetHistory(int assetId) => db.from('movements')
+    .select('kind,at,from_place,to_place,person_id,note')
+    .eq('asset_id', assetId).order('at', ascending: false).limit(50);
+
 /// Everything in Needs attention (view storage_issues), waived ones already left out.
 Future<List<Rec>> storageIssues() => db.from('storage_issues').select('code,a_id,b_id,detail,key').order('code').order('detail');
 

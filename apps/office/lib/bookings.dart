@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 import 'data.dart';
+import 'scan_screen.dart';
 import 'hours.dart';
 import 'ideas_screen.dart';
 import 'inventory.dart';
@@ -50,6 +51,7 @@ class _BookingsPageState extends State<BookingsPage> {
           final loaded = snap.data;
           return Scaffold(
             appBar: AppBar(title: const Text('Lab bookings'), actions: [
+              ScanButton(refs: loaded?.$1),
               IconButton(
                 tooltip: 'TV',
                 icon: const Icon(Icons.tv),

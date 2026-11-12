@@ -85,6 +85,10 @@ The top of the Inventory page lists what to sort out: places never counted (or n
 
 From the Mac, in the repo: `uv run python scripts/labels.py --root R15` (one room and everything in it) or `--assets` for tagged items. It writes `~/Downloads/labels.html`; open it and print at 100 % on A4 (3 × 8 labels).
 
+## Scan a label
+
+Use **Scan** in bookings or inventory to use the camera, USB scanner or typed code. Place labels open their place; tagged items show their current place or holder and recent movements. Unknown codes offer a search and instructions for tagging an item at its place. An asset label link also returns to its item after email sign-in.
+
 ## Equipment requests (by QR or link)
 
 Anyone with an email can ask for equipment at https://berlogabob.github.io/openlabtwin/kit/ (QR: `apps/site/web/qr/kit.svg`), **for a class** (with "every week until" for a course), **for lab work** in the Tech Lab, or **to take home** for a project. They pick courses from the timetable and items from the lab's list the same way as the schedule filters (type to search, pick from the list, × to remove), set a quantity on each item, and can describe anything else. Every public form (equipment, Book me, ideas) asks for the **student number**: the lab's local ID for a person; staff give their staff number. It's optional: nothing else in the lab needs it.

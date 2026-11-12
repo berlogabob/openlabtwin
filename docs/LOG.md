@@ -2,6 +2,10 @@
 
 Git is the source of truth. Entries cover work committed in openlabtwin and videowall; decision links point to the records.
 
+## 2026-11-12 (Thursday)
+
+- Office scan screen opens place and asset labels, shows current location and movement history, and helps find unknown codes.
+
 ## 2026-11-03 (Tuesday)
 
 - TV Pi `techlab-tv` reflashed with user `techlab` (same user, password and SSH key as the other lab Pis, was `tv`); set up again with `scripts/tv-pi-setup.sh`.

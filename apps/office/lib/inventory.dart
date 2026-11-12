@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 import 'data.dart';
+import 'scan_screen.dart';
 import 'logic.dart';
 import 'places.dart';
 import 'archive_screen.dart';
@@ -257,6 +258,7 @@ class _InventoryPageState extends State<InventoryPage> {
     appBar: AppBar(
       title: const Text('Inventory'),
       actions: [
+        ScanButton(refs: refs),
         IconButton(
           tooltip: 'Archive',
           icon: const Icon(Icons.history_edu),
