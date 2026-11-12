@@ -23,6 +23,10 @@ The Pi 3 B is reinstalled and runs the kiosk (2026-09-29): see [edge-node.md →
 3. Measure: which video level the TV settles on (its footer shows "video 480p/720p/1080p") and whether cards and slides stay smooth. If a Pi 3 can't manage, get a Pi 4 (2 GB+) or Pi 5, or an old laptop or mini-PC.
 4. Then retire the old site: point the TV at the new address for good, and follow [OPERATIONS → The old site](OPERATIONS.md#the-old-site) (the local branch `retire-to-openlabtwin` in `iade-lab-schedule` is ready and not pushed).
 
+## Scanner and reports
+
+Office scanner, stocktake by scanning, PlayStation box/console pairing and equipment-request reports: tracker in [PLAN-scanner.md](PLAN-scanner.md).
+
 ## Smart storage: first stocktakes
 
 The office side is built (2026-09-26); what's left is walking the store with a phone.
