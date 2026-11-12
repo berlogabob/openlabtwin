@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'data.dart';
 import 'scan_screen.dart';
+import 'pairing_screen.dart';
 import 'logic.dart';
 import 'places.dart';
 import 'archive_screen.dart';
@@ -259,6 +260,11 @@ class _InventoryPageState extends State<InventoryPage> {
       title: const Text('Inventory'),
       actions: [
         ScanButton(refs: refs),
+        IconButton(
+          tooltip: 'Pair boxes and consoles',
+          icon: const Icon(Icons.compare_arrows),
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const PairingPage())),
+        ),
         IconButton(
           tooltip: 'Archive',
           icon: const Icon(Icons.history_edu),

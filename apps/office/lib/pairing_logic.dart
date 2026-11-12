@@ -101,7 +101,9 @@ PairingResult matchPairs(List<String> boxSerials, List<String> consoleSerials) {
     }
   }
 
-  final int pairs = unmatchedBoxes.length < unmatchedConsoles.length ? unmatchedBoxes.length : unmatchedConsoles.length;
+  final int pairs = unmatchedBoxes.length < unmatchedConsoles.length
+      ? unmatchedBoxes.length
+      : unmatchedConsoles.length;
   final List<(String box, String console)> assignments = <(String, String)>[];
   for (int i = 0; i < pairs; i++) {
     assignments.add((unmatchedBoxes[i], unmatchedConsoles[i]));
@@ -124,4 +126,40 @@ PairingResult matchPairs(List<String> boxSerials, List<String> consoleSerials) {
     duplicateBoxes: duplicateBoxes,
     duplicateConsoles: duplicateConsoles,
   );
+}
+
+/// Export the pairing result as RFC 4180 CSV.
+String pairingCsv(PairingResult r) {
+  String cell(String value) => value.contains(RegExp('[",\r\n]'))
+      ? '"${value.replaceAll('"', '""')}"'
+      : value;
+  final rows = <List<String>>[
+    ['status', 'box_serial', 'console_serial'],
+    for (final serial in r.matched) ['ok', serial, serial],
+    for (final (box, console) in r.assignments) ['move', box, console],
+    for (final box in r.leftoverBoxes) ['empty_box', box, ''],
+    for (final console in r.leftoverConsoles) ['no_box', '', console],
+  ];
+  return '${rows.map((row) => row.map(cell).join(',')).join('\r\n')}\r\n';
+}
+
+/// Printable labels for consoles that need to move.
+String stickerHtml(PairingResult r) {
+  String escape(String value) => value
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
+  return '''<!doctype html>
+<html><head><meta charset="utf-8"><title>Console stickers</title>
+<style>
+@page { size: A4; margin: 10mm; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3mm; }
+.label { border: 1px solid #000; padding: 5mm; text-align: center; break-inside: avoid; overflow-wrap: anywhere; }
+.serial { font: bold 24pt sans-serif; }
+.box { font: 12pt sans-serif; }
+</style></head><body><div class="grid">
+${r.assignments.map((pair) => '<div class="label"><div class="serial">${escape(pair.$2)}</div><div class="box">Box ${escape(pair.$1)}</div></div>').join('\n')}
+</div></body></html>''';
 }

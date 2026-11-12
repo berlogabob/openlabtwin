@@ -56,6 +56,10 @@ Movements are never edited or deleted. Fix a mistake with an **adjust**, so the 
 
 For a tagged item (a console, a headset, a lab PC), pick it in **Tagged one** after the item: it moves on its own, quantity 1, and the office then knows exactly where that one is or who has it.
 
+### Pair PlayStation boxes with consoles
+
+In Inventory, open **Pair boxes and consoles** (arrows icon). Scan or type all box serials, then all console serials; tap a scanned entry to remove it. Review matches, moves, leftovers and repeated scans. **Download CSV** saves the results. **Print stickers** downloads an HTML page: open it and print it on A4; stickers are only for consoles that need moving. The pairing stays in the browser and does not change inventory records.
+
 ### Places and QR labels
 
 **Places** (tree icon on the Inventory page) lists every room, cabinet, shelf and box, indented, with its code, how many items it holds and when it was last counted. Every place has a QR label. Scanning it with your phone opens that place in the office. If you're signed out, sign in: the email link opens that same place.
