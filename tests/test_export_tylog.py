@@ -26,6 +26,11 @@ data = {
                {'id': 9, 'name': 'Staff Secret', 'kind': 'staff', 'email': 'staff@example.com'}],
 }
 notes = export.build_notes(data)
+assert export.equipment_aliases('Camera', 'LV-01', ['Camera']) == ['Camera', 'LV-01']
+assert export.equipment_aliases('Camera', 'LV-03', ['Camera', 'Camera', 'Camera'], 3) == [
+    'Camera 3', 'Camera num3', 'Camera no. 3', 'Camera #3', 'LV-03']
+assert export.equipment_aliases('VR glasses 3', 'TL-0003', ['VR glasses 3']) == [
+    'VR glasses 3', 'TL-0003', 'vr-glasses-3']
 assert export.typ_str('a\\b"c\nd') == '"a\\\\b\\"c\\nd"'
 assert notes['TL-0003'] == '''#import "/_system/tylog.typ" as tylog
 
@@ -35,7 +40,7 @@ assert notes['TL-0003'] == '''#import "/_system/tylog.typ" as tylog
   kind: "equipment",
   date: none,
   tags: ("equipment",),
-  aliases: ("TL-0003", "TL0003", "ABC", "VR glasses 3", "VR glasses no. 3", "VR glasses nº 3",),
+  aliases: ("VR glasses 3", "VR glasses num3", "VR glasses no. 3", "VR glasses #3", "VR-glasses 3", "VR-glasses num3", "VR-glasses no. 3", "VR-glasses #3", "TL-0003",),
   project: none,
   properties: (part_of: ("SHELF",), serial: "ABC", status: "good", tag: "TL-0003", item: "VR glasses", source: "openlabtwin"),
 )
@@ -76,7 +81,7 @@ assert notes['lab-person-7'] == '''#import "/_system/tylog.typ" as tylog
 
 '''
 assert not any(s in ''.join(notes.values()) for s in ['Student Secret', 'Staff Secret', '@example.com'])
-assert 'Camera 1' not in notes['LV-01'] and 'Camera 1' not in notes['XX-01']
+assert '"Camera 1"' in notes['LV-01'] and '"Camera 2"' in notes['XX-01']  # same-named assets are numbered by tag order
 assert 'part_of:' not in notes['TL-0001']
 bad = copy.deepcopy(data)
 bad['places'][0]['code'] = 'TL-0003'

@@ -4,7 +4,7 @@ Usage: uv run python scripts/export_tylog.py [--data SNAPSHOT.json] [--vault DIR
 Without --vault, report a dry run and write nothing.
 """
 import argparse
-from collections import Counter, defaultdict
+from collections import defaultdict
 import json
 import os
 from pathlib import Path
@@ -20,6 +20,22 @@ def typ_str(value):
 def tuple_str(values):
     values = list(dict.fromkeys(v for v in values if v))
     return '(' + ''.join(typ_str(v) + ', ' for v in values).rstrip() + ')'
+
+
+def equipment_aliases(name, tag, siblings, ordinal=None):
+    """Names people use for one asset. siblings: every asset's item name; ordinal: 1-based position among same-named assets by tag."""
+    aliases = []
+    if siblings.count(name) == 1:
+        aliases.append(name)
+    elif ordinal:
+        for base in dict.fromkeys((name, name.replace(' ', '-'))):  # people also write "VR-glasses num3"
+            aliases.extend(f'{base} {suffix}' for suffix in
+                           (str(ordinal), f'num{ordinal}', f'no. {ordinal}', f'#{ordinal}'))
+    aliases.append(tag)
+    if re.search(r'(?:\s|^)(?:\d+|[A-Za-z])$', name):
+        aliases.append(re.sub(r'\s+', '-', name).lower())
+    title = f'{name} {tag}'
+    return list(dict.fromkeys(alias for alias in aliases if alias and alias != title))
 
 
 def note(id, title, kind, aliases, properties):
@@ -49,25 +65,16 @@ def build_notes(data):
 
     items = {i['id']: i['name'] for i in data['items']}
     locations = {row['asset_id']: row['place_id'] for row in data['asset_place']}
-    groups = defaultdict(list)
-    for asset in data['assets']:
-        groups[asset['item_id']].append(asset)
-    for item_id, assets in groups.items():
-        assets.sort(key=lambda a: a['tag'])
-        numbers = []
-        for rank, a in enumerate(assets, 1):
-            digits = ''.join(re.findall(r'\d', a['tag']))
-            numbers.append(rank if a['tag'].startswith('TL-') else (int(digits) if digits else None))
-        counts = Counter(numbers)
-        for a, number in zip(assets, numbers):
-            tag, name = a['tag'], items[item_id]
-            aliases = [tag, tag.replace('-', ''), a['serial']]
-            if number is not None and counts[number] == 1:
-                aliases += [f'{name} {number}', f'{name} no. {number}', f'{name} nº {number}']
-            place = places.get(locations.get(a['id'])) or {}
-            add(tag, f'{name} {tag}', 'equipment', aliases,
-                {'part_of': place.get('code'), 'serial': a['serial'], 'status': a['condition'],
-                 'tag': tag, 'item': name})
+    assets = sorted(data['assets'], key=lambda a: a['tag'])
+    siblings = [items[a['item_id']] for a in assets]
+    for index, a in enumerate(assets):
+        name = siblings[index]
+        ordinal = siblings[:index + 1].count(name)
+        aliases = equipment_aliases(name, a['tag'], siblings, ordinal)
+        place = places.get(locations.get(a['id'])) or {}
+        add(a['tag'], f"{name} {a['tag']}", 'equipment', aliases,
+            {'part_of': place.get('code'), 'serial': a['serial'], 'status': a['condition'],
+             'tag': a['tag'], 'item': name})
     for p in data['people']:
         if p['kind'] == 'professor':
             folded = unicodedata.normalize('NFKD', p['name']).encode('ascii', 'ignore').decode('ascii')
