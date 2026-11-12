@@ -32,6 +32,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: 3.13.7 # pinned: Dart 3.14 breaks jaspr_builder 0.23 + build_web_compilers
       - run: dart pub get
       - run: dart analyze
       - run: dart test
@@ -46,6 +48,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: 3.50.0 # office uses material_ui (Flutter 3.50)
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test

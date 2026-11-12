@@ -43,6 +43,20 @@ Future<Refs> loadRefs() async {
   return Refs(r[0] as List<Rec>, r[1] as List<Rec>, r[2] as List<Rec>, r[3] as List<Rec>, r[4] as List<Rec>, (r[5] as Rec?)?['id'] as int?);
 }
 
+Future<(List<Rec>, List<Rec>, List<Rec>)> reportSource(String from, String to) async {
+  final end = DateTime.parse(to).add(const Duration(days: 1)).toIso8601String().substring(0, 10);
+  final activities = await db.from('activities')
+      .select('id,title,kind,status,starts_at,requester_id,requester_display')
+      .eq('kind', 'equipment').gte('starts_at', from).lt('starts_at', end);
+  final ids = [for (final a in activities) a['id'] as int];
+  if (ids.isEmpty) return (activities, <Rec>[], <Rec>[]);
+  final rows = await Future.wait([
+    db.from('activity_items').select('activity_id,item_id,qty').inFilter('activity_id', ids),
+    db.from('movements').select('activity_id,kind,qty,item_id').inFilter('activity_id', ids).inFilter('kind', ['issue', 'return']),
+  ]);
+  return (activities, rows[0], rows[1]);
+}
+
 const placeCols = 'id,name,iade_name,kind,tier,parent_id,code,counted_at';
 
 /// Upcoming activities, plus repeating ones that started earlier.
@@ -181,6 +195,10 @@ Future<void> addMovements(List<Rec> rows) => db.from('movements').insert(rows);
 
 /// Where each tagged item is now (its latest movement): place_id, or person_id while on loan.
 Future<List<Rec>> assetPlaces() => db.from('asset_place').select('asset_id,place_id,person_id');
+
+Future<List<Rec>> assetHistory(int assetId) => db.from('movements')
+    .select('kind,at,from_place,to_place,person_id,note')
+    .eq('asset_id', assetId).order('at', ascending: false).limit(50);
 
 /// Everything in Needs attention (view storage_issues), waived ones already left out.
 Future<List<Rec>> storageIssues() => db.from('storage_issues').select('code,a_id,b_id,detail,key').order('code').order('detail');

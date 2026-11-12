@@ -1,8 +1,9 @@
 // Usage for the thesis and for buying: the archive and live loans together (views usage_by_item, usage_by_course, peak_on_loan).
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'data.dart';
 import 'logic.dart';
+import 'report_screen.dart';
 
 class UsageScreen extends StatefulWidget {
   const UsageScreen({super.key, required this.refs});
@@ -18,7 +19,7 @@ class _UsageScreenState extends State<UsageScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Usage'), actions: [IconButton(tooltip: 'Reload', icon: const Icon(Icons.refresh), onPressed: () => setState(() => data = _load()))]),
+        appBar: AppBar(title: const Text('Usage'), actions: [IconButton(tooltip: 'Equipment requests report', icon: const Icon(Icons.assignment_outlined), onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => ReportScreen(refs: widget.refs)))), IconButton(tooltip: 'Reload', icon: const Icon(Icons.refresh), onPressed: () => setState(() => data = _load()))]),
         body: FutureBuilder<(List<Rec>, List<Rec>, List<Rec>)>(
           future: data,
           builder: (context, snap) {

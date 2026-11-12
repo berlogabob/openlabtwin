@@ -1,5 +1,5 @@
 // Idea hub, staff side: the idea bank (new / approved / archived), the AI's version, matches, workshop flag.
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'data.dart';
 

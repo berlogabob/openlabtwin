@@ -1,11 +1,12 @@
 // Lab office: staff sign in with an email link, then log, approve and equip bookings.
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'bookings.dart';
 import 'data.dart';
 import 'places.dart';
+import 'scan_screen.dart';
 
 const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
 const supabaseKey = String.fromEnvironment('SUPABASE_ANON_KEY'); // public by design: anon has no grants, RLS decides
@@ -36,12 +37,14 @@ class OfficeApp extends StatelessWidget {
             MediaQuery(data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true), child: child!),
         home: StreamBuilder<AuthState>(
           stream: db.auth.onAuthStateChange,
-          // a QR label opens office/?place=CODE (kept through sign-in: the email link returns to it)
+          // QR links are kept through sign-in.
           builder: (context, _) => db.auth.currentSession == null
               ? const LoginPage()
-              : Uri.base.queryParameters['place'] == null
-                  ? const BookingsPage()
-                  : PlaceLinkPage(code: Uri.base.queryParameters['place']!),
+              : Uri.base.queryParameters['place'] != null
+                  ? PlaceLinkPage(code: Uri.base.queryParameters['place']!)
+                  : Uri.base.queryParameters['asset'] != null
+                      ? AssetLinkPage(tag: Uri.base.queryParameters['asset']!)
+                      : const BookingsPage(),
         ),
       );
 }
@@ -63,9 +66,9 @@ class _LoginPageState extends State<LoginPage> {
       await db.auth.signInWithOtp(
         email: email.text.trim().toLowerCase(),
         shouldCreateUser: false, // staff accounts are created by an admin; nobody signs up here
-        // back to this page, keeping only a scanned ?place= so the email link opens that place
+        // Keep a scanned place or asset link through sign-in.
         emailRedirectTo: Uri.base
-            .replace(queryParameters: {if (Uri.base.queryParameters['place'] != null) 'place': Uri.base.queryParameters['place']!}, fragment: '')
+            .replace(queryParameters: {for (final key in ['place', 'asset']) if (Uri.base.queryParameters[key] != null) key: Uri.base.queryParameters[key]!}, fragment: '')
             .toString()
             .replaceAll(RegExp(r'[?#]+$'), ''),
       );

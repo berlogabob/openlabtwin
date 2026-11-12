@@ -1,5 +1,5 @@
 // TV showcase: the slides the lab TV plays beside the schedule (docs/STAFF-GUIDE.md, "The TV").
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'data.dart';
 import 'logic.dart';

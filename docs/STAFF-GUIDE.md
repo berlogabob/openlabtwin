@@ -56,6 +56,10 @@ Movements are never edited or deleted. Fix a mistake with an **adjust**, so the 
 
 For a tagged item (a console, a headset, a lab PC), pick it in **Tagged one** after the item: it moves on its own, quantity 1, and the office then knows exactly where that one is or who has it.
 
+### Pair PlayStation boxes with consoles
+
+In Inventory, open **Pair boxes and consoles** (arrows icon). Scan or type all box serials, then all console serials; tap a scanned entry to remove it. Review matches, moves, leftovers and repeated scans. **Download CSV** saves the results. **Print stickers** downloads an HTML page: open it and print it on A4; stickers are only for consoles that need moving. The pairing stays in the browser and does not change inventory records.
+
 ### Places and QR labels
 
 **Places** (tree icon on the Inventory page) lists every room, cabinet, shelf and box, indented, with its code, how many items it holds and when it was last counted. Every place has a QR label. Scanning it with your phone opens that place in the office. If you're signed out, sign in: the email link opens that same place.
@@ -72,7 +76,7 @@ On a place's screen:
 The spreadsheet from the previous team isn't trusted, so every place starts as **never counted**. To count one, open it (scan its label) and tap **Count**:
 1. Type how many of each untagged item are really there.
 2. Tick every tagged item you can see. Unticked ones are marked **missing**.
-3. A tagged item that's here but not on the list (recorded on another shelf, still marked as lent, or never placed): type its tag or serial under **Found a tagged item that is not listed?** and tap **Found here**. It's moved here and ticked.
+3. A tagged item that's here but not on the list (recorded on another shelf, still marked as lent, or never placed): type its tag or serial under **Found a tagged item that is not listed?** and tap **Found here**, or use the scan button beside it to scan several items in a row. It's moved here and ticked.
 4. **Save count.** The differences are recorded as adjust movements (marked "stocktake"), and the place shows today's date. A tagged item you didn't find stays in the stock, marked missing, until a later count ticks it.
 
 Something that's here but not on the list: cancel the count, **Record movement** → receive, then count.
@@ -85,6 +89,10 @@ The top of the Inventory page lists what to sort out: places never counted (or n
 
 From the Mac, in the repo: `uv run python scripts/labels.py --root R15` (one room and everything in it) or `--assets` for tagged items. It writes `~/Downloads/labels.html`; open it and print at 100 % on A4 (3 × 8 labels).
 
+## Scan a label
+
+Use **Scan** in bookings or inventory to use the camera, USB scanner or typed code. Place labels open their place; tagged items show their current place or holder and recent movements. Unknown codes offer a search and instructions for tagging an item at its place. An asset label link also returns to its item after email sign-in.
+
 ## Equipment requests (by QR or link)
 
 Anyone with an email can ask for equipment at https://berlogabob.github.io/openlabtwin/kit/ (QR: `apps/site/web/qr/kit.svg`), **for a class** (with "every week until" for a course), **for lab work** in the Tech Lab, or **to take home** for a project. They pick courses from the timetable and items from the lab's list the same way as the schedule filters (type to search, pick from the list, × to remove), set a quantity on each item, and can describe anything else. Every public form (equipment, Book me, ideas) asks for the **student number**: the lab's local ID for a person; staff give their staff number. It's optional: nothing else in the lab needs it.
@@ -94,6 +102,10 @@ Anyone with an email can ask for equipment at https://berlogabob.github.io/openl
 - Only lab work appears on the public schedule (it uses the lab). Class kits and take-home kits stay private.
 - A kit still out a day after its booking ended shows in **Needs attention** as *kit not returned*.
 - The requester's private link shows the status, the dates and the items.
+
+### Equipment requests report
+
+In Usage, tap the assignment icon to open **Equipment requests report**. Choose an inclusive date range (defaults to this month through today), then reload to see requests, their items and issue/return totals. **Download CSV** saves the displayed report; outstanding is the total quantity still out.
 
 ## The paper loan archive
 

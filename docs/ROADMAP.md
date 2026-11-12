@@ -23,6 +23,10 @@ The Pi 3 B is reinstalled and runs the kiosk (2026-09-29): see [edge-node.md →
 3. Measure: which video level the TV settles on (its footer shows "video 480p/720p/1080p") and whether cards and slides stay smooth. If a Pi 3 can't manage, get a Pi 4 (2 GB+) or Pi 5, or an old laptop or mini-PC.
 4. Then retire the old site: point the TV at the new address for good, and follow [OPERATIONS → The old site](OPERATIONS.md#the-old-site) (the local branch `retire-to-openlabtwin` in `iade-lab-schedule` is ready and not pushed).
 
+## Scanner and reports
+
+Office scanner, stocktake by scanning, PlayStation box/console pairing and equipment-request reports: tracker in [PLAN-scanner.md](PLAN-scanner.md).
+
 ## Smart storage: first stocktakes
 
 The office side is built (2026-09-26); what's left is walking the store with a phone.
@@ -33,7 +37,7 @@ The office side is built (2026-09-26); what's left is walking the store with a p
 4. Classroom cupboards `CUP1`–`CUP8`: set each one's room (Edit → Inside) and name.
 5. PlayStation loans: the import (applied 2026-09-27) listed 12 student loan records and one console outside IADE. Record the ones still out as issue movements (tagged console to the student).
 6. Godot: name each storage node after its place code and read `stock` and `asset_place`. Staff sign-in is awkward from Godot; the likely route is a node-written LAN JSON of place codes and counts, like `tv.json`.
-7. A tagged item's own QR (`office/?asset=TL-0003`): where it is, who has it, its history, with issue and return from there.
+7. Test the scanner on the real phone and a USB scanner ([PLAN-scanner.md](PLAN-scanner.md)).
 8. After the first counts, re-tune the duplicate threshold (0.5 flags 21 pairs in the import, about 6 real; 0.6 would flag 14).
 
 ## Paper loan archive: first sheets
