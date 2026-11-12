@@ -4,11 +4,10 @@ You need: a phone (camera) or a laptop with a USB barcode scanner, staff sign-in
 
 1. Open the office on the phone: https://berlogabob.github.io/openlabtwin/office/ and sign in. Inventory, then the two-arrows icon: **Pair boxes and consoles**.
 2. **Boxes.** Take each console out of its box and put it on a separate pile. Scan the serial barcode on every box. The counter goes up per box; a wrong scan: tap it in the list to remove it. Tap **Done with boxes**.
-3. **Consoles.** The console barcode is too small and reflective for the camera scanner (tested on 7 photos: no decoder, barcode or OCR, read them reliably). Use the phone's own text reader instead, it reads the printed digits under the barcode:
-   - Android (Gboard): tap the serial field, then the keyboard's **Scan text** button (toolbar, or the ⋯ menu), point at the digits `15-27452595-9784902`, tap **Insert**.
-   - iPhone: tap the serial field, tap it again and choose **Scan Text**, point, tap **Insert**.
-   - Dashes don't matter: `15-27452595-9784902` and `15274525959784902` count as the same serial.
-   Press Enter after each one. Tap **Done with consoles**.
+3. **Consoles.** The console label is too small for any phone scanner (tested: barcode decoders and phone OCR fail), but the lab's vision model reads it reliably (7/7 test photos, about 5 s each).
+   - Photograph each console's label with the normal camera: label filling the width, sharp, no flash glare. One photo per console.
+   - Put the photos in one folder on the Mac (AirDrop or a cable), then run `uv run python scripts/read_labels.py FOLDER` in the openlabtwin repo (needs the Studio on: AI_URL/AI_KEY in `.env`). Lines marked UNREAD: retake that photo.
+   - Copy the serial list at the end of the output, paste it into the Pairing field on the consoles step (a pasted list adds every line), tap **Done with consoles**.
 4. **Read the result.**
    - **Matched:** put each console into the box with the same serial.
    - **Move console into box:** "Put console X into box Y": these boxes keep a different serial, so the box label is wrong for what is inside.

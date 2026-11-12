@@ -40,11 +40,13 @@ class _CodeCaptureState extends State<CodeCapture> {
   }
 
   void _submit(String value) {
-    final code = value.trim();
-    if (code.isEmpty) return;
+    final codes = value.split(RegExp(r'[,\s]+')).where((code) => code.isNotEmpty);
+    if (codes.isEmpty) return;
     text.clear();
     focus.requestFocus();
-    widget.onCode(code);
+    for (final code in codes) {
+      widget.onCode(code);
+    }
   }
 
   @override
