@@ -1,5 +1,5 @@
 // Lab office: staff sign in with an email link, then log, approve and equip bookings.
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 

@@ -1,5 +1,5 @@
 // Searchable picker used for office lists that are too long for a plain dropdown.
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class Pick<T> extends StatefulWidget {
   const Pick({super.key, required this.label, required this.value, required this.options, required this.onChanged, this.nullText});

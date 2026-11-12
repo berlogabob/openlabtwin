@@ -2,7 +2,7 @@
 // reads wall_state and wall_slides every 2 s and reports in wall_status every 10 s.
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'data.dart';
 import 'logic.dart';

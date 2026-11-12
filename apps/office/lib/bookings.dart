@@ -1,5 +1,5 @@
 // Bookings list and the booking form (requester, rooms, repeat, equipment, clash warnings, approval).
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'data.dart';
 import 'scan_screen.dart';

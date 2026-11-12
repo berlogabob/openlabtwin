@@ -1,5 +1,5 @@
 // Inventory: Needs attention, stock per place, who holds what, and one form for every movement.
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'data.dart';
 import 'scan_screen.dart';

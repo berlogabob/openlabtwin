@@ -1,5 +1,5 @@
 // Paper loan archive: sheets the node's reader has read, checked one by one against their photo, then approved as loans.
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'data.dart';
 import 'inventory.dart';

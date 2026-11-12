@@ -1,6 +1,6 @@
 // Places: the storage tree (rooms, cabinets, shelves, boxes), each place's contents, and the stocktake.
 // A place's code is on its QR label (office/?place=CODE) and is the node name in the Godot twin: keep it once printed.
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'bookings.dart';
 import 'data.dart';
