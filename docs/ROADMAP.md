@@ -2,6 +2,10 @@
 
 What's next, in rough order. Done work moves to the status table in [ARCHITECTURE.md](ARCHITECTURE.md#status); this file holds only what is still open. Update it in the same commit that finishes or adds an item.
 
+## Next: lab loans in natural language
+
+Tracker: [PLAN-loans.md](PLAN-loans.md) (branch `loans`): addressed storage cells, PS4 pairing key and import, staff guide, and the catalogue export that feeds TyLog.
+
 ## Next: the video wall link
 
 Built on branch `wall` (2026-10-01): migrations `20261001100000_wall.sql` (`wall_slides`, `wall_state`, `wall_status`), `20261002100003_timeline.sql` (office Today timeline), and `20261002100004_commands.sql` (one-shot screen restart/reboot commands); pgTAP wall coverage; office Wall screen, preview URL and per-screen / staggered reboot controls. Left:
