@@ -3,7 +3,7 @@
 Source plan: TyLog wave 34 (`TypstSeq/docs/plans/activity-plan.md`, section "Wave 34"). OpenLabTwin stays the system of record; TyLog is the natural-language interface. Scripts that write default to a dry run.
 
 - [ ] A0 Addressed storage cells: `scripts/seed_places.py` + `docs/places.yaml` (draft; shelf counts to confirm), then `--apply` and print labels — script, draft YAML and test done (codex luna, ~8 min); offline run, live read had no network; `--apply` and YAML confirmation left for main session
-- [ ] A1 Pairing key: match on product + unit digits (`apps/office/lib/pairing_logic.dart`)
+- [x] A1 Pairing key: match on product + unit digits (`apps/office/lib/pairing_logic.dart`) — codex luna, ~6 min; 13 boxes / 14 consoles / 7 matched test green
 - [ ] A2 `scripts/import_pairing.py`: register consoles from the final pairing CSV (dry run by default)
 - [ ] A3 Run A2 on the real result, print QR labels for consoles and boxes — left for main session
 - [ ] A4 Photo label reading (migration `label_reads`, edge job, office "Photo" button) — left for main session
