@@ -22,9 +22,21 @@ def tuple_str(values):
     return '(' + ''.join(typ_str(v) + ', ' for v in values).rstrip() + ')'
 
 
-def equipment_aliases(name, tag, siblings, ordinal=None):
+_UNIT_SUFFIX = re.compile(r'\s*(?:\[(\d+)\]|\((\d+)\)|#\s*(\d+)|№\s*(\d+)|no\.\s*(\d+)|nº\s*(\d+)|n\s*(\d+)|unit\s+(\d+))\s*$', re.I)
+
+
+def split_unit(name):
+    match = _UNIT_SUFFIX.search(name)
+    if not match:
+        return name, None
+    return name[:match.start()].rstrip(), int(next(value for value in match.groups() if value))
+
+
+def equipment_aliases(name, tag, siblings, ordinal=None, unit=None):
     """Names people use for one asset. siblings: every asset's item name; ordinal: 1-based position among same-named assets by tag."""
     aliases = []
+    if unit is not None:
+        aliases.append(f'{name} [{unit}]')
     if siblings.count(name) == 1:
         aliases.append(name)
     elif ordinal:
@@ -66,13 +78,18 @@ def build_notes(data):
     items = {i['id']: i['name'] for i in data['items']}
     locations = {row['asset_id']: row['place_id'] for row in data['asset_place']}
     assets = sorted(data['assets'], key=lambda a: a['tag'])
-    siblings = [items[a['item_id']] for a in assets]
+    original_names = [items[a['item_id']] for a in assets]
+    split_names = [split_unit(name) for name in original_names]
+    siblings = [name for name, _ in split_names]
     for index, a in enumerate(assets):
         name = siblings[index]
         ordinal = siblings[:index + 1].count(name)
-        aliases = equipment_aliases(name, a['tag'], siblings, ordinal)
+        explicit_unit = split_names[index][1]
+        unit = explicit_unit if explicit_unit is not None else (ordinal if siblings.count(name) > 1 else None)
+        aliases = equipment_aliases(name, a['tag'], siblings, ordinal, unit)
         place = places.get(locations.get(a['id'])) or {}
-        add(a['tag'], f"{name} {a['tag']}", 'equipment', aliases,
+        title = f"{name} unit {unit} {a['tag']}" if unit is not None else f"{name} {a['tag']}"
+        add(a['tag'], title, 'equipment', aliases,
             {'part_of': place.get('code'), 'serial': a['serial'], 'status': a['condition'],
              'tag': a['tag'], 'item': name})
     for p in data['people']:

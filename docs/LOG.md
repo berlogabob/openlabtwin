@@ -2,6 +2,10 @@
 
 Git is the source of truth. Entries cover work committed in openlabtwin and videowall; decision links point to the records.
 
+## 2026-11-13 (Friday)
+
+- TyLog equipment notes now normalize unit labels from item names, assign units to same-named assets by tag order, and retain `[n]` label aliases; unchanged exports stay byte-identical.
+
 ## 2026-11-12 (Thursday)
 
 - Added `scripts/read_labels.py` to read PS4 serials from label photos with the archive vision model, and let Pairing accept pasted serial lists.
