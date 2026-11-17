@@ -1,6 +1,6 @@
 # OpenLabTwin
 
-The IADE game lab's system of record: rooms, storage, equipment, people, bookings, events, and the official IADE timetable. The public schedule, the lab TV and the staff back office are all built on it. It is also the working prototype for the Master's thesis ("everything starts with the storage").
+The IADE game lab's system of record: rooms, storage, equipment, people, bookings, events, and the official IADE timetable. The public schedule, the lab TV and the staff back office are all built on it. It is also the working prototype for the Master's thesis ("everything starts with the storage"). See [operations](docs/OPERATIONS.md) for the thesis storage snapshot command.
 
 | | URL |
 |---|---|

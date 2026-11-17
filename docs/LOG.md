@@ -2,6 +2,10 @@
 
 Git is the source of truth. Entries cover work committed in openlabtwin and videowall; decision links point to the records.
 
+## 2026-11-17 (Tuesday)
+
+- Added a read-only aggregate storage snapshot for thesis metrics, with optional JSONL append output.
+
 ## 2026-11-13 (Friday)
 
 - TyLog equipment notes now normalize unit labels from item names, assign units to same-named assets by tag order, and retain `[n]` label aliases; unchanged exports stay byte-identical.
