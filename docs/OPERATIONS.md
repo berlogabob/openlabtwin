@@ -2,6 +2,10 @@
 
 The runbook. For the why behind any of this see [ARCHITECTURE.md](ARCHITECTURE.md).
 
+Item and unit photos require the `item_photos` migration and private `item-photos` bucket. The office uploads resized JPEGs and requests signed URLs only on item or unit pages; staff access is controlled by the bucket and table policies.
+
+Each item photo `items/<id>/<name>.jpg` has a thumbnail at `items/<id>/<name>.thumb.jpg` (long edge at most 400 px, JPEG quality 80); older thumbnails may be missing. The nightly backup copies photos and available thumbnails to `~/openlabtwin-backups/photos`, which is not pruned. To restore photos, upload that folder’s contents back to the `item-photos` bucket, preserving paths.
+
 ## How data reaches the public site
 
 | What | When | How |
@@ -210,3 +214,7 @@ Run it after schema changes: Supabase dashboard → Advisors, or `GET https://ap
 - replace its `docs/index.html` with a link to the new site;
 - tell `lab.ics` subscribers the new address;
 - archive the repo.
+
+### Importing inventory photos
+
+After reviewing and applying the item photo migration, run `uv run python scripts/import_photos.py "/Users/berloga/Downloads/Inventario Tech Lab.xlsx"` with `SUPABASE_URL` and `SUPABASE_SERVICE_KEY` set. Review the matched and unmatched images; `--items-json FILE` supplies an offline JSON array of `{id, name}` items for a dry run. Add `--apply` to upload matched photos and insert reference rows. A previous import note blocks another run. Uploads overwrite the same paths, so if an upload or the insert fails, just run `--apply` again. The original spreadsheet stays private.

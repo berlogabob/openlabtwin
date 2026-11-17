@@ -187,7 +187,7 @@ Map<String, dynamic> movementRow({
     'qty': qty,
     'from_place': const {'move', 'issue', 'consume'}.contains(kind) ? from : null,
     'to_place': const {'receive', 'move', 'return', 'adjust'}.contains(kind) ? to : null,
-    'person_id': const {'issue', 'return'}.contains(kind) ? personId : null,
+    'person_id': const {'issue', 'return', 'consume'}.contains(kind) ? personId : null,
     'activity_id': activityId,
     'by_staff': byStaff,
     'asset_id': assetId,

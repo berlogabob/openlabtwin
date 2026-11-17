@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
@@ -5,6 +7,7 @@ import 'data.dart';
 import 'inventory.dart';
 import 'logic.dart';
 import 'pick.dart';
+import 'pick_photo.dart';
 import 'scan_screen.dart';
 
 typedef ItemRows = (List<Rec>, List<Rec>, List<Rec>, List<Rec>);
@@ -68,6 +71,7 @@ Future<bool> everydayMovement(
           value: value,
           options: [
             for (final p in refs.places)
+              if (action != 'Use' || available.any((s) => s['place_id'] == p['id']))
               (p['id'] as int, refs.placeName(p['id'] as int)),
           ],
           onChanged: (v) => set(() => change(v)),
@@ -80,14 +84,14 @@ Future<bool> everydayMovement(
               children: [
                 if (action != 'Take back' && asset == null)
                   placePick('From', from, (v) => from = v),
-                if (action == 'Hand out' ||
+                if (action == 'Hand out' || action == 'Use' ||
                     (action == 'Take back' && asset == null)) ...[
                   Pick<int?>(
-                    label: action == 'Hand out' ? 'Person' : 'Holder',
+                    label: action == 'Take back' ? 'Holder' : 'Person',
                     value: person,
                     options: [
                       for (final p in refs.people)
-                        if (action == 'Hand out' ||
+                        if (action != 'Take back' ||
                             loans.any(
                               (l) =>
                                   l['item_id'] == item['id'] &&
@@ -183,7 +187,7 @@ Future<bool> everydayMovement(
                       decimal: true,
                     ),
                   ),
-                if (action != 'Hand out') placePick('To', to, (v) => to = v),
+                if (action != 'Hand out' && action != 'Use') placePick('To', to, (v) => to = v),
               ],
             ),
           ),
@@ -202,7 +206,7 @@ Future<bool> everydayMovement(
                               ? 'issue'
                               : action == 'Take back'
                               ? 'return'
-                              : 'move',
+                              : action == 'Use' ? 'consume' : 'move',
                           itemId: item['id'] as int,
                           qty: asset == null
                               ? num.tryParse(qty.text.trim()) ?? 0
@@ -243,7 +247,7 @@ Future<bool> everydayMovement(
           ? 'Handed out $name to $who'
           : action == 'Take back'
           ? 'Took back $name'
-          : 'Moved $name',
+          : action == 'Use' ? 'Used $name' : 'Moved $name',
     );
   }
   // qty is not disposed: the sheet still reads it during its closing animation.
@@ -257,9 +261,17 @@ class ItemPage extends StatefulWidget {
     required this.item,
     this.loader,
     this.save,
+    this.saveKind,
+    this.loadPhotos,
+    this.pickPhoto,
+    this.savePhoto,
   });
   final Refs refs;
   final Rec item;
+  final Future<void> Function(int, String)? saveKind;
+  final Future<List<Rec>> Function(int)? loadPhotos;
+  final Future<({Uint8List full, Uint8List thumb})?> Function()? pickPhoto;
+  final Future<void> Function({required int itemId, int? assetId, required Uint8List bytes, Uint8List? thumb, required String state, String? note})? savePhoto;
   final Future<ItemRows> Function()? loader;
   final Future<void> Function(List<Rec>)? save;
   @override
@@ -268,6 +280,8 @@ class ItemPage extends StatefulWidget {
 
 class _ItemPageState extends State<ItemPage> {
   late Future<ItemRows> data = load();
+  late Future<List<Rec>> photos = loadPhotos();
+  Future<List<Rec>> loadPhotos() => widget.loadPhotos != null ? widget.loadPhotos!(widget.item['id'] as int) : widget.loader != null ? Future.value([]) : itemPhotos(widget.item['id'] as int);
   Future<ItemRows> load() async => widget.loader == null
       ? (
           await stock(),
@@ -278,6 +292,7 @@ class _ItemPageState extends State<ItemPage> {
       : widget.loader!();
   void reload() => setState(() {
     data = load();
+    photos = loadPhotos();
   });
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -310,18 +325,59 @@ class _ItemPageState extends State<ItemPage> {
         return ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            FutureBuilder<List<Rec>>(
+              future: photos,
+              builder: (context, photoSnap) {
+                if (photoSnap.hasError) return Text('Could not load photos: ${photoSnap.error}');
+                if (!photoSnap.hasData) return const CircularProgressIndicator();
+                final rows = photoSnap.data!;
+                final reference = rows.where((p) => p['state'] == 'reference').firstOrNull;
+                return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  if (reference == null) const Text('No reference photo') else PhotoView(photo: reference, large: true),
+                  SingleChildScrollView(scrollDirection: Axis.horizontal, child: Row(children: [
+                    for (final photo in rows) PhotoView(photo: photo),
+                  ])),
+                  TextButton(onPressed: () async {
+                    try {
+                      final picked = await (widget.pickPhoto ?? pickPhoto)();
+                      if (picked != null) {
+                        await (widget.savePhoto ?? addItemPhoto)(itemId: item['id'] as int, bytes: picked.full, thumb: picked.thumb, state: 'reference');
+                        if (mounted) reload();
+                      }
+                    } catch (e) {
+                      if (context.mounted) say(context, 'Could not add photo: $e');
+                    }
+                  }, child: const Text('Add photo')),
+                ]);
+              },
+            ),
             Text('${item['kind'] ?? ''} · Total $total'),
+            SwitchListTile(
+              title: const Text('Consumable'),
+              value: item['kind'] == 'consumable',
+              onChanged: (v) async {
+                // shortcut: a stationary item switched on then off comes back as portable; set stationary again in Edit
+                final kind = v ? 'consumable' : 'portable';
+                try {
+                  await (widget.saveKind ?? setItemKind)(item['id'] as int, kind);
+                  item['kind'] = kind;
+                  if (mounted) reload();
+                } catch (e) {
+                  if (context.mounted) say(context, 'Could not save: $e');
+                }
+              },
+            ),
             Wrap(
               spacing: 8,
               children: [
                 for (final action in [
-                  'Hand out',
-                  if (held.isNotEmpty ||
+                  if (item['kind'] == 'consumable') 'Use' else 'Hand out',
+                  if (item['kind'] != 'consumable' && (held.isNotEmpty ||
                       locations.any(
                         (l) =>
                             l['person_id'] != null &&
                             units.any((a) => a['id'] == l['asset_id']),
-                      ))
+                      )))
                     'Take back',
                   'Move',
                 ])
@@ -378,7 +434,7 @@ class _ItemPageState extends State<ItemPage> {
                   await Navigator.push(
                     context,
                     MaterialPageRoute<void>(
-                      builder: (_) => AssetPage(refs: refs, asset: a),
+                      builder: (_) => AssetPage(refs: refs, asset: a, loadPhotos: () => photos),
                     ),
                   );
                   if (mounted) reload();
@@ -410,4 +466,22 @@ class _ItemPageState extends State<ItemPage> {
       },
     ),
   );
+}
+
+/// One photo row from itemPhotos(); its signed 'url' is already there, so building it costs no request.
+class PhotoView extends StatelessWidget {
+  const PhotoView({super.key, required this.photo, this.large = false});
+  final Rec photo;
+  final bool large;
+  @override
+  Widget build(BuildContext context) {
+    final url = photo['url'] as String?;
+    return Column(children: [
+      if (url == null) const Icon(Icons.broken_image) else GestureDetector(
+        onTap: () => showDialog<void>(context: context, builder: (c) => Dialog(child: InteractiveViewer(child: Image.network(url)))),
+        child: Image.network((photo['thumb'] as String?) ?? url, width: large ? 240 : 80, height: large ? 180 : 80, fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(Icons.broken_image)),
+      ),
+      if (!large) Text('${photo['state']} · ${'${photo['taken_at'] ?? ''}'.split('T').first}'),
+    ]);
+  }
 }

@@ -1,4 +1,7 @@
 // Every query the office makes. RLS lets only staff (people.is_staff, linked by auth_user_id) read or write.
+import 'dart:math';
+import 'dart:typed_data';
+
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -219,6 +222,48 @@ Future<Rec> addAsset(int itemId, String tag, String serial) => db
     .insert({'item_id': itemId, if (tag.trim().isNotEmpty) 'tag': tag.trim(), 'serial': serial.trim().isEmpty ? null : serial.trim()})
     .select('id,item_id,tag,serial,condition')
     .single();
+
+Future<void> setItemKind(int id, String kind) => db.from('items').update({'kind': kind}).eq('id', id);
+
+String thumbPath(String path) => path.replaceFirst(RegExp(r'\.jpg$'), '.thumb.jpg');
+
+final _photoUrls = <String, (String, DateTime)>{};
+
+/// The item's photos, newest first, with signed URLs reused during the session.
+Future<List<Rec>> itemPhotos(int itemId) async {
+  final rows = await db.from('item_photos').select().eq('item_id', itemId).order('taken_at', ascending: false);
+  final now = DateTime.now();
+  final paths = {for (final r in rows) ...[r['path'] as String, thumbPath(r['path'] as String)]};
+  final missing = [for (final path in paths) if (_photoUrls[path] == null || now.difference(_photoUrls[path]!.$2) >= const Duration(hours: 12)) path];
+  if (missing.isNotEmpty) {
+    final urls = await db.storage.from('item-photos').createSignedUrlsResult(missing, 86400);
+    for (final path in missing) { _photoUrls.remove(path); }
+    for (final u in urls.whereType<SignedUrlSuccess>()) { _photoUrls[u.path] = (u.signedUrl, now); }
+  }
+  return [for (final r in rows) {...r, 'url': _photoUrls[r['path']]?.$1, 'thumb': _photoUrls[thumbPath(r['path'] as String)]?.$1}];
+}
+
+Future<void> addItemPhoto({required int itemId, int? assetId, required Uint8List bytes, Uint8List? thumb, required String state, String? note}) async {
+  final suffix = Random.secure().nextInt(65536).toRadixString(16).padLeft(4, '0');
+  final path = 'items/$itemId/${DateTime.now().millisecondsSinceEpoch}-$suffix.jpg';
+  final bucket = db.storage.from('item-photos');
+  final uploaded = <String>[];
+  try {
+    await bucket.uploadBinary(path, bytes, fileOptions: const FileOptions(contentType: 'image/jpeg', cacheControl: '31536000'));
+    uploaded.add(path);
+    if (thumb != null) {
+      final thumbnail = thumbPath(path);
+      await bucket.uploadBinary(thumbnail, thumb, fileOptions: const FileOptions(contentType: 'image/jpeg', cacheControl: '31536000'));
+      uploaded.add(thumbnail);
+    }
+    await db.from('item_photos').insert({'item_id': itemId, 'asset_id': assetId, 'path': path, 'state': state, 'note': note});
+  } catch (_) {
+    if (uploaded.isNotEmpty) {
+      try { await bucket.remove(uploaded); } catch (_) {}
+    }
+    rethrow;
+  }
+}
 
 /// Whether the public /kit/ list offers this item.
 Future<void> setLendable(int itemId, bool lendable) => db.from('items').update({'lendable': lendable}).eq('id', itemId);
