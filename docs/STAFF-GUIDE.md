@@ -35,13 +35,42 @@ Save the booking first. Then:
 - **Issue kit:** hands the whole list out, from a place (default: Room 15) to a person (default: the requester). Tagged units on that shelf go first, and the office shows which tags before recording anything. If the place doesn't hold enough, you're told what's short and can still go ahead.
 - **Return kit:** takes the whole list back into a place, starting with the tags that person holds.
 
-## Inventory
+## Storage
 
-The **Inventory** button (box icon, top bar) shows every item: how many are in each place, who has some on loan, and the total. Items with nothing left (all used up, broken and taken apart, given away) are hidden; **Show items with nothing left** brings them back. To take something out for good, record a **consume** with a note (for example "disassembled: broken"); its history stays.
+Things are in the **Storage** tab. Everyday work is on an item's, unit's or place's page; **Tools** holds rare work such as corrections and arrivals.
 
-Every long list in the office (items, places, people) is a search field: type part of a name, pick from the list, and **×** clears it. The public site works the same way.
+### Find
 
-**Record movement** covers everything else:
+1. In **Storage**, type in **Find an item, tag, place or person**. Choose an item, tagged unit or place from the results. When the field is empty, **Out now** lists loans; **Needs attention** opens the issues list.
+2. Or tap **Scan** and scan a place or tagged item's label. A shelf opens its contents; a tagged unit opens its current place or holder and recent movements.
+
+### Hand out
+
+1. Open an item from search, or scan its tagged unit. Tap **Hand out**. On an item page, choose **From**, **Person** (or **Add person**), and **Quantity**; on a tagged unit page, the office records that unit.
+2. Tap **Confirm**. A tagged unit already out cannot be handed out again. The office refuses the second loan and says who has it; the database rule enforces this too.
+
+### Take back
+
+1. Open the item or scan the tagged unit, then tap **Take back**. For untagged stock choose **Holder** and **To**; for a tagged unit, **To** starts at the shelf it came from.
+2. Set **Quantity** for untagged stock, then tap **Confirm**. The tagged unit is recorded as one.
+
+### Move
+
+1. Open an item from search, or scan a tagged unit that is on a shelf. Tap **Move**.
+2. Choose **From** and **To**; set **Quantity** for untagged stock. Tap **Confirm**. A tagged unit moves as one.
+
+### Count a shelf
+
+1. Open a place from search or scan its label, then tap **Count this shelf**. Type the actual quantity for each untagged item.
+2. Tick each tagged item you can see. Unticked ones are marked **missing**.
+3. For a tagged unit here but not listed, enter its tag or serial in **Found a tagged item that is not listed? Its tag or serial** and tap **Found here**. Or use the scan button beside it to scan several items in a row. The unit is moved here and ticked.
+4. Tap **Save count**. Differences are recorded as adjust movements marked “stocktake”, and the place shows today's date. A tagged item you did not find stays in stock, marked missing, until a later count finds it.
+
+If an untagged item is here but not on the list, cancel the count. Open **Tools** → **Record movement**, receive it into the place, then count again.
+
+### Corrections and arrivals (Tools → Record movement)
+
+Use **Record movement** for other corrections and arrivals:
 
 | Kind | Meaning |
 |---|---|
@@ -58,32 +87,22 @@ For a tagged item (a console, a headset, a lab PC), pick it in **Tagged one** af
 
 ### Pair PlayStation boxes with consoles
 
-In Inventory, open **Pair boxes and consoles** (arrows icon). Scan or type all box serials, then all console serials; you can paste a list separated by commas or whitespace. Tap a scanned entry to remove it. Serial matching ignores punctuation and letter case. Review matches, moves, leftovers and repeated scans. **Download CSV** saves the results. **Print stickers** downloads an HTML page: open it and print it on A4; stickers are only for consoles that need moving. The pairing stays in the browser and does not change inventory records.
+In **Storage**, open **Tools** → **Pair boxes and consoles**. Scan or type all box serials, then all console serials; you can paste a list separated by commas or whitespace. Tap a scanned entry to remove it. Serial matching ignores punctuation and letter case. Review matches, moves, leftovers and repeated scans. **Download CSV** saves the results. **Print stickers** downloads an HTML page: open it and print it on A4; stickers are only for consoles that need moving. The pairing stays in the browser and does not change inventory records.
 
 ### Places and QR labels
 
-**Places** (tree icon on the Inventory page) lists every room, cabinet, shelf and box, indented, with its code, how many items it holds and when it was last counted. Every place has a QR label. Scanning it with your phone opens that place in the office. If you're signed out, sign in: the email link opens that same place.
+**Storage** → **Tools** → **Places** lists every room, cabinet, shelf and box, indented, with its code, how many items it holds and when it was last counted. Every place has a QR label. Scanning it with your phone opens that place in the office. If you're signed out, sign in: the email link opens that same place.
 
 On a place's screen:
-- **what should be here:** each item's quantity (and how many of those are untagged), then the tagged items with their condition. Tap a tagged item to mark it ok, broken or missing;
-- **Record movement** starts from this place;
-- **Edit** (pencil) changes the name, code, tier or where it sits. Don't change a code once its label is printed: the label and the Godot twin both use it;
-- **Add a place inside** (folder icon), for example the racks and shelves on the -2 floor: `B2-R1`, then `B2-R1-S1`;
-- **Tag an item** (QR icon): give one of the items here a tag. Leave the tag empty for the next `TL-` number, or type its old tag (`GS-031`). Then print its label.
-
-### Stocktake: count a place
-
-The spreadsheet from the previous team isn't trusted, so every place starts as **never counted**. To count one, open it (scan its label) and tap **Count**:
-1. Type how many of each untagged item are really there.
-2. Tick every tagged item you can see. Unticked ones are marked **missing**.
-3. A tagged item that's here but not on the list (recorded on another shelf, still marked as lent, or never placed): type its tag or serial under **Found a tagged item that is not listed?** and tap **Found here**, or use the scan button beside it to scan several items in a row. It's moved here and ticked.
-4. **Save count.** The differences are recorded as adjust movements (marked "stocktake"), and the place shows today's date. A tagged item you didn't find stays in the stock, marked missing, until a later count ticks it.
-
-Something that's here but not on the list: cancel the count, **Record movement** → receive, then count.
+- **what should be here:** each item's quantity (and how many of those are untagged), then the tagged items with their condition. Tap a tagged item to open its unit page, or use **Condition** to mark it ok, broken or missing;
+- **Move** on an item row starts from this place;
+- **More options** → **Edit place** changes the name, code, tier or where it sits. Don't change a code once its label is printed: the label and the Godot twin both use it;
+- **More options** → **Add a place inside**, for example the racks and shelves on the -2 floor: `B2-R1`, then `B2-R1-S1`;
+- **More options** → **Tag an item**: give one of the items here a tag. Leave the tag empty for the next `TL-` number, or type its old tag (`GS-031`). Then print its label.
 
 ### Needs attention
 
-The top of the Inventory page lists what to sort out: places never counted (or not for 6 months), stock below zero, broken or missing tagged items, and items that look like the same thing under two names ("Cabo HDMI" / "Cabos HDMI"). Tap a place issue to open the place. For a pair of names, **Merge** keeps the name you pick and moves everything to it; **Not the same** hides the pair. **Dismiss** hides any other issue.
+**Storage** → **Needs attention** lists what to sort out: places never counted (or not for 6 months), stock below zero, broken or missing tagged items, and items that look like the same thing under two names ("Cabo HDMI" / "Cabos HDMI"). Tap a place issue to open the place. For a pair of names, **Merge** keeps the name you pick and moves everything to it; **Not the same** hides the pair. **Dismiss** hides any other issue.
 
 ### Printing labels
 
@@ -93,12 +112,16 @@ From the Mac, in the repo: `uv run python scripts/labels.py --root R15` (one roo
 
 Use **Scan** in bookings or inventory to use the camera, USB scanner or typed code. Place labels open their place; tagged items show their current place or holder and recent movements. Unknown codes offer a search and instructions for tagging an item at its place. An asset label link also returns to its item after email sign-in.
 
+## Find an item, hand it out, take it back (one page for teachers)
+
+Use [Find](#find), [Hand out](#hand-out), and [Take back](#take-back) under [Storage](#storage). For a whole class kit, use [Issue kit](#equipment-for-a-booking) on the booking.
+
 ## Equipment requests (by QR or link)
 
 Anyone with an email can ask for equipment at https://berlogabob.github.io/openlabtwin/kit/ (QR: `apps/site/web/qr/kit.svg`), **for a class** (with "every week until" for a course), **for lab work** in the Tech Lab, or **to take home** for a project. They pick courses from the timetable and items from the lab's list the same way as the schedule filters (type to search, pick from the list, × to remove), set a quantity on each item, and can describe anything else. Every public form (equipment, Book me, ideas) asks for the **student number**: the lab's local ID for a person; staff give their staff number. It's optional: nothing else in the lab needs it.
 
 - The request arrives in the bookings list as **Equipment**, *requested*, titled Class kit, Lab work or Take-home kit, with the kit already listed and what it's for in **Purpose and notes**. Approve, prepare the lines, then **Issue kit** / **Return kit** as usual.
-- The list only shows items marked **can be requested**: portable items start ticked. Change it on the Inventory page: tap an item.
+- The list only shows items marked **can be requested**: portable items start ticked. Change it on the Storage tab: tap an item.
 - Only lab work appears on the public schedule (it uses the lab). Class kits and take-home kits stay private.
 - A kit still out a day after its booking ended shows in **Needs attention** as *kit not returned*.
 - The requester's private link shows the status, the dates and the items.
@@ -113,7 +136,7 @@ The old A4 sheets of what students took home become data for statistics, in thre
 
 1. **Photograph** each sheet flat, in good light, and drop the photos into the shared folder `smb://192.168.1.131/archive` (on the lab network; Finder → Go → Connect to Server on a Mac, or the Files app on a phone). The same photo twice is read once.
 2. **Wait** up to 15 minutes: the lab computer reads each sheet with the AI on the big PC (about 1–2 minutes a sheet) and fills in its fields.
-3. **Check**: Inventory → **Archive** (scroll icon) lists the sheets to check. Open one: the photo on one side (pinch or scroll to zoom), the fields on the other. Fix what the AI got wrong:
+3. **Check**: Storage → **Tools** → **Archive** lists the sheets to check. Open one: the photo on one side (pinch or scroll to zoom), the fields on the other. Fix what the AI got wrong:
    - **Student:** picked by student number or name when they're already known; otherwise **New student**.
    - **Course**, **Out on**, **Back on** (dates as 2019-03-12).
    - **Lines:** the item as written, the quantity, and the lab item it is (suggested when the name is close). Leave "No item (keep the text)" when it matches nothing: the text is kept, and you can match it later.
@@ -121,7 +144,7 @@ The old A4 sheets of what students took home become data for statistics, in thre
 
 The AI's version is never used without your check. Historic loans don't change today's stock.
 
-**Usage** (chart icon on the Inventory page) shows what was used most (archive and today's loans), what ran out (the most out at once reached what the lab owns: a candidate to buy more of), and use by course.
+**Usage** (chart icon on the Storage tab) shows what was used most (archive and today's loans), what ran out (the most out at once reached what the lab owns: a candidate to buy more of), and use by course.
 
 ## "Book me": students request consultations by QR
 

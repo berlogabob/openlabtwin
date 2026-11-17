@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:office/data.dart';
 import 'package:office/scan_screen.dart';
+import 'package:office/places.dart';
 
 void main() {
   final refs = Refs(
@@ -51,5 +52,24 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Held by Alex'), findsOneWidget);
     expect(find.text('Item: Camera'), findsOneWidget);
+  });
+  testWidgets('place keeps maintenance in overflow', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: PlacePage(
+          refs: refs,
+          place: refs.places.first,
+          loader: () async => (<Rec>[], <Rec>[]),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Count this shelf'), findsOneWidget);
+    expect(find.text('Record movement'), findsNothing);
+    await tester.tap(find.byTooltip('More options'));
+    await tester.pumpAndSettle();
+    for (final name in ['Edit place', 'Add a place inside', 'Tag an item']) {
+      expect(find.text(name), findsOneWidget);
+    }
   });
 }

@@ -32,6 +32,40 @@ String? parsePs4Serial(String text) {
   return match == null ? null : normaliseSerial(match.group(1)!);
 }
 
+class Ps4Key {
+  final String? product;
+  final String unit;
+
+  const Ps4Key({required this.product, required this.unit});
+}
+
+/// Extract the product (when present) and unit digits from PS4 scans.
+Ps4Key? parsePs4Key(String raw) {
+  final console = RegExp(
+    r'(?:^|[^0-9])([0-9]{2})[-\s]?([0-9]{8})[-\s]?([0-9]{7})(?![0-9])',
+  ).firstMatch(raw);
+  if (console != null) {
+    return Ps4Key(product: console.group(2), unit: console.group(3)!);
+  }
+
+  final unit = RegExp(r'(?:^|[^A-Za-z0-9])S[0-9]{2}-([0-9]{7})(?![0-9])')
+      .firstMatch(raw);
+  if (unit == null) return null;
+  final product = RegExp(r'(?:^|[^A-Za-z0-9])P-([0-9]{8})(?![0-9])')
+      .firstMatch(raw);
+  return Ps4Key(product: product?.group(1), unit: unit.group(1)!);
+}
+
+bool _sameIdentity(String rawA, String rawB) {
+  final a = parsePs4Key(rawA);
+  final b = parsePs4Key(rawB);
+  if (a != null && b != null) {
+    return a.unit == b.unit &&
+        (a.product == null || b.product == null || a.product == b.product);
+  }
+  return normaliseSerial(rawA) == normaliseSerial(rawB);
+}
+
 /// Match boxes against consoles.
 ///
 /// Every serial is stripped of separators and upper-cased before comparison. Empty serials
@@ -45,67 +79,72 @@ String? parsePs4Serial(String text) {
 /// order.
 PairingResult matchPairs(List<String> boxSerials, List<String> consoleSerials) {
   final List<String> boxes = <String>[];
-  final Set<String> boxSeen = <String>{};
+  final List<String> boxRaw = <String>[];
   for (final String raw in boxSerials) {
     final String serial = normaliseSerial(raw);
     if (serial.isEmpty) continue;
-    if (boxSeen.contains(serial)) continue;
-    boxSeen.add(serial);
+    if (boxRaw.any((seen) => _sameIdentity(seen, raw))) continue;
+    boxRaw.add(raw);
     boxes.add(serial);
   }
 
   final List<String> consoles = <String>[];
-  final Set<String> consoleSeen = <String>{};
+  final List<String> consoleRaw = <String>[];
   for (final String raw in consoleSerials) {
     final String serial = normaliseSerial(raw);
     if (serial.isEmpty) continue;
-    if (consoleSeen.contains(serial)) continue;
-    consoleSeen.add(serial);
+    if (consoleRaw.any((seen) => _sameIdentity(seen, raw))) continue;
+    consoleRaw.add(raw);
     consoles.add(serial);
   }
 
   final List<String> duplicateBoxes = <String>[];
-  final Set<String> seenBoxes = <String>{};
+  final List<String> seenBoxes = <String>[];
   for (final String raw in boxSerials) {
     final String serial = normaliseSerial(raw);
     if (serial.isEmpty) continue;
-    if (!seenBoxes.add(serial)) {
+    if (seenBoxes.any((seen) => _sameIdentity(seen, raw))) {
       if (!duplicateBoxes.contains(serial)) {
         duplicateBoxes.add(serial);
       }
+    } else {
+      seenBoxes.add(raw);
     }
   }
 
   final List<String> duplicateConsoles = <String>[];
-  final Set<String> seenConsoles = <String>{};
+  final List<String> seenConsoles = <String>[];
   for (final String raw in consoleSerials) {
     final String serial = normaliseSerial(raw);
     if (serial.isEmpty) continue;
-    if (!seenConsoles.add(serial)) {
+    if (seenConsoles.any((seen) => _sameIdentity(seen, raw))) {
       if (!duplicateConsoles.contains(serial)) {
         duplicateConsoles.add(serial);
       }
+    } else {
+      seenConsoles.add(raw);
     }
   }
 
   final List<String> matched = <String>[];
-  for (final String box in boxes) {
-    if (consoleSeen.contains(box)) {
+  for (int i = 0; i < boxes.length; i++) {
+    if (consoleRaw.any((console) => _sameIdentity(boxRaw[i], console))) {
+      final String box = boxes[i];
       matched.add(box);
     }
   }
 
   final List<String> unmatchedBoxes = <String>[];
-  for (final String box in boxes) {
-    if (!consoleSeen.contains(box)) {
-      unmatchedBoxes.add(box);
+  for (int i = 0; i < boxes.length; i++) {
+    if (!consoleRaw.any((console) => _sameIdentity(boxRaw[i], console))) {
+      unmatchedBoxes.add(boxes[i]);
     }
   }
 
   final List<String> unmatchedConsoles = <String>[];
-  for (final String console in consoles) {
-    if (!boxSeen.contains(console)) {
-      unmatchedConsoles.add(console);
+  for (int i = 0; i < consoles.length; i++) {
+    if (!boxRaw.any((box) => _sameIdentity(box, consoleRaw[i]))) {
+      unmatchedConsoles.add(consoles[i]);
     }
   }
 

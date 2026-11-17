@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'bookings.dart';
 import 'data.dart';
+import 'item_page.dart';
 import 'places.dart';
 import 'scan_logic.dart';
 import 'scan_widget.dart';
@@ -94,7 +95,7 @@ class _ScanPageState extends State<ScanPage> {
                   children: [
                     Text('Not in the catalogue: $unknown'),
                     const Text(
-                      'To add it: open the place it is in and use Tag an item (QR icon), typing this code.',
+                      'To add it: open the place it is in and use More options → Tag an item, typing this code.',
                     ),
                     TextField(
                       controller: search,
@@ -144,17 +145,19 @@ class AssetPage extends StatefulWidget {
     required this.asset,
     this.loadPlaces,
     this.loadHistory,
+    this.save,
   });
   final Refs refs;
   final Rec asset;
   final Future<List<Rec>> Function()? loadPlaces, loadHistory;
+  final Future<void> Function(List<Rec>)? save;
 
   @override
   State<AssetPage> createState() => _AssetPageState();
 }
 
 class _AssetPageState extends State<AssetPage> {
-  late final Future<(List<Rec>, List<Rec>)> data = _load();
+  late Future<(List<Rec>, List<Rec>)> data = _load();
   Future<(List<Rec>, List<Rec>)> _load() async => (
     await (widget.loadPlaces ?? assetPlaces)(),
     await (widget.loadHistory ??
@@ -216,25 +219,45 @@ class _AssetPageState extends State<AssetPage> {
                       ? 'Nowhere recorded'
                       : 'Held by ${person(personId)}',
                 ),
+              Wrap(
+                spacing: 8,
+                children: [
+                  for (final action
+                      in personId != null
+                          ? ['Take back']
+                          : (place != null ? ['Hand out', 'Move'] : <String>[]))
+                    FilledButton(
+                      onPressed: () async {
+                        final item = refs.items
+                            .where((i) => i['id'] == asset['item_id'])
+                            .firstOrNull;
+                        if (item != null &&
+                            await everydayMovement(
+                              context,
+                              refs,
+                              item,
+                              action,
+                              asset: asset,
+                              location: location,
+                              history: history,
+                              save: widget.save,
+                            )) {
+                          setState(() {
+                            data = _load();
+                          });
+                        }
+                      },
+                      child: Text(action),
+                    ),
+                ],
+              ),
               const SizedBox(height: 16),
               Text('History', style: Theme.of(context).textTheme.titleMedium),
               if (history.isEmpty) const Text('No movements recorded.'),
               for (final row in history)
                 ListTile(
-                  title: Text(
-                    '${row['at'] == null ? '?' : DateTime.parse(row['at'] as String).toLocal().toString().substring(0, 16)} · ${row['kind']}',
-                  ),
-                  subtitle: Text(
-                    '${row['from_place'] != null
-                        ? refs.placeName(row['from_place'] as int)
-                        : row['kind'] == 'return' && row['person_id'] != null
-                        ? person(row['person_id'] as int)
-                        : '—'} → ${row['to_place'] != null
-                        ? refs.placeName(row['to_place'] as int)
-                        : row['person_id'] != null
-                        ? person(row['person_id'] as int)
-                        : '—'}${row['note'] == null ? '' : '\n${row['note']}'}',
-                  ),
+                  title: Text(movementWords(row, refs)),
+                  subtitle: Text('${row['at'] ?? ''}'),
                 ),
             ],
           );

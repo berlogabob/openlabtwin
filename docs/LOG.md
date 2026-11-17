@@ -2,6 +2,23 @@
 
 Git is the source of truth. Entries cover work committed in openlabtwin and videowall; decision links point to the records.
 
+## 2026-11-17 (Tuesday)
+
+- Added a browser test and tap/time measurement for the everyday storage jobs.
+
+- Rewrote the storage guide around finding, handing out, taking back, moving and counting shelves.
+- Added item and unit pages for everyday loans and moves, simplified place actions, and sorted tagged loans by recency.
+
+- Reorganized office navigation and added storage search, loans, attention and tools.
+
+- Added a read-only aggregate storage snapshot for thesis metrics, with optional JSONL append output.
+- Added nightly 04:00 storage metrics on the edge node, including tagged loan return times and movement channels.
+- Added database rules against issuing an already loaned tagged unit and recording a TyLog step twice.
+
+## 2026-11-13 (Friday)
+
+- TyLog equipment notes now normalize unit labels from item names, assign units to same-named assets by tag order, and retain `[n]` label aliases; unchanged exports stay byte-identical.
+
 ## 2026-11-12 (Thursday)
 
 - Added `scripts/read_labels.py` to read PS4 serials from label photos with the archive vision model, and let Pairing accept pasted serial lists.

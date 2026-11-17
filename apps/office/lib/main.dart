@@ -7,19 +7,38 @@ import 'bookings.dart';
 import 'data.dart';
 import 'places.dart';
 import 'scan_screen.dart';
+import 'storage_home.dart';
+import 'hours.dart';
+import 'ideas_screen.dart';
+import 'tv_screen.dart';
+import 'wall_screen.dart';
 
 const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
-const supabaseKey = String.fromEnvironment('SUPABASE_ANON_KEY'); // public by design: anon has no grants, RLS decides
+const supabaseKey = String.fromEnvironment(
+  'SUPABASE_ANON_KEY',
+); // public by design: anon has no grants, RLS decides
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // browser tests read the semantics tree; build with --dart-define=E2E=true (off in production)
-  if (const bool.fromEnvironment('E2E')) SemanticsBinding.instance.ensureSemantics();
+  if (const bool.fromEnvironment('E2E')) {
+    SemanticsBinding.instance.ensureSemantics();
+  }
   try {
-    await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseKey, httpClient: TimeoutClient());
+    await Supabase.initialize(
+      url: supabaseUrl,
+      publishableKey: supabaseKey,
+      httpClient: TimeoutClient(),
+    );
   } catch (e) {
     // a bad key or no network at boot must not leave a blank white page (lesson from UNIDCOM RIMS)
-    runApp(MaterialApp(home: Scaffold(body: Center(child: Text('Could not start the office: $e')))));
+    runApp(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(child: Text('Could not start the office: $e')),
+        ),
+      ),
+    );
     return;
   }
   runApp(const OfficeApp());
@@ -30,23 +49,25 @@ class OfficeApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-        title: 'Lab office',
-        theme: ThemeData(colorSchemeSeed: const Color(0xFFB3261E)),
-        // 24-hour clock everywhere, time pickers included, whatever the phone's locale says
-        builder: (context, child) =>
-            MediaQuery(data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true), child: child!),
-        home: StreamBuilder<AuthState>(
-          stream: db.auth.onAuthStateChange,
-          // QR links are kept through sign-in.
-          builder: (context, _) => db.auth.currentSession == null
-              ? const LoginPage()
-              : Uri.base.queryParameters['place'] != null
-                  ? PlaceLinkPage(code: Uri.base.queryParameters['place']!)
-                  : Uri.base.queryParameters['asset'] != null
-                      ? AssetLinkPage(tag: Uri.base.queryParameters['asset']!)
-                      : const BookingsPage(),
-        ),
-      );
+    title: 'Lab office',
+    theme: ThemeData(colorSchemeSeed: const Color(0xFFB3261E)),
+    // 24-hour clock everywhere, time pickers included, whatever the phone's locale says
+    builder: (context, child) => MediaQuery(
+      data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+      child: child!,
+    ),
+    home: StreamBuilder<AuthState>(
+      stream: db.auth.onAuthStateChange,
+      // QR links are kept through sign-in.
+      builder: (context, _) => db.auth.currentSession == null
+          ? const LoginPage()
+          : Uri.base.queryParameters['place'] != null
+          ? PlaceLinkPage(code: Uri.base.queryParameters['place']!)
+          : Uri.base.queryParameters['asset'] != null
+          ? AssetLinkPage(tag: Uri.base.queryParameters['asset']!)
+          : const OfficeHome(),
+    ),
+  );
 }
 
 class LoginPage extends StatefulWidget {
@@ -68,37 +89,159 @@ class _LoginPageState extends State<LoginPage> {
         shouldCreateUser: false, // staff accounts are created by an admin; nobody signs up here
         // Keep a scanned place or asset link through sign-in.
         emailRedirectTo: Uri.base
-            .replace(queryParameters: {for (final key in ['place', 'asset']) if (Uri.base.queryParameters[key] != null) key: Uri.base.queryParameters[key]!}, fragment: '')
+            .replace(
+              queryParameters: {
+                for (final key in ['place', 'asset'])
+                  if (Uri.base.queryParameters[key] != null)
+                    key: Uri.base.queryParameters[key]!,
+              },
+              fragment: '',
+            )
             .toString()
             .replaceAll(RegExp(r'[?#]+$'), ''),
       );
-      setState(() => message = 'Check your inbox: the link signs you in on this browser.');
+      setState(
+        () => message =
+            'Check your inbox: the link signs you in on this browser.',
+      );
     } on AuthException catch (e) {
-      setState(() => message = e.message.contains('not allowed') || e.statusCode == '422'
-          ? 'This email is not a lab staff account.'
-          : e.message);
+      setState(
+        () =>
+            message = e.message.contains('not allowed') || e.statusCode == '422'
+            ? 'This email is not a lab staff account.'
+            : e.message,
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        body: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 360),
-            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              Text('Lab office', style: Theme.of(context).textTheme.headlineMedium),
-              const SizedBox(height: 16),
-              TextField(
-                controller: email,
-                decoration: const InputDecoration(labelText: 'Staff email'),
-                keyboardType: TextInputType.emailAddress,
-                onSubmitted: (_) => _send(),
+    body: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 360),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Lab office',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: email,
+              decoration: const InputDecoration(labelText: 'Staff email'),
+              keyboardType: TextInputType.emailAddress,
+              onSubmitted: (_) => _send(),
+            ),
+            const SizedBox(height: 12),
+            FilledButton(
+              onPressed: _send,
+              child: const Text('Send sign-in link'),
+            ),
+            if (message != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Text(message!),
               ),
-              const SizedBox(height: 12),
-              FilledButton(onPressed: _send, child: const Text('Send sign-in link')),
-              if (message != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(message!)),
-            ]),
-          ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class OfficeHome extends StatefulWidget {
+  const OfficeHome({super.key});
+  @override
+  State<OfficeHome> createState() => _OfficeHomeState();
+}
+
+class _OfficeHomeState extends State<OfficeHome> {
+  late final Future<Refs> refs = loadRefs();
+  int selected = 0;
+  @override
+  Widget build(BuildContext context) => FutureBuilder<Refs>(
+    future: refs,
+    builder: (context, snap) {
+      if (snap.hasError) {
+        return Scaffold(
+          body: Center(child: Text('Could not load: ${snap.error}')),
+        );
+      }
+      if (!snap.hasData) {
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      }
+      final r = snap.data!;
+      return Scaffold(
+        body: IndexedStack(
+          index: selected,
+          children: [
+            BookingsPage(refs: r),
+            StorageHome(refs: r),
+            Scaffold(
+              appBar: AppBar(title: const Text('More')),
+              body: ListView(
+                children: [
+                  ListTile(
+                    title: const Text('TV'),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(builder: (_) => const TvScreen()),
+                    ),
+                  ),
+                  ListTile(
+                    title: const Text('Video wall'),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => const WallScreen(),
+                      ),
+                    ),
+                  ),
+                  ListTile(
+                    title: const Text('Ideas'),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => const IdeasScreen(),
+                      ),
+                    ),
+                  ),
+                  ListTile(
+                    title: const Text('Consultation hours'),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => HoursPage(refs: r),
+                      ),
+                    ),
+                  ),
+                  ListTile(
+                    title: const Text('Sign out'),
+                    onTap: () => db.auth.signOut(),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: selected,
+          onDestinationSelected: (v) => setState(() => selected = v),
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.calendar_today),
+              label: 'Bookings',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.inventory_2_outlined),
+              label: 'Storage',
+            ),
+            NavigationDestination(icon: Icon(Icons.more_horiz), label: 'More'),
+          ],
         ),
       );
+    },
+  );
 }

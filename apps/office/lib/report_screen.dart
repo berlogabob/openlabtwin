@@ -45,7 +45,7 @@ class _ReportScreenState extends State<ReportScreen> {
               Wrap(spacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
                 OutlinedButton(onPressed: () => _pick(true), child: Text('From ${_date(from)}')),
                 OutlinedButton(onPressed: () => _pick(false), child: Text('To ${_date(to)}')),
-                IconButton(tooltip: 'Reload', icon: const Icon(Icons.refresh), onPressed: () => setState(() => data = _load())),
+                IconButton(tooltip: 'Reload', icon: const Icon(Icons.refresh), onPressed: () => setState(() { data = _load(); })),
               ]),
               Padding(padding: const EdgeInsets.all(8), child: Text('${rows.length} requests, $outstanding outstanding')),
               Expanded(child: SingleChildScrollView(scrollDirection: Axis.horizontal, child: SingleChildScrollView(child: DataTable(

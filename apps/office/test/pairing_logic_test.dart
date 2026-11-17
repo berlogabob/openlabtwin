@@ -8,6 +8,16 @@ void main() {
     expect(parsePs4Serial('123456789012345678'), isNull);
     expect(parsePs4Serial('unreadable'), isNull);
   });
+  test('parses PS4 product and unit keys from labels and OCR', () {
+    expect(parsePs4Key('15-27452595-9784902')?.product, '27452595');
+    expect(parsePs4Key(' 15274525959784902 ')?.unit, '9784902');
+    expect(
+      parsePs4Key('EU8 CUH-2216A B01W\n220-240V\nP-27452595-L\nS01-9784862-U')?.unit,
+      '9784862',
+    );
+    expect(parsePs4Key('S01-9816817-0')?.product, isNull);
+    expect(parsePs4Key('noise only'), isNull);
+  });
   group('matchPairs', () {
     test('serial separators do not affect matching or duplicates', () {
       final result = matchPairs(
@@ -17,6 +27,68 @@ void main() {
       expect(result.matched, ['15274525959784902']);
       expect(result.duplicateBoxes, ['15274525959784902']);
       expect(normaliseSerial(' a-b.12 '), 'AB12');
+    });
+    test('PS4 boxes match consoles by unit and compatible product', () {
+      final result = matchPairs(
+        [
+          'EU8 CUH-2216A B01W\n220-240V\nP-27452595-L\nS01-9784864-U',
+          'P-27452595-L\nS01-9784902-U',
+          'P-27452595-L\nS01-9784904-U',
+          'P-27452595-L\nS01-9784888-U',
+          'P-27452595-L\nS01-9784900-U',
+          'P-27452595-L\nS01-9784924-U',
+          'S01-9816817-0',
+          'P-27452595-L\nS01-9784862-U',
+          'P-27452595-L\nS01-9784899-U',
+          'P-27452595-L\nS01-9784901-U',
+          'P-27452595-L\nS01-9784876-U',
+          'P-27452595-L\nS01-9784861-U',
+          'P-27452595-L\nS01-9784903-U',
+          'P-27452595-L\nS01-9784888-U',
+          'P-27452595-L\nS01-9784902-U',
+        ],
+        [
+          '15-27452595-9784863',
+          '15-27452595-9784904',
+          '15-27452595-9784902',
+          '15-27452595-9784888',
+          '15-27452595-9784886',
+          '15-27452595-9816817',
+          '15-27452595-9784864',
+          '15-27452595-9784900',
+          '15-27452595-9784923',
+          '15-27452595-9784925',
+          '15-27452595-9784924',
+          '03-27452439-5893834',
+          '03-27452573-6951476',
+          '02-27452437-1812762',
+          '15-27452595-9784902',
+          '15-27452595-9784904',
+          '15-27452595-9784888',
+          '03-27452439-5893834',
+          '15-27452595-9784863',
+          '03-27452573-6951476',
+          '15-27452595-9784886',
+        ],
+      );
+      expect(result.matched, hasLength(7));
+      expect(result.duplicateBoxes, hasLength(2));
+      expect(result.duplicateConsoles, hasLength(7));
+      expect(result.leftoverBoxes.length + result.assignments.length, 6);
+      expect(result.leftoverBoxes, isEmpty);
+      expect(result.assignments, hasLength(6));
+      expect(result.leftoverConsoles, hasLength(1));
+      expect(result.matched, hasLength(7));
+    });
+    test('different product does not match; unit-only box does', () {
+      expect(
+        matchPairs(['P-11111111-L\nS01-9784862-U'], ['15-27452595-9784862']).matched,
+        isEmpty,
+      );
+      expect(
+        matchPairs(['S01-9816817-0'], ['15-27452595-9816817']).matched,
+        hasLength(1),
+      );
     });
     test('all matched', () {
       final result = matchPairs(['A', 'B', 'C'], ['A', 'B', 'C']);

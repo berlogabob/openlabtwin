@@ -38,7 +38,7 @@ Staff ──email link──► apps/office (Flutter web) ──► Supabase (Po
 The tables are in `supabase/migrations/20260923120000_core_schema.sql`.
 
 - **places:** rooms and storage (`tier` fast or long), a tree through `parent_id` (room → cabinet → shelf → box). `iade_name` ties a room to the timetable's room name, and `public` decides whether it is ever exported. `code` (`R15-L-S3`: capitals, digits, dashes) is printed on the place's QR label and is the node name in the Godot twin, so it stays fixed once printed. `counted_at` is the last stocktake; empty means never counted.
-- **items** (consumable, portable, stationary), and **movements**, which is append-only: receive, move, issue, return, consume, adjust.
+- **items** (consumable, portable, stationary), and **movements**, which is append-only: receive, move, issue, return, consume, adjust; tagged units cannot be issued twice without a return, and `tylog:` notes are unique.
 - **stock** (view): the sum of movements per item and place. It is never stored.
 - **on_loan** (view): issued minus returned, per item and person.
 - **assets:** tagged items, one row each: legacy tags kept (`GS-031`, `LV-01`, `PF-136`), new ones `TL-0001` from a sequence; `serial`, `condition` (ok, broken, missing), `seen_at` (last ticked in a stocktake). A movement may name an asset (`movements.asset_id`, quantity 1, same item through a composite foreign key); **asset_place** (view) is each asset's latest movement, so where it is or who holds it. `movements.note` keeps provenance (`import: …`, `stocktake`, `tagged`).
@@ -117,3 +117,5 @@ This follows UNIDCOM RIMS, which learned the hard way that row-level security ha
 | 5 Thesis layer: demand forecast, Godot view | not started; scope depends on the thesis topic change |
 
 What's next is in [ROADMAP.md](ROADMAP.md). Deferred on purpose: RFID, procurement, professor and student sign-in, consultation self-booking, and local-first sync.
+
+The office home shares reference lists across Bookings and Storage tabs; More links to the other staff screens. Storage searches the catalogue and shows current loans and attention issues, with maintenance actions under Tools. Item and tagged-unit pages offer hand-out, take-back and move forms; place pages put counting first. Tagged loans sort by the asset-location timestamp; untagged loans have no timestamp and follow by item name.

@@ -19,7 +19,7 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Paper archive'), actions: [IconButton(tooltip: 'Reload', icon: const Icon(Icons.refresh), onPressed: () => setState(() => data = archiveSheets()))]),
+        appBar: AppBar(title: const Text('Paper archive'), actions: [IconButton(tooltip: 'Reload', icon: const Icon(Icons.refresh), onPressed: () => setState(() { data = archiveSheets(); }))]),
         body: FutureBuilder<List<Rec>>(
           future: data,
           builder: (context, snap) {
@@ -40,7 +40,7 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
                     subtitle: Text('${_photoDate(sheet['photo_at'])} · ${_extractedName(sheet)} · ${_lines(sheet).length} lines'),
                     onTap: () async {
                       if (await Navigator.of(context).push<bool>(MaterialPageRoute(builder: (_) => SheetPage(refs: widget.refs, sheet: sheet))) == true) {
-                        setState(() => data = archiveSheets());
+                        setState(() { data = archiveSheets(); });
                       }
                     },
                   ),

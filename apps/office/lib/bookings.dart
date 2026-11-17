@@ -2,13 +2,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import 'data.dart';
-import 'scan_screen.dart';
-import 'hours.dart';
-import 'ideas_screen.dart';
-import 'inventory.dart';
 import 'logic.dart';
-import 'tv_screen.dart';
-import 'wall_screen.dart';
 import 'pick.dart';
 
 const statusColors = {
@@ -21,7 +15,8 @@ const statusColors = {
 };
 
 class BookingsPage extends StatefulWidget {
-  const BookingsPage({super.key});
+  const BookingsPage({super.key, this.refs});
+  final Refs? refs;
 
   @override
   State<BookingsPage> createState() => _BookingsPageState();
@@ -30,7 +25,7 @@ class BookingsPage extends StatefulWidget {
 class _BookingsPageState extends State<BookingsPage> {
   late Future<(Refs, List<Activity>)> data = _load();
 
-  Future<(Refs, List<Activity>)> _load() async => (await loadRefs(), await upcoming());
+  Future<(Refs, List<Activity>)> _load() async => (widget.refs ?? await loadRefs(), await upcoming());
 
   Future<void> _open(Refs refs, Activity? a) async {
     final now = DateTime.now();
@@ -41,7 +36,7 @@ class _BookingsPageState extends State<BookingsPage> {
         activity: a ?? Activity(start: start, end: start.add(const Duration(hours: 2)), ownerStaffId: refs.me),
       ),
     ));
-    setState(() => data = _load());
+    setState(() { data = _load(); });
   }
 
   @override
@@ -51,36 +46,7 @@ class _BookingsPageState extends State<BookingsPage> {
           final loaded = snap.data;
           return Scaffold(
             appBar: AppBar(title: const Text('Lab bookings'), actions: [
-              ScanButton(refs: loaded?.$1),
-              IconButton(
-                tooltip: 'TV',
-                icon: const Icon(Icons.tv),
-                onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const TvScreen())),
-              ),
-              IconButton(
-                tooltip: 'Video wall',
-                icon: const Icon(Icons.view_module),
-                onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const WallScreen())),
-              ),
-              IconButton(
-                tooltip: 'Ideas',
-                icon: const Icon(Icons.lightbulb_outline),
-                onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const IdeasScreen())),
-              ),
-              if (loaded != null)
-                IconButton(
-                  tooltip: 'Consultation hours',
-                  icon: const Icon(Icons.schedule),
-                  onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => HoursPage(refs: loaded.$1))),
-                ),
-              if (loaded != null)
-                IconButton(
-                  tooltip: 'Inventory',
-                  icon: const Icon(Icons.inventory_2_outlined),
-                  onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => InventoryPage(refs: loaded.$1))),
-                ),
-              IconButton(tooltip: 'Reload', icon: const Icon(Icons.refresh), onPressed: () => setState(() => data = _load())),
-              IconButton(tooltip: 'Sign out', icon: const Icon(Icons.logout), onPressed: () => db.auth.signOut()),
+              IconButton(tooltip: 'Reload', icon: const Icon(Icons.refresh), onPressed: () => setState(() { data = _load(); })),
             ]),
             floatingActionButton: loaded == null
                 ? null
