@@ -10,6 +10,7 @@ Git is the source of truth. Entries cover work committed in openlabtwin and vide
 - Reorganized office navigation and added storage search, loans, attention and tools.
 
 - Added a read-only aggregate storage snapshot for thesis metrics, with optional JSONL append output.
+- Added nightly 04:00 storage metrics on the edge node, including tagged loan return times and movement channels.
 - Added database rules against issuing an already loaned tagged unit and recording a TyLog step twice.
 
 ## 2026-11-13 (Friday)

@@ -21,7 +21,7 @@ curl -fsSL https://raw.githubusercontent.com/berlogabob/openlabtwin/main/scripts
 5. **asks** for the Supabase service role key (hidden input) and writes `~/openlabtwin/.env` with mode 600;
 6. installs **Ollama** with `nomic-embed-text`, and `ornith-1.5:9b` only if the PC has at least 16 GB of RAM. Otherwise it tells you to set `IDEAS_MODEL` to a small model (for example `qwen2.5:3b`) or `OLLAMA_URL` to a machine that runs ornith. On sysVinit it also starts Ollama at boot;
 7. runs everything once: scrape, export, push if changed, backup, idea AI;
-8. installs the cron lines: publish every 10 minutes, scrape every 6 hours, idea AI every 15 minutes, back up nightly at 03:30.
+8. installs the cron lines: publish every 10 minutes, scrape every 6 hours, idea AI every 15 minutes, back up at 03:30, mirror at 03:45, and append the storage thesis metric at 04:00.
 
 Before running it, turn off sleep and suspend in MX's power settings.
 
@@ -101,6 +101,8 @@ Photos of the old A4 loan sheets go into `smb://192.168.1.131/archive` (live sin
 
 A read-only copy of the database in local Postgres 17 (Debian's `postgresql`, listening on localhost only; live since 2026-09-27), database `openlabtwin`. At 03:45, after the backup, `scripts/mirror.py` loads the newest backup folder: every table is dropped and recreated from its JSON (column types from the schema for the tables the views read, from the values for the rest), then `stock`, `on_loan` and `asset_place` are recreated. It fails, and logs to `~/mirror.log`, if any row count differs from its file. Setup step 10 installs Postgres, gives `TechLAB` a role and creates the database.
 
+At 04:00, `scripts/storage_snapshot.py` reads aggregate source rows over HTTPS and appends one counts-only JSON record to `~/storage_metrics.jsonl`. The `loans` metric covers tagged units and pairs each issue with the next return for that asset; movement channels map `tylog:*` to `tylog`, `stocktake` and unprefixed office form notes to `office`, and other note prefixes to themselves. Errors go to `~/storage_metrics.log`.
+
 Query it on the node with `psql openlabtwin`, for example `select * from stock` or `select code, name from places order by code`. Nothing writes to it except the nightly load, so any change made there is gone the next morning. It is also the tested restore: if the mirror loads, the backup is whole.
 
 ## What it does
@@ -112,6 +114,7 @@ Query it on the node with `psql openlabtwin`, for example `select * from stock` 
 - `tail ~/publish.log`: one block every 10 minutes, ending in `no changes` or `pushed`.
 - `ls ~/openlabtwin-backups`: a new dated folder every morning.
 - `tail ~/mirror.log`: `mirrored YYYY-MM-DD: places …, items …` every morning.
+- `tail -1 ~/storage_metrics.jsonl`: the latest counts-only thesis storage snapshot.
 - `tail ~/ideas_ai.log`: `normalised N, approved M, matches K` every 15 minutes.
 - Hardware check before choosing the model: `free -h` (RAM), `nproc` (cores), `lspci | grep -i nvidia` (GPU). Ornith needs about 8 GB free; on a CPU it takes 1–3 minutes per idea.
 - **Idea AI server:** `set -a; . ./.env; set +a; uv run python scripts/ideas_ai.py --check` runs one chat and one embedding against the configured servers (Studio for chat, the node's Ollama for embeddings) and writes nothing.
