@@ -5,6 +5,7 @@ Git is the source of truth. Entries cover work committed in openlabtwin and vide
 ## 2026-11-17 (Tuesday)
 
 - Added a read-only aggregate storage snapshot for thesis metrics, with optional JSONL append output.
+- Added database rules against issuing an already loaned tagged unit and recording a TyLog step twice.
 
 ## 2026-11-13 (Friday)
 
