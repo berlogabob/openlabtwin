@@ -29,6 +29,7 @@ def photos(path, items):
         by_name[key] = item
     wb = openpyxl.load_workbook(path, data_only=True)
     seen = set()
+    cells = {}
     result = []
     for sheet in SHEETS:
         ws = wb[sheet]
@@ -53,7 +54,12 @@ def photos(path, items):
                 thumb = io.BytesIO()
                 picture.save(thumb, format='JPEG', quality=80)
             slug = re.sub(r'[^a-z0-9]+', '-', norm(sheet)).strip('-')
-            dest = f"items/{item['id']}/import-{slug}-r{row}-c{col}.jpg" if item else None
+            dest = None
+            if item:
+                # A cell can hold several photos: the 2nd and later get -2, -3 so none overwrites another.
+                base = f"items/{item['id']}/import-{slug}-r{row}-c{col}"
+                cells[base] = cells.get(base, 0) + 1
+                dest = base + (f"-{cells[base]}" if cells[base] > 1 else '') + '.jpg'
             result.append({'sheet': sheet, 'row': row, 'col': col, 'item': item, 'path': dest, 'jpeg': output.getvalue(), 'thumb': thumb.getvalue()})
     return result
 

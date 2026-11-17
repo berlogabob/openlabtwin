@@ -17,6 +17,8 @@ with tempfile.TemporaryDirectory() as temp:
     root = Path(temp)
     img = root / 'image.png'
     Image.new('RGB', (2000, 1000), 'red').save(img)
+    blue = root / 'blue.png'
+    Image.new('RGB', (2000, 1000), 'blue').save(blue)
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = 'Inventario Sala 15'
@@ -24,6 +26,7 @@ with tempfile.TemporaryDirectory() as temp:
     ws['C3'] = 'Cabos Ethernet'
     ws.add_image(XLImage(img), 'H2')
     ws.add_image(XLImage(img), 'H3')
+    ws.add_image(XLImage(blue), 'H2')  # a second, different photo in the same cell
     wb.create_sheet('Sala 1314')
     furniture = wb.create_sheet('Inventario Mobiliario')
     furniture['B4'] = 'Item'
@@ -35,10 +38,11 @@ with tempfile.TemporaryDirectory() as temp:
     items_file = root / 'items.json'
     items_file.write_text(json.dumps(items))
     output = subprocess.check_output([sys.executable, 'scripts/import_photos.py', str(xlsx), '--items-json', str(items_file)], text=True)
-    assert '42 Cabos ethernet' in output and 'matched: 2, unmatched: 0, items with photos: 2' in output
+    assert '42 Cabos ethernet' in output and 'matched: 3, unmatched: 0, items with photos: 2' in output
     pictures = imp.photos(xlsx, items)
-    assert len(pictures) == 2
-    assert pictures[1]['path'] == 'items/43/import-inventario-mobiliario-r3-c4.jpg'
+    assert len(pictures) == 3
+    assert pictures[1]['path'] == 'items/42/import-inventario-sala-15-r2-c8-2.jpg'
+    assert pictures[2]['path'] == 'items/43/import-inventario-mobiliario-r3-c4.jpg'
     assert Image.open(io.BytesIO(pictures[0]['jpeg'])).size == (1600, 800)
     assert Image.open(io.BytesIO(pictures[0]['thumb'])).size == (400, 200)
     uploaded, rows = [], []
