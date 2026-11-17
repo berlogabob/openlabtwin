@@ -4,6 +4,7 @@ Git is the source of truth. Entries cover work committed in openlabtwin and vide
 
 ## 2026-11-17 (Tuesday)
 
+- Rewrote the storage guide around finding, handing out, taking back, moving and counting shelves.
 - Added item and unit pages for everyday loans and moves, simplified place actions, and sorted tagged loans by recency.
 
 - Reorganized office navigation and added storage search, loans, attention and tools.

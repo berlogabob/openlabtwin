@@ -37,11 +37,40 @@ Save the booking first. Then:
 
 ## Storage
 
-The **Storage** tab searches items, tags, places and people. **Out now** shows tagged loans newest first, followed by other loans by item name. Open an item to see where it is, who has it, its units and recent history. Use **Hand out**, **Take back** or **Move** for everyday work. On a tagged unit's page, the available buttons reflect whether it is on a shelf or held by someone; taking it back suggests the shelf it came from. The item's request switch and spreadsheet note are at the bottom of its page.
+Things are in the **Storage** tab. Everyday work is on an item's, unit's or place's page; **Tools** holds rare work such as corrections and arrivals.
 
-Every long list in the office (items, places, people) is a search field: type part of a name, pick from the list, and **×** clears it. The public site works the same way.
+### Find
 
-**Storage → Tools → Record movement** covers other corrections and arrivals:
+1. In **Storage**, type in **Find an item, tag, place or person**. Choose an item, tagged unit or place from the results. When the field is empty, **Out now** lists loans; **Needs attention** opens the issues list.
+2. Or tap **Scan** and scan a place or tagged item's label. A shelf opens its contents; a tagged unit opens its current place or holder and recent movements.
+
+### Hand out
+
+1. Open an item from search, or scan its tagged unit. Tap **Hand out**. On an item page, choose **From**, **Person** (or **Add person**), and **Quantity**; on a tagged unit page, the office records that unit.
+2. Tap **Confirm**. A tagged unit already out cannot be handed out again. The office refuses the second loan and says who has it; the database rule enforces this too.
+
+### Take back
+
+1. Open the item or scan the tagged unit, then tap **Take back**. For untagged stock choose **Holder** and **To**; for a tagged unit, **To** starts at the shelf it came from.
+2. Set **Quantity** for untagged stock, then tap **Confirm**. The tagged unit is recorded as one.
+
+### Move
+
+1. Open an item from search, or scan a tagged unit that is on a shelf. Tap **Move**.
+2. Choose **From** and **To**; set **Quantity** for untagged stock. Tap **Confirm**. A tagged unit moves as one.
+
+### Count a shelf
+
+1. Open a place from search or scan its label, then tap **Count this shelf**. Type the actual quantity for each untagged item.
+2. Tick each tagged item you can see. Unticked ones are marked **missing**.
+3. For a tagged unit here but not listed, enter its tag or serial in **Found a tagged item that is not listed? Its tag or serial** and tap **Found here**. Or use the scan button beside it to scan several items in a row. The unit is moved here and ticked.
+4. Tap **Save count**. Differences are recorded as adjust movements marked “stocktake”, and the place shows today's date. A tagged item you did not find stays in stock, marked missing, until a later count finds it.
+
+If an untagged item is here but not on the list, cancel the count. Open **Tools** → **Record movement**, receive it into the place, then count again.
+
+### Corrections and arrivals (Tools → Record movement)
+
+Use **Record movement** for other corrections and arrivals:
 
 | Kind | Meaning |
 |---|---|
@@ -58,7 +87,7 @@ For a tagged item (a console, a headset, a lab PC), pick it in **Tagged one** af
 
 ### Pair PlayStation boxes with consoles
 
-In Storage, open **Tools** → **Pair boxes and consoles**. Scan or type all box serials, then all console serials; you can paste a list separated by commas or whitespace. Tap a scanned entry to remove it. Serial matching ignores punctuation and letter case. Review matches, moves, leftovers and repeated scans. **Download CSV** saves the results. **Print stickers** downloads an HTML page: open it and print it on A4; stickers are only for consoles that need moving. The pairing stays in the browser and does not change inventory records.
+In **Storage**, open **Tools** → **Pair boxes and consoles**. Scan or type all box serials, then all console serials; you can paste a list separated by commas or whitespace. Tap a scanned entry to remove it. Serial matching ignores punctuation and letter case. Review matches, moves, leftovers and repeated scans. **Download CSV** saves the results. **Print stickers** downloads an HTML page: open it and print it on A4; stickers are only for consoles that need moving. The pairing stays in the browser and does not change inventory records.
 
 ### Places and QR labels
 
@@ -67,19 +96,9 @@ In Storage, open **Tools** → **Pair boxes and consoles**. Scan or type all box
 On a place's screen:
 - **what should be here:** each item's quantity (and how many of those are untagged), then the tagged items with their condition. Tap a tagged item to open its unit page, or use **Condition** to mark it ok, broken or missing;
 - **Move** on an item row starts from this place;
-- **More options → Edit place** changes the name, code, tier or where it sits. Don't change a code once its label is printed: the label and the Godot twin both use it;
-- **More options → Add a place inside**, for example the racks and shelves on the -2 floor: `B2-R1`, then `B2-R1-S1`;
-- **More options → Tag an item**: give one of the items here a tag. Leave the tag empty for the next `TL-` number, or type its old tag (`GS-031`). Then print its label.
-
-### Stocktake: count a place
-
-The spreadsheet from the previous team isn't trusted, so every place starts as **never counted**. To count one, open it (scan its label) and tap **Count this shelf**:
-1. Type how many of each untagged item are really there.
-2. Tick every tagged item you can see. Unticked ones are marked **missing**.
-3. A tagged item that's here but not on the list (recorded on another shelf, still marked as lent, or never placed): type its tag or serial under **Found a tagged item that is not listed?** and tap **Found here**, or use the scan button beside it to scan several items in a row. It's moved here and ticked.
-4. **Save count.** The differences are recorded as adjust movements (marked "stocktake"), and the place shows today's date. A tagged item you didn't find stays in the stock, marked missing, until a later count ticks it.
-
-Something that's here but not on the list: cancel the count, open Storage → Tools → **Record movement** → receive, then count.
+- **More options** → **Edit place** changes the name, code, tier or where it sits. Don't change a code once its label is printed: the label and the Godot twin both use it;
+- **More options** → **Add a place inside**, for example the racks and shelves on the -2 floor: `B2-R1`, then `B2-R1-S1`;
+- **More options** → **Tag an item**: give one of the items here a tag. Leave the tag empty for the next `TL-` number, or type its old tag (`GS-031`). Then print its label.
 
 ### Needs attention
 
@@ -95,21 +114,7 @@ Use **Scan** in bookings or inventory to use the camera, USB scanner or typed co
 
 ## Find an item, hand it out, take it back (one page for teachers)
 
-You need your phone and your staff sign-in. Nothing is typed twice: the label on the item or the shelf does the finding.
-
-**Find an item.**
-1. Open the office on your phone and tap **Scan**. Point the camera at the item's QR label (or the shelf's label if you only know where it should be). No label: tap **Storage** and type part of the name in the search field.
-2. A shelf opens with what should be there; an item opens with where it is now, or who holds it, and its last movements. If it is not where the office says, scan the shelf you found it on and use **Found a tagged item** under **Count** ([Stocktake](#stocktake-count-a-place)).
-
-**Hand it out.**
-1. Scan the item's label, then **Record movement**, kind **issue**.
-2. Pick the person (or add them) and write the reason in the note ("class of ...", "take-home"). Check the date, then save.
-3. For a whole class kit use **Issue kit** on the booking instead ([Equipment for a booking](#equipment-for-a-booking)).
-
-**Take it back.**
-1. Scan the item's label, **Record movement**, kind **return**. Pick the shelf it goes onto (scan the shelf label if unsure) and save.
-2. If it came back broken, open the item, mark it **broken**, and say so in the note; it then shows in **Needs attention**.
-3. A mistake is never edited: record an **adjust** or a new movement, so the history stays true.
+Use [Find](#find), [Hand out](#hand-out), and [Take back](#take-back) under [Storage](#storage). For a whole class kit, use [Issue kit](#equipment-for-a-booking) on the booking.
 
 ## Equipment requests (by QR or link)
 
