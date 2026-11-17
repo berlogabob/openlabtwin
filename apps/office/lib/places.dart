@@ -715,8 +715,8 @@ class PlaceLinkPage extends StatelessWidget {
 
 Future<void> changeCondition(BuildContext context, Rec asset, {
   Future<void> Function(List<int>, Rec)? update,
-  Future<Uint8List?> Function()? pick,
-  Future<void> Function({required int itemId, int? assetId, required Uint8List bytes, required String state, String? note})? savePhoto,
+  Future<({Uint8List full, Uint8List thumb})?> Function()? pick,
+  Future<void> Function({required int itemId, int? assetId, required Uint8List bytes, Uint8List? thumb, required String state, String? note})? savePhoto,
 }) async {
   final condition = await showDialog<String>(context: context, builder: (c) => SimpleDialog(
     title: Text('${asset['tag']} is…'),
@@ -736,8 +736,8 @@ Future<void> changeCondition(BuildContext context, Rec asset, {
       ],
     ));
     if (take == true) {
-      final bytes = await (pick ?? pickPhoto)();
-      if (bytes != null) await (savePhoto ?? addItemPhoto)(itemId: asset['item_id'] as int, assetId: asset['id'] as int, bytes: bytes, state: condition);
+      final picked = await (pick ?? pickPhoto)();
+      if (picked != null) await (savePhoto ?? addItemPhoto)(itemId: asset['item_id'] as int, assetId: asset['id'] as int, bytes: picked.full, thumb: picked.thumb, state: condition);
     }
   } catch (e) {
     if (context.mounted) say(context, 'Could not save: $e');
