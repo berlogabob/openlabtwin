@@ -2,6 +2,10 @@
 
 What's next, in rough order. Done work moves to the status table in [ARCHITECTURE.md](ARCHITECTURE.md#status); this file holds only what is still open. Update it in the same commit that finishes or adds an item.
 
+## Next: storage rebuild (Wave 36)
+
+Tracker: TyLog `docs/plans/activity-plan.md` § Wave 36 (branch `storage`): a storage office organised around jobs, a DB double-loan rule, real stocktakes, the TyLog loan bridge, and thesis metrics. PLAN-loans A0, A3 and A4 moved there.
+
 ## Next: lab loans in natural language
 
 Tracker: [PLAN-loans.md](PLAN-loans.md) (branch `loans`): addressed storage cells, PS4 pairing key and import, staff guide, and the catalogue export that feeds TyLog.
