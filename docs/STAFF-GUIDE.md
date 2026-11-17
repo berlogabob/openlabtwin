@@ -37,11 +37,11 @@ Save the booking first. Then:
 
 ## Storage
 
-The **Storage** tab shows every item: how many are in each place, who has some on loan, and the total. Items with nothing left (all used up, broken and taken apart, given away) are hidden; **Show items with nothing left** brings them back. To take something out for good, record a **consume** with a note (for example "disassembled: broken"); its history stays.
+The **Storage** tab searches items, tags, places and people. **Out now** shows tagged loans newest first, followed by other loans by item name. Open an item to see where it is, who has it, its units and recent history. Use **Hand out**, **Take back** or **Move** for everyday work. On a tagged unit's page, the available buttons reflect whether it is on a shelf or held by someone; taking it back suggests the shelf it came from. The item's request switch and spreadsheet note are at the bottom of its page.
 
 Every long list in the office (items, places, people) is a search field: type part of a name, pick from the list, and **×** clears it. The public site works the same way.
 
-**Record movement** covers everything else:
+**Storage → Tools → Record movement** covers other corrections and arrivals:
 
 | Kind | Meaning |
 |---|---|
@@ -65,21 +65,21 @@ In Storage, open **Tools** → **Pair boxes and consoles**. Scan or type all box
 **Storage** → **Tools** → **Places** lists every room, cabinet, shelf and box, indented, with its code, how many items it holds and when it was last counted. Every place has a QR label. Scanning it with your phone opens that place in the office. If you're signed out, sign in: the email link opens that same place.
 
 On a place's screen:
-- **what should be here:** each item's quantity (and how many of those are untagged), then the tagged items with their condition. Tap a tagged item to mark it ok, broken or missing;
-- **Record movement** starts from this place;
-- **Edit** (pencil) changes the name, code, tier or where it sits. Don't change a code once its label is printed: the label and the Godot twin both use it;
-- **Add a place inside** (folder icon), for example the racks and shelves on the -2 floor: `B2-R1`, then `B2-R1-S1`;
-- **Tag an item** (QR icon): give one of the items here a tag. Leave the tag empty for the next `TL-` number, or type its old tag (`GS-031`). Then print its label.
+- **what should be here:** each item's quantity (and how many of those are untagged), then the tagged items with their condition. Tap a tagged item to open its unit page, or use **Condition** to mark it ok, broken or missing;
+- **Move** on an item row starts from this place;
+- **More options → Edit place** changes the name, code, tier or where it sits. Don't change a code once its label is printed: the label and the Godot twin both use it;
+- **More options → Add a place inside**, for example the racks and shelves on the -2 floor: `B2-R1`, then `B2-R1-S1`;
+- **More options → Tag an item**: give one of the items here a tag. Leave the tag empty for the next `TL-` number, or type its old tag (`GS-031`). Then print its label.
 
 ### Stocktake: count a place
 
-The spreadsheet from the previous team isn't trusted, so every place starts as **never counted**. To count one, open it (scan its label) and tap **Count**:
+The spreadsheet from the previous team isn't trusted, so every place starts as **never counted**. To count one, open it (scan its label) and tap **Count this shelf**:
 1. Type how many of each untagged item are really there.
 2. Tick every tagged item you can see. Unticked ones are marked **missing**.
 3. A tagged item that's here but not on the list (recorded on another shelf, still marked as lent, or never placed): type its tag or serial under **Found a tagged item that is not listed?** and tap **Found here**, or use the scan button beside it to scan several items in a row. It's moved here and ticked.
 4. **Save count.** The differences are recorded as adjust movements (marked "stocktake"), and the place shows today's date. A tagged item you didn't find stays in the stock, marked missing, until a later count ticks it.
 
-Something that's here but not on the list: cancel the count, **Record movement** → receive, then count.
+Something that's here but not on the list: cancel the count, open Storage → Tools → **Record movement** → receive, then count.
 
 ### Needs attention
 

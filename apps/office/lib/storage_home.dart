@@ -1,7 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import 'data.dart';
-import 'inventory.dart';
+import 'item_page.dart';
 import 'places.dart';
 import 'scan_logic.dart';
 import 'scan_screen.dart';
@@ -41,7 +41,9 @@ class StorageHome extends StatefulWidget {
 class _StorageHomeState extends State<StorageHome> {
   late Future<StorageRows> data = (widget.loader ?? _load)();
   String query = '';
-  void reload() => setState(() => data = (widget.loader ?? _load)());
+  void reload() => setState(() {
+    data = (widget.loader ?? _load)();
+  });
   Future<void> openCode(String code) async {
     final result = resolveCode(code, widget.refs.places, widget.refs.assets);
     if (result.kind == ScanKind.unknown) return;
@@ -92,7 +94,7 @@ class _StorageHomeState extends State<StorageHome> {
             return const Center(child: CircularProgressIndicator());
           }
           final (loans, locations, issues) = snap.data!;
-          final rows = <(int?, int?, String?, num)>[
+          final rows = <(int?, int?, String?, num, String?)>[
             for (final l in loans)
               if ((l['qty'] as num) -
                       locations
@@ -123,6 +125,7 @@ class _StorageHomeState extends State<StorageHome> {
                                 ),
                           )
                           .length,
+                  null,
                 ),
             for (final w in locations)
               if (w['person_id'] != null)
@@ -133,15 +136,37 @@ class _StorageHomeState extends State<StorageHome> {
                       a['item_id'] as int?,
                       a['tag'] as String?,
                       1,
+                      w['at'] as String?,
                     ),
           ];
+          rows.sort((a, b) {
+            if (a.$3 != null && b.$3 == null) return -1;
+            if (a.$3 == null && b.$3 != null) return 1;
+            if (a.$3 != null) return (b.$5 ?? '').compareTo(a.$5 ?? '');
+            return (refs.itemNames[a.$2] ?? '').compareTo(
+              refs.itemNames[b.$2] ?? '',
+            );
+          });
+          Future<void> openItem(int? id) async {
+            final item = refs.items.where((i) => i['id'] == id).firstOrNull;
+            if (item == null) return;
+            await Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                builder: (_) => ItemPage(refs: refs, item: item),
+              ),
+            );
+            if (mounted) reload();
+          }
+
           String person(int? id) =>
               refs.people
                   .where((p) => p['id'] == id)
                   .firstOrNull?['name']
                   ?.toString() ??
               '?';
-          Widget row((int?, int?, String?, num) r) => ListTile(
+          Widget row((int?, int?, String?, num, String?) r) => ListTile(
+            onTap: () => openItem(r.$2),
             title: Text(
               '${person(r.$1)} · ${refs.itemNames[r.$2] ?? '?'}${r.$3 == null ? ' · ${r.$4}' : ' · ${r.$3}'}',
             ),
@@ -184,7 +209,7 @@ class _StorageHomeState extends State<StorageHome> {
                 for (final i in refs.items.where((i) => matches(i['name'])))
                   ListTile(
                     title: Text('${i['name']}'),
-                    onTap: () => showItem(context, i),
+                    onTap: () => openItem(i['id'] as int),
                   ),
                 const ListTile(title: Text('Tagged units')),
                 for (final a in refs.assets.where(

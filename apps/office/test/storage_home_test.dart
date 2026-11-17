@@ -51,7 +51,10 @@ void main() {
     ]) {
       await tester.enterText(field, query);
       await tester.pumpAndSettle();
-      expect(find.descendant(of: find.byType(ListTile), matching: find.text(result)), findsOneWidget);
+      expect(
+        find.descendant(of: find.byType(ListTile), matching: find.text(result)),
+        findsOneWidget,
+      );
     }
   });
   testWidgets('shows loans, attention count and tools', (tester) async {
@@ -87,5 +90,61 @@ void main() {
     expect(find.byTooltip('Reload'), findsOneWidget);
     expect(find.byTooltip('TV'), findsNothing);
     expect(find.byTooltip('Inventory'), findsNothing);
+  });
+  testWidgets('out now puts newest tagged units before untagged items', (
+    tester,
+  ) async {
+    final r = Refs(
+      [],
+      [
+        {'id': 2, 'name': 'Ana'},
+      ],
+      [],
+      [
+        {'id': 3, 'name': 'Zebra'},
+        {'id': 6, 'name': 'Alpha'},
+      ],
+      [
+        {'id': 4, 'item_id': 3, 'tag': 'OLD'},
+        {'id': 5, 'item_id': 3, 'tag': 'NEW'},
+      ],
+      null,
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: StorageHome(
+          refs: r,
+          loader: () async => (
+            [
+              {'person_id': 2, 'item_id': 3, 'qty': 3},
+              {'person_id': 2, 'item_id': 6, 'qty': 1},
+            ],
+            [
+              {'person_id': 2, 'asset_id': 4, 'at': '2026-01-01'},
+              {'person_id': 2, 'asset_id': 5, 'at': '2026-11-01'},
+            ],
+            <Rec>[],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final names = tester
+        .widgetList<ListTile>(find.byType(ListTile))
+        .map((x) => (x.title as Text?)?.data)
+        .whereType<String>()
+        .toList();
+    expect(
+      names.indexOf('Ana · Zebra · NEW'),
+      lessThan(names.indexOf('Ana · Zebra · OLD')),
+    );
+    expect(
+      names.indexOf('Ana · Zebra · OLD'),
+      lessThan(names.indexOf('Ana · Alpha · 1')),
+    );
+    expect(
+      names.indexOf('Ana · Alpha · 1'),
+      lessThan(names.indexOf('Ana · Zebra · 1')),
+    );
   });
 }

@@ -36,7 +36,7 @@ class _BookingsPageState extends State<BookingsPage> {
         activity: a ?? Activity(start: start, end: start.add(const Duration(hours: 2)), ownerStaffId: refs.me),
       ),
     ));
-    setState(() => data = _load());
+    setState(() { data = _load(); });
   }
 
   @override
@@ -46,7 +46,7 @@ class _BookingsPageState extends State<BookingsPage> {
           final loaded = snap.data;
           return Scaffold(
             appBar: AppBar(title: const Text('Lab bookings'), actions: [
-              IconButton(tooltip: 'Reload', icon: const Icon(Icons.refresh), onPressed: () => setState(() => data = _load())),
+              IconButton(tooltip: 'Reload', icon: const Icon(Icons.refresh), onPressed: () => setState(() { data = _load(); })),
             ]),
             floatingActionButton: loaded == null
                 ? null

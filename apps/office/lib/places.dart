@@ -1,4 +1,5 @@
 import 'pairing_logic.dart' show normaliseSerial;
+
 // Places: the storage tree (rooms, cabinets, shelves, boxes), each place's contents, and the stocktake.
 // A place's code is on its QR label (office/?place=CODE) and is the node name in the Godot twin: keep it once printed.
 import 'package:material_ui/material_ui.dart';
@@ -6,14 +7,23 @@ import 'package:material_ui/material_ui.dart';
 import 'bookings.dart';
 import 'data.dart';
 import 'inventory.dart';
+import 'item_page.dart';
 import 'logic.dart';
 import 'pick.dart';
 import 'scan_widget.dart';
+import 'scan_screen.dart';
 
-String _day(Object? at) => at == null ? 'never counted' : 'counted ${isoDate(DateTime.parse(at as String).toLocal())}';
+String _day(Object? at) => at == null
+    ? 'never counted'
+    : 'counted ${isoDate(DateTime.parse(at as String).toLocal())}';
 
 /// Add a place (parent given) or edit one. Returns the saved row.
-Future<Rec?> editPlace(BuildContext context, Refs refs, {Rec? place, int? parentId}) async {
+Future<Rec?> editPlace(
+  BuildContext context,
+  Refs refs, {
+  Rec? place,
+  int? parentId,
+}) async {
   final name = TextEditingController(text: place?['name'] as String? ?? '');
   final code = TextEditingController(text: place?['code'] as String? ?? '');
   var tier = place?['tier'] as String? ?? 'fast';
@@ -30,14 +40,18 @@ Future<Rec?> editPlace(BuildContext context, Refs refs, {Rec? place, int? parent
             children: [
               TextField(
                 controller: name,
-                decoration: const InputDecoration(labelText: 'Name (e.g. Rack 1, shelf 2)'),
+                decoration: const InputDecoration(
+                  labelText: 'Name (e.g. Rack 1, shelf 2)',
+                ),
               ),
               TextField(
                 controller: code,
                 textCapitalization: TextCapitalization.characters,
                 decoration: InputDecoration(
                   labelText: 'Code (e.g. B2-R1-S2)',
-                  helperText: place?['code'] == null ? null : 'Changing it breaks printed labels and the Godot link.',
+                  helperText: place?['code'] == null
+                      ? null
+                      : 'Changing it breaks printed labels and the Godot link.',
                 ),
               ),
               if (!isRoom)
@@ -45,8 +59,14 @@ Future<Rec?> editPlace(BuildContext context, Refs refs, {Rec? place, int? parent
                   value: tier,
                   isExpanded: true,
                   items: const [
-                    DropdownMenuItem(value: 'fast', child: Text('fast (everyday storage)')),
-                    DropdownMenuItem(value: 'long', child: Text('long (-2 floor, long-term)')),
+                    DropdownMenuItem(
+                      value: 'fast',
+                      child: Text('fast (everyday storage)'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'long',
+                      child: Text('long (-2 floor, long-term)'),
+                    ),
                   ],
                   onChanged: (v) => set(() => tier = v!),
                 ),
@@ -56,7 +76,8 @@ Future<Rec?> editPlace(BuildContext context, Refs refs, {Rec? place, int? parent
                 nullText: 'Top level',
                 options: [
                   for (final (p, _) in placeTree(refs.places))
-                    if (p['id'] != place?['id']) (p['id'] as int, refs.placeName(p['id'] as int)),
+                    if (p['id'] != place?['id'])
+                      (p['id'] as int, refs.placeName(p['id'] as int)),
                 ],
                 onChanged: (v) => set(() => parent = v),
               ),
@@ -64,8 +85,14 @@ Future<Rec?> editPlace(BuildContext context, Refs refs, {Rec? place, int? parent
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Save')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Save'),
+          ),
         ],
       ),
     ),
@@ -114,7 +141,11 @@ class _PlacesPageState extends State<PlacesPage> {
     appBar: AppBar(title: const Text('Places')),
     floatingActionButton: FloatingActionButton.extended(
       onPressed: () async {
-        if (await editPlace(context, refs) != null) setState(() => data = stock());
+        if (await editPlace(context, refs) != null) {
+          setState(() {
+            data = stock();
+          });
+        }
       },
       icon: const Icon(Icons.add),
       label: const Text('Add place'),
@@ -122,14 +153,21 @@ class _PlacesPageState extends State<PlacesPage> {
     body: FutureBuilder(
       future: data,
       builder: (context, snap) {
-        if (snap.hasError) return Center(child: Text('Could not load: ${snap.error}'));
+        if (snap.hasError) {
+          return Center(child: Text('Could not load: ${snap.error}'));
+        }
         final rows = snap.data;
-        if (rows == null) return const Center(child: CircularProgressIndicator());
+        if (rows == null) {
+          return const Center(child: CircularProgressIndicator());
+        }
         return ListView(
           children: [
             for (final (p, depth) in placeTree(refs.places))
               ListTile(
-                contentPadding: EdgeInsets.only(left: 16.0 + 20 * depth, right: 16),
+                contentPadding: EdgeInsets.only(
+                  left: 16.0 + 20 * depth,
+                  right: 16,
+                ),
                 title: Text(refs.placeName(p['id'] as int)),
                 subtitle: Text(
                   [
@@ -144,7 +182,9 @@ class _PlacesPageState extends State<PlacesPage> {
                       builder: (_) => PlacePage(refs: refs, place: p),
                     ),
                   );
-                  setState(() => data = stock());
+                  setState(() {
+                    data = stock();
+                  });
                 },
               ),
           ],
@@ -156,9 +196,15 @@ class _PlacesPageState extends State<PlacesPage> {
 
 /// One place: what should be here, the stocktake, and movements from here.
 class PlacePage extends StatefulWidget {
-  const PlacePage({super.key, required this.refs, required this.place});
+  const PlacePage({
+    super.key,
+    required this.refs,
+    required this.place,
+    this.loader,
+  });
   final Refs refs;
   final Rec place;
+  final Future<(List<Rec>, List<Rec>)> Function()? loader;
 
   @override
   State<PlacePage> createState() => _PlacePageState();
@@ -176,7 +222,9 @@ class _PlacePageState extends State<PlacePage> {
 
   int get id => place['id'] as int;
 
-  Future<(List<Rec>, List<Rec>)> _load() async => (await stock(), await assetPlaces());
+  Future<(List<Rec>, List<Rec>)> _load() async => widget.loader == null
+      ? (await stock(), await assetPlaces())
+      : widget.loader!();
 
   void _reload() => setState(() {
     data = _load();
@@ -184,10 +232,14 @@ class _PlacePageState extends State<PlacePage> {
   });
 
   /// Items here: total, and untagged = total minus the tagged ones that are here.
-  (Map<int, num>, Map<int, num>, List<Rec>) _here(List<Rec> stockRows, List<Rec> where) {
+  (Map<int, num>, Map<int, num>, List<Rec>) _here(
+    List<Rec> stockRows,
+    List<Rec> where,
+  ) {
     final total = {
       for (final s in stockRows)
-        if (s['place_id'] == id && s['qty'] != 0) s['item_id'] as int: s['qty'] as num,
+        if (s['place_id'] == id && s['qty'] != 0)
+          s['item_id'] as int: s['qty'] as num,
     };
     final hereIds = {
       for (final w in where)
@@ -197,7 +249,10 @@ class _PlacePageState extends State<PlacePage> {
       for (final a in refs.assets)
         if (hereIds.contains(a['id'])) a,
     ];
-    final untagged = {for (final e in total.entries) e.key: e.value - tagged.where((a) => a['item_id'] == e.key).length};
+    final untagged = {
+      for (final e in total.entries)
+        e.key: e.value - tagged.where((a) => a['item_id'] == e.key).length,
+    };
     return (total, untagged, tagged);
   }
 
@@ -206,18 +261,28 @@ class _PlacePageState extends State<PlacePage> {
     seen.clear();
     counts
       ..clear()
-      ..addAll({for (final e in untagged.entries) e.key: TextEditingController(text: '${e.value}')});
+      ..addAll({
+        for (final e in untagged.entries)
+          e.key: TextEditingController(text: '${e.value}'),
+      });
   });
 
   Future<void> _saveCount(Map<int, num> untagged, List<Rec> tagged) async {
     final counted = <int, num>{};
     for (final e in counts.entries) {
       final n = num.tryParse(e.value.text.trim());
-      if (n == null || n < 0) return say(context, 'Type a count (0 or more) for ${refs.itemNames[e.key]}.');
+      if (n == null || n < 0) {
+        return say(
+          context,
+          'Type a count (0 or more) for ${refs.itemNames[e.key]}.',
+        );
+      }
       counted[e.key] = n;
     }
     try {
-      await addMovements(countAdjustments(untagged, counted, id, byStaff: refs.me));
+      await addMovements(
+        countAdjustments(untagged, counted, id, byStaff: refs.me),
+      );
       final now = DateTime.now().toUtc().toIso8601String();
       final found = [
         for (final a in tagged)
@@ -227,8 +292,12 @@ class _PlacePageState extends State<PlacePage> {
         for (final a in tagged)
           if (!seen.contains(a['id'])) a['id'] as int,
       ];
-      if (found.isNotEmpty) await updateAssets(found, {'seen_at': now, 'condition': 'ok'});
-      if (missing.isNotEmpty) await updateAssets(missing, {'condition': 'missing'});
+      if (found.isNotEmpty) {
+        await updateAssets(found, {'seen_at': now, 'condition': 'ok'});
+      }
+      if (missing.isNotEmpty) {
+        await updateAssets(missing, {'condition': 'missing'});
+      }
       for (final a in tagged) {
         a['condition'] = seen.contains(a['id']) ? 'ok' : 'missing';
       }
@@ -237,7 +306,12 @@ class _PlacePageState extends State<PlacePage> {
       refs.places
         ..removeWhere((p) => p['id'] == id)
         ..add(place);
-      if (mounted) say(context, 'Counted. ${missing.isEmpty ? '' : '${missing.length} tagged not found, marked missing.'}');
+      if (mounted) {
+        say(
+          context,
+          'Counted. ${missing.isEmpty ? '' : '${missing.length} tagged not found, marked missing.'}',
+        );
+      }
       _reload();
     } catch (e) {
       if (mounted) say(context, 'Could not save the count: $e');
@@ -250,7 +324,11 @@ class _PlacePageState extends State<PlacePage> {
       builder: (context) => SimpleDialog(
         title: Text('${a['tag']} is…'),
         children: [
-          for (final c in const ['ok', 'broken', 'missing']) SimpleDialogOption(onPressed: () => Navigator.pop(context, c), child: Text(c)),
+          for (final c in const ['ok', 'broken', 'missing'])
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(context, c),
+              child: Text(c),
+            ),
         ],
       ),
     );
@@ -277,22 +355,35 @@ class _PlacePageState extends State<PlacePage> {
               Pick<int?>(
                 label: 'Item',
                 value: itemId,
-                options: [for (final i in refs.items) (i['id'] as int, i['name'] as String)],
+                options: [
+                  for (final i in refs.items)
+                    (i['id'] as int, i['name'] as String),
+                ],
                 onChanged: (v) => set(() => itemId = v),
               ),
               TextField(
                 controller: tag,
-                decoration: const InputDecoration(labelText: 'Tag (empty: next TL number)'),
+                decoration: const InputDecoration(
+                  labelText: 'Tag (empty: next TL number)',
+                ),
               ),
               TextField(
                 controller: serial,
-                decoration: const InputDecoration(labelText: 'Serial number (optional)'),
+                decoration: const InputDecoration(
+                  labelText: 'Serial number (optional)',
+                ),
               ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-            FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Tag it')),
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Tag it'),
+            ),
           ],
         ),
       ),
@@ -300,9 +391,22 @@ class _PlacePageState extends State<PlacePage> {
     if (ok != true || itemId == null) return;
     try {
       final a = await addAsset(itemId!, tag.text.toUpperCase(), serial.text);
-      await addMovements(tagRows(itemId!, a['id'] as int, id, _untagged[itemId] ?? 0, byStaff: refs.me));
+      await addMovements(
+        tagRows(
+          itemId!,
+          a['id'] as int,
+          id,
+          _untagged[itemId] ?? 0,
+          byStaff: refs.me,
+        ),
+      );
       refs.assets.add(a);
-      if (mounted) say(context, 'Tagged ${a['tag']}. Print its label with scripts/labels.py --assets.');
+      if (mounted) {
+        say(
+          context,
+          'Tagged ${a['tag']}. Print its label with scripts/labels.py --assets.',
+        );
+      }
       _reload();
     } catch (e) {
       if (mounted) say(context, 'Could not tag: $e');
@@ -312,17 +416,43 @@ class _PlacePageState extends State<PlacePage> {
   /// Count mode: a tagged unit that is here but recorded elsewhere (or on loan, or nowhere) is brought here and ticked.
   Future<void> _found(List<Rec> where, [String? code]) async {
     final typed = (code ?? found.text).trim();
-    final a = refs.assets.where((a) => a['tag'] == typed.toUpperCase() || (a['serial'] != null && normaliseSerial(typed).isNotEmpty && normaliseSerial(a['serial'] as String) == normaliseSerial(typed))).firstOrNull;
-    if (a == null) return say(context, 'No tagged item "$typed". Tag it first (QR button at the top).');
+    final a = refs.assets
+        .where(
+          (a) =>
+              a['tag'] == typed.toUpperCase() ||
+              (a['serial'] != null &&
+                  normaliseSerial(typed).isNotEmpty &&
+                  normaliseSerial(a['serial'] as String) ==
+                      normaliseSerial(typed)),
+        )
+        .firstOrNull;
+    if (a == null) {
+      return say(
+        context,
+        'No tagged item "$typed". Tag it first (More options → Tag an item).',
+      );
+    }
     try {
-      final rows = foundRows(a, where.where((w) => w['asset_id'] == a['id']).firstOrNull, id, byStaff: refs.me);
+      final rows = foundRows(
+        a,
+        where.where((w) => w['asset_id'] == a['id']).firstOrNull,
+        id,
+        byStaff: refs.me,
+      );
       if (rows.isNotEmpty) await addMovements(rows);
       found.clear();
       setState(() {
         seen.add(a['id'] as int);
         data = _load();
       });
-      if (mounted) say(context, rows.isEmpty ? '${a['tag']} is listed here: ticked.' : '${a['tag']} recorded as here (${rows.single['kind']}), ticked.');
+      if (mounted) {
+        say(
+          context,
+          rows.isEmpty
+              ? '${a['tag']} is listed here: ticked.'
+              : '${a['tag']} recorded as here (${rows.single['kind']}), ticked.',
+        );
+      }
     } catch (e) {
       if (mounted) say(context, 'Could not record: $e');
     }
@@ -340,7 +470,10 @@ class _PlacePageState extends State<PlacePage> {
             CodeCapture(onCode: (code) => _found(where, code)),
             Align(
               alignment: Alignment.centerRight,
-              child: TextButton(onPressed: () => Navigator.pop(sheetContext), child: const Text('Done')),
+              child: TextButton(
+                onPressed: () => Navigator.pop(sheetContext),
+                child: const Text('Done'),
+              ),
             ),
           ],
         ),
@@ -350,7 +483,9 @@ class _PlacePageState extends State<PlacePage> {
 
   @override
   Widget build(BuildContext context) {
-    final parent = place['parent_id'] == null ? null : refs.placeName(place['parent_id'] as int);
+    final parent = place['parent_id'] == null
+        ? null
+        : refs.placeName(place['parent_id'] as int);
     return Scaffold(
       appBar: AppBar(
         // opened from a QR label: nothing to go back to, so offer the office instead
@@ -359,81 +494,105 @@ class _PlacePageState extends State<PlacePage> {
             : IconButton(
                 tooltip: 'Office',
                 icon: const Icon(Icons.home_outlined),
-                onPressed: () => Navigator.of(context).pushReplacement(MaterialPageRoute<void>(builder: (_) => const BookingsPage())),
+                onPressed: () => Navigator.of(context).pushReplacement(
+                  MaterialPageRoute<void>(builder: (_) => const BookingsPage()),
+                ),
               ),
         title: Text(refs.placeName(id)),
         actions: [
-          IconButton(
-            tooltip: 'Edit place',
-            icon: const Icon(Icons.edit_outlined),
-            onPressed: () async {
-              final saved = await editPlace(context, refs, place: place);
-              if (saved != null) setState(() => place = saved);
+          PopupMenuButton<String>(
+            tooltip: 'More options',
+            onSelected: (value) async {
+              if (value == 'edit') {
+                final saved = await editPlace(context, refs, place: place);
+                if (saved != null) setState(() => place = saved);
+              } else if (value == 'add') {
+                await editPlace(context, refs, parentId: id);
+              } else {
+                await _tag();
+              }
             },
+            itemBuilder: (_) => [
+              const PopupMenuItem(value: 'edit', child: Text('Edit place')),
+              const PopupMenuItem(
+                value: 'add',
+                child: Text('Add a place inside'),
+              ),
+              const PopupMenuItem(value: 'tag', child: Text('Tag an item')),
+            ],
           ),
-          IconButton(
-            tooltip: 'Add a place inside',
-            icon: const Icon(Icons.create_new_folder_outlined),
-            onPressed: () => editPlace(context, refs, parentId: id),
-          ),
-          IconButton(tooltip: 'Tag an item', icon: const Icon(Icons.qr_code_2), onPressed: _tag),
         ],
       ),
-      floatingActionButton: counting
-          ? null
-          : FloatingActionButton.extended(
-              onPressed: () async {
-                if (await recordMovement(context, refs, placeId: id)) _reload();
-              },
-              icon: const Icon(Icons.swap_horiz),
-              label: const Text('Record movement'),
-            ),
       body: FutureBuilder(
         future: data,
         builder: (context, snap) {
-          if (snap.hasError) return Center(child: Text('Could not load: ${snap.error}'));
+          if (snap.hasError) {
+            return Center(child: Text('Could not load: ${snap.error}'));
+          }
           final loaded = snap.data;
-          if (loaded == null) return const Center(child: CircularProgressIndicator());
+          if (loaded == null) {
+            return const Center(child: CircularProgressIndicator());
+          }
           final (total, untagged, tagged) = _here(loaded.$1, loaded.$2);
           _untagged = untagged;
           return ListView(
             padding: const EdgeInsets.only(bottom: 80),
             children: [
+              if (!counting)
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: FilledButton(
+                    onPressed: () => _startCount(untagged),
+                    child: const Text('Count this shelf'),
+                  ),
+                ),
               ListTile(
-                title: Text([if (parent != null) 'in $parent', place['tier'] ?? place['kind'], _day(place['counted_at'])].join(' · ')),
+                title: Text(
+                  [
+                    if (parent != null) 'in $parent',
+                    place['tier'] ?? place['kind'],
+                    _day(place['counted_at']),
+                  ].join(' · '),
+                ),
                 subtitle: counting
                     ? Wrap(
                         spacing: 8,
                         children: [
-                          TextButton(onPressed: () => setState(() => counting = false), child: const Text('Cancel')),
-                          FilledButton(onPressed: () => _saveCount(untagged, tagged), child: const Text('Save count')),
+                          TextButton(
+                            onPressed: () => setState(() => counting = false),
+                            child: const Text('Cancel'),
+                          ),
+                          FilledButton(
+                            onPressed: () => _saveCount(untagged, tagged),
+                            child: const Text('Save count'),
+                          ),
                         ],
                       )
                     : null,
-                trailing: counting
-                    ? null
-                    : OutlinedButton.icon(
-                        onPressed: () => _startCount(untagged),
-                        icon: const Icon(Icons.fact_check_outlined),
-                        label: const Text('Count'),
-                      ),
               ),
               if (counting)
                 const ListTile(
                   dense: true,
-                  title: Text('Type what is really here. Tick each tagged item you see; unticked ones are marked missing.'),
+                  title: Text(
+                    'Type what is really here. Tick each tagged item you see; unticked ones are marked missing.',
+                  ),
                 ),
               if (counting)
                 ListTile(
                   title: TextField(
                     controller: found,
-                    decoration: const InputDecoration(labelText: 'Found a tagged item that is not listed? Its tag or serial'),
+                    decoration: const InputDecoration(
+                      labelText: 'Found a tagged item that is not listed? Its tag or serial',
+                    ),
                     onSubmitted: (_) => _found(loaded.$2),
                   ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      TextButton(onPressed: () => _found(loaded.$2), child: const Text('Found here')),
+                      TextButton(
+                        onPressed: () => _found(loaded.$2),
+                        child: const Text('Found here'),
+                      ),
                       IconButton(
                         tooltip: 'Scan tagged items',
                         onPressed: () => _scanFound(loaded.$2),
@@ -442,39 +601,100 @@ class _PlacePageState extends State<PlacePage> {
                     ],
                   ),
                 ),
-              if (total.isEmpty && !counting) const ListTile(title: Text('Nothing recorded here.')),
+              if (total.isEmpty && !counting)
+                const ListTile(title: Text('Nothing recorded here.')),
               for (final e in (counting ? untagged : total).entries)
                 ListTile(
                   title: Text(refs.itemNames[e.key] ?? 'item ${e.key}'),
-                  subtitle: counting || untagged[e.key] == e.value ? null : Text('${untagged[e.key]} untagged'),
+                  subtitle: counting || untagged[e.key] == e.value
+                      ? null
+                      : Text('${untagged[e.key]} untagged'),
                   trailing: counting
                       ? SizedBox(
                           width: 80,
                           child: Semantics(
-                            label: 'Count of ${refs.itemNames[e.key] ?? 'item ${e.key}'}',
+                            label:
+                                'Count of ${refs.itemNames[e.key] ?? 'item ${e.key}'}',
                             child: TextField(
                               controller: counts[e.key],
                               textAlign: TextAlign.end,
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
                             ),
                           ),
                         )
-                      : Text('${e.value}', style: Theme.of(context).textTheme.titleMedium),
+                      : Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '${e.value}',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            TextButton(
+                              onPressed: () async {
+                                final item = refs.items
+                                    .where((i) => i['id'] == e.key)
+                                    .firstOrNull;
+                                if (item != null &&
+                                    await everydayMovement(
+                                      context,
+                                      refs,
+                                      item,
+                                      'Move',
+                                      location: {'place_id': id},
+                                      stockRows: loaded.$1,
+                                    )) {
+                                  _reload();
+                                }
+                              },
+                              child: const Text('Move'),
+                            ),
+                          ],
+                        ),
                 ),
-              if (tagged.isNotEmpty) const ListTile(dense: true, title: Text('Tagged')),
+              if (tagged.isNotEmpty)
+                const ListTile(dense: true, title: Text('Tagged')),
               for (final a in tagged)
                 counting
                     ? CheckboxListTile(
                         value: seen.contains(a['id']),
-                        onChanged: (v) => setState(() => v! ? seen.add(a['id'] as int) : seen.remove(a['id'])),
-                        title: Text('${a['tag']} · ${refs.itemNames[a['item_id']]}'),
-                        subtitle: a['serial'] == null ? null : Text('${a['serial']}'),
+                        onChanged: (v) => setState(
+                          () => v!
+                              ? seen.add(a['id'] as int)
+                              : seen.remove(a['id']),
+                        ),
+                        title: Text(
+                          '${a['tag']} · ${refs.itemNames[a['item_id']]}',
+                        ),
+                        subtitle: a['serial'] == null
+                            ? null
+                            : Text('${a['serial']}'),
                       )
                     : ListTile(
-                        title: Text('${a['tag']} · ${refs.itemNames[a['item_id']]}'),
-                        subtitle: Text([if (a['serial'] != null) a['serial'], a['condition']].join(' · ')),
-                        trailing: a['condition'] == 'ok' ? null : const Icon(Icons.error_outline, color: Colors.orange),
-                        onTap: () => _condition(a),
+                        title: Text(
+                          '${a['tag']} · ${refs.itemNames[a['item_id']]}',
+                        ),
+                        subtitle: Text(
+                          [
+                            if (a['serial'] != null) a['serial'],
+                            a['condition'],
+                          ].join(' · '),
+                        ),
+                        trailing: TextButton(
+                          onPressed: () => _condition(a),
+                          child: const Text('Condition'),
+                        ),
+                        onTap: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute<void>(
+                              builder: (_) => AssetPage(refs: refs, asset: a),
+                            ),
+                          );
+                          if (mounted) _reload();
+                        },
                       ),
             ],
           );
@@ -493,9 +713,15 @@ class PlaceLinkPage extends StatelessWidget {
   Widget build(BuildContext context) => FutureBuilder(
     future: loadRefs(),
     builder: (context, snap) {
-      if (snap.hasError) return Scaffold(body: Center(child: Text('Could not load: ${snap.error}')));
+      if (snap.hasError) {
+        return Scaffold(
+          body: Center(child: Text('Could not load: ${snap.error}')),
+        );
+      }
       final refs = snap.data;
-      if (refs == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      if (refs == null) {
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      }
       final p = refs.placeByCode(code.toUpperCase());
       return p == null ? const BookingsPage() : PlacePage(refs: refs, place: p);
     },

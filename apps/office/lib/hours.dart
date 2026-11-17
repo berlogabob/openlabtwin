@@ -76,7 +76,7 @@ class _HoursPageState extends State<HoursPage> {
     if (ok != true || placeId == null || refs.me == null) return;
     try {
       await addConsultationHours(refs.me!, placeId!, weekday, _t(from), _t(to), slot);
-      setState(() => rows = consultationHours());
+      setState(() { rows = consultationHours(); });
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not add: $e')));
     }
@@ -106,7 +106,7 @@ class _HoursPageState extends State<HoursPage> {
                     icon: const Icon(Icons.delete_outline),
                     onPressed: () async {
                       await removeConsultationHours(h['id'] as int);
-                      setState(() => rows = consultationHours());
+                      setState(() { rows = consultationHours(); });
                     },
                   ),
                 ),

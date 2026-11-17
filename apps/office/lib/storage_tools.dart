@@ -72,7 +72,9 @@ class NeedsAttentionPage extends StatefulWidget {
 class _NeedsAttentionPageState extends State<NeedsAttentionPage> {
   late final refs = widget.refs;
   late Future<List<Rec>> data = (widget.loader ?? storageIssues)();
-  void _reload() => setState(() => data = (widget.loader ?? storageIssues)());
+  void _reload() => setState(() {
+    data = (widget.loader ?? storageIssues)();
+  });
   Future<void> _merge(Rec issue) async {
     final a = issue['a_id'] as int, b = issue['b_id'] as int;
     final keep = await showDialog<int>(

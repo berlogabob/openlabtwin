@@ -73,7 +73,7 @@ try:
         checks["QR link opens the place"] = True
 
         # 2. count: 4 of the 5 cables, tick the Quest listed here, and the other Quest found here
-        pg.get_by_role("button", name="Count").click()
+        pg.get_by_role("button", name="Count this shelf").click()
         target = pg.get_by_role("textbox", name="Count of E2E Cabo HDMI longo", exact=True)
         target.click(); pg.wait_for_timeout(400)
         pg.keyboard.press("Meta+A"); pg.keyboard.type("4", delay=60); pg.wait_for_timeout(300)

@@ -4,6 +4,8 @@ Git is the source of truth. Entries cover work committed in openlabtwin and vide
 
 ## 2026-11-17 (Tuesday)
 
+- Added item and unit pages for everyday loans and moves, simplified place actions, and sorted tagged loans by recency.
+
 - Reorganized office navigation and added storage search, loans, attention and tools.
 
 - Added a read-only aggregate storage snapshot for thesis metrics, with optional JSONL append output.
