@@ -8,6 +8,10 @@ import 'package:office/scan_screen.dart';
 import 'package:office/places.dart';
 
 void main() {
+  test('thumbnail path follows the photo path', () {
+    expect(thumbPath('items/3/1-ab.jpg'), 'items/3/1-ab.thumb.jpg');
+  });
+
   final refs = Refs(
     [
       {'id': 1, 'name': 'Shelf', 'code': 'S1'},
@@ -186,9 +190,9 @@ void main() {
       await t.pumpWidget(MaterialApp(home: Scaffold(body: Builder(builder: (context) => TextButton(
         onPressed: () => changeCondition(context, asset,
           update: (ids, change) async { expect(ids, [4]); expect(change, {'condition': 'broken'}); },
-          pick: () async => Uint8List.fromList([1, 2]),
-          savePhoto: ({required itemId, assetId, required bytes, required state, note}) async {
-            photo = {'item_id': itemId, 'asset_id': assetId, 'bytes': bytes, 'state': state};
+          pick: () async => (full: Uint8List.fromList([1, 2]), thumb: Uint8List.fromList([3, 4])),
+          savePhoto: ({required itemId, assetId, required bytes, thumb, required state, note}) async {
+            photo = {'item_id': itemId, 'asset_id': assetId, 'bytes': bytes, 'thumb': thumb, 'state': state};
           },
         ), child: const Text('Condition'),
       )))));
@@ -200,7 +204,7 @@ void main() {
       await t.tap(find.text(take ? 'Take photo' : 'Skip'));
       await t.pumpAndSettle();
       if (take) {
-        expect(photo, {'item_id': 3, 'asset_id': 4, 'bytes': Uint8List.fromList([1, 2]), 'state': 'broken'});
+        expect(photo, {'item_id': 3, 'asset_id': 4, 'bytes': Uint8List.fromList([1, 2]), 'thumb': Uint8List.fromList([3, 4]), 'state': 'broken'});
       } else {
         expect(photo, isNull);
       }
@@ -211,11 +215,13 @@ void main() {
     await t.pumpWidget(MaterialApp(home: ItemPage(
       refs: refs, item: {'id': 3, 'name': 'Camera', 'kind': 'portable'},
       loader: () async => (<Rec>[], <Rec>[], <Rec>[], <Rec>[]),
-      loadPhotos: (_) async => [{'path': 'reference.jpg', 'url': 'https://example.test/reference.jpg', 'state': 'reference', 'taken_at': '2026-11-17T10:00:00Z'}],
+      loadPhotos: (_) async => [{'path': 'reference.jpg', 'url': 'https://example.test/reference.jpg', 'thumb': 'https://example.test/reference.thumb.jpg', 'state': 'reference', 'taken_at': '2026-11-17T10:00:00Z'}],
     )));
     await t.pumpAndSettle();
     final large = t.widget<PhotoView>(find.byType(PhotoView).first);
     expect(large.large, isTrue);
+    final image = t.widget<Image>(find.descendant(of: find.byWidget(large), matching: find.byType(Image)));
+    expect((image.image as NetworkImage).url, 'https://example.test/reference.thumb.jpg');
     expect(large.photo['path'], 'reference.jpg');
     expect(find.text('No reference photo'), findsNothing);
   });

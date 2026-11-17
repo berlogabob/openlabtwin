@@ -270,8 +270,8 @@ class ItemPage extends StatefulWidget {
   final Rec item;
   final Future<void> Function(int, String)? saveKind;
   final Future<List<Rec>> Function(int)? loadPhotos;
-  final Future<Uint8List?> Function()? pickPhoto;
-  final Future<void> Function({required int itemId, int? assetId, required Uint8List bytes, required String state, String? note})? savePhoto;
+  final Future<({Uint8List full, Uint8List thumb})?> Function()? pickPhoto;
+  final Future<void> Function({required int itemId, int? assetId, required Uint8List bytes, Uint8List? thumb, required String state, String? note})? savePhoto;
   final Future<ItemRows> Function()? loader;
   final Future<void> Function(List<Rec>)? save;
   @override
@@ -339,9 +339,9 @@ class _ItemPageState extends State<ItemPage> {
                   ])),
                   TextButton(onPressed: () async {
                     try {
-                      final bytes = await (widget.pickPhoto ?? pickPhoto)();
-                      if (bytes != null) {
-                        await (widget.savePhoto ?? addItemPhoto)(itemId: item['id'] as int, bytes: bytes, state: 'reference');
+                      final picked = await (widget.pickPhoto ?? pickPhoto)();
+                      if (picked != null) {
+                        await (widget.savePhoto ?? addItemPhoto)(itemId: item['id'] as int, bytes: picked.full, thumb: picked.thumb, state: 'reference');
                         if (mounted) reload();
                       }
                     } catch (e) {
@@ -479,7 +479,7 @@ class PhotoView extends StatelessWidget {
     return Column(children: [
       if (url == null) const Icon(Icons.broken_image) else GestureDetector(
         onTap: () => showDialog<void>(context: context, builder: (c) => Dialog(child: InteractiveViewer(child: Image.network(url)))),
-        child: Image.network(url, width: large ? 240 : 80, height: large ? 180 : 80, fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(Icons.broken_image)),
+        child: Image.network((photo['thumb'] as String?) ?? url, width: large ? 240 : 80, height: large ? 180 : 80, fit: BoxFit.cover, errorBuilder: (_, _, _) => const Icon(Icons.broken_image)),
       ),
       if (!large) Text('${photo['state']} · ${'${photo['taken_at'] ?? ''}'.split('T').first}'),
     ]);
