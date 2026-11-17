@@ -210,3 +210,7 @@ Run it after schema changes: Supabase dashboard → Advisors, or `GET https://ap
 - replace its `docs/index.html` with a link to the new site;
 - tell `lab.ics` subscribers the new address;
 - archive the repo.
+
+### Importing inventory photos
+
+After reviewing and applying the item photo migration, run `uv run python scripts/import_photos.py "/Users/berloga/Downloads/Inventario Tech Lab.xlsx"` with `SUPABASE_URL` and `SUPABASE_SERVICE_KEY` set. Review the matched and unmatched images; `--items-json FILE` supplies an offline JSON array of `{id, name}` items for a dry run. Add `--apply` to upload matched photos and insert reference rows. A previous import note blocks another run. Uploads and the database insert are separate operations: if an upload or insert fails, inspect and remove any objects already uploaded before retrying; uploads do not overwrite existing paths. The original spreadsheet stays private.
