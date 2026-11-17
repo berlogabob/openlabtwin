@@ -38,6 +38,7 @@ Staff ──email link──► apps/office (Flutter web) ──► Supabase (Po
 The tables are in `supabase/migrations/20260923120000_core_schema.sql`.
 
 - **places:** rooms and storage (`tier` fast or long), a tree through `parent_id` (room → cabinet → shelf → box). `iade_name` ties a room to the timetable's room name, and `public` decides whether it is ever exported. `code` (`R15-L-S3`: capitals, digits, dashes) is printed on the place's QR label and is the node name in the Godot twin, so it stays fixed once printed. `counted_at` is the last stocktake; empty means never counted.
+- **item_photos** stores staff-only item and unit photo metadata; JPEGs are in the private `item-photos` bucket. The office loads them only on item and unit pages.
 - **items** (consumable, portable, stationary), and **movements**, which is append-only: receive, move, issue, return, consume, adjust; tagged units cannot be issued twice without a return, and `tylog:` notes are unique.
 - **stock** (view): the sum of movements per item and place. It is never stored.
 - **on_loan** (view): issued minus returned, per item and person.

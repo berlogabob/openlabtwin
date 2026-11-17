@@ -145,11 +145,12 @@ class AssetPage extends StatefulWidget {
     required this.asset,
     this.loadPlaces,
     this.loadHistory,
+    this.loadPhotos,
     this.save,
   });
   final Refs refs;
   final Rec asset;
-  final Future<List<Rec>> Function()? loadPlaces, loadHistory;
+  final Future<List<Rec>> Function()? loadPlaces, loadHistory, loadPhotos;
   final Future<void> Function(List<Rec>)? save;
 
   @override
@@ -163,6 +164,8 @@ class _AssetPageState extends State<AssetPage> {
     await (widget.loadHistory ??
         () => assetHistory(widget.asset['id'] as int))(),
   );
+
+  late Future<List<Rec>> photos = widget.loadPhotos != null ? widget.loadPhotos!() : widget.loadHistory != null ? Future.value([]) : itemPhotos(widget.asset['item_id'] as int);
 
   String person(int? id) =>
       widget.refs.people.where((p) => p['id'] == id).firstOrNull?['name']
@@ -253,6 +256,14 @@ class _AssetPageState extends State<AssetPage> {
               ),
               const SizedBox(height: 16),
               Text('History', style: Theme.of(context).textTheme.titleMedium),
+              FutureBuilder<List<Rec>>(
+                future: photos,
+                builder: (context, snap) {
+                  if (snap.hasError) return Text('Could not load photos: ${snap.error}');
+                  return Column(children: [for (final photo in snap.data ?? <Rec>[])
+                    if (photo['asset_id'] == asset['id']) PhotoView(photo: photo)]);
+                },
+              ),
               if (history.isEmpty) const Text('No movements recorded.'),
               for (final row in history)
                 ListTile(

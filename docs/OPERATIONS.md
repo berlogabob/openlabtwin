@@ -2,6 +2,8 @@
 
 The runbook. For the why behind any of this see [ARCHITECTURE.md](ARCHITECTURE.md).
 
+Item and unit photos require the `item_photos` migration and private `item-photos` bucket. The office uploads resized JPEGs and requests signed URLs only on item or unit pages; staff access is controlled by the bucket and table policies.
+
 ## How data reaches the public site
 
 | What | When | How |
