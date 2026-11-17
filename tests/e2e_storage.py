@@ -108,7 +108,8 @@ try:
             pg.wait_for_timeout(1500)
             box = pg.get_by_role("textbox", name="From" if kind == "Issue kit" else "Back to")
             if kind == "Issue kit":
-                pg.screenshot(path=os.environ.get("E2E_SHOT", "/dev/null"))  # the kit's place starts as Room 15 (Flutter hides field values)
+                if os.environ.get("E2E_SHOT"):  # newer Playwright refuses /dev/null (no mime type)
+                    pg.screenshot(path=os.environ["E2E_SHOT"])  # the kit's place starts as Room 15 (Flutter hides field values)
             box.click(); pg.wait_for_timeout(400)  # the office's searchable picker: type, then pick from the list
             pg.keyboard.press("Meta+A"); pg.keyboard.type("E2E-S1", delay=60); pg.wait_for_timeout(600)
             pick(pg, "E2E-S1 · E2E shelf")
@@ -124,8 +125,8 @@ try:
             and kit[0]["asset_id"] == kit[1]["asset_id"] and kit[0]["person_id"] == person)
 
         # 4. merge the duplicate pair from Needs attention
-        pg.go_back()
-        pg.get_by_role("button", name="Storage").click()
+        pg.goto(BASE)  # the session is kept; browser back from a pushed route doesn't reliably reach the tab bar
+        pg.get_by_role("tab", name="Storage").click(timeout=30000)
         pg.get_by_text("Needs attention", exact=False).first.click(timeout=20000)
         # only this test's own pair: the live list holds real duplicates too
         pg.locator("[aria-label^='E2E Cabo HDMI longo /']").get_by_role("button", name="Merge").click()
