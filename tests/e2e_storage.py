@@ -125,11 +125,8 @@ try:
 
         # 4. merge the duplicate pair from Needs attention
         pg.go_back()
-        pg.get_by_role("button", name="Inventory").click()
-        pg.get_by_text("Needs attention", exact=False).first.wait_for(timeout=20000)
-        if pg.locator("[aria-label^='E2E Cabo HDMI longo /']").count() == 0:
-            pg.get_by_text("Needs attention", exact=False).first.click()  # collapsed when there are more than 10 issues
-            pg.wait_for_timeout(1500)
+        pg.get_by_role("button", name="Storage").click()
+        pg.get_by_text("Needs attention", exact=False).first.click(timeout=20000)
         # only this test's own pair: the live list holds real duplicates too
         pg.locator("[aria-label^='E2E Cabo HDMI longo /']").get_by_role("button", name="Merge").click()
         pg.get_by_text("E2E Cabos HDMI longos", exact=True).last.click()

@@ -117,3 +117,5 @@ This follows UNIDCOM RIMS, which learned the hard way that row-level security ha
 | 5 Thesis layer: demand forecast, Godot view | not started; scope depends on the thesis topic change |
 
 What's next is in [ROADMAP.md](ROADMAP.md). Deferred on purpose: RFID, procurement, professor and student sign-in, consultation self-booking, and local-first sync.
+
+The office home shares reference lists across Bookings and Storage tabs; More links to the other staff screens. Storage searches the catalogue and shows current loans and attention issues, with existing maintenance actions under Tools. Loan and asset-location views have no timestamps, so their current rows cannot be ordered by recency.
