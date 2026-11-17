@@ -40,18 +40,19 @@ with tempfile.TemporaryDirectory() as temp:
     assert len(pictures) == 2
     assert pictures[1]['path'] == 'items/43/import-inventario-mobiliario-r3-c4.jpg'
     assert Image.open(io.BytesIO(pictures[0]['jpeg'])).size == (1600, 800)
+    assert Image.open(io.BytesIO(pictures[0]['thumb'])).size == (400, 200)
     uploaded, rows = [], []
     imp.upload = lambda db, path, data: uploaded.append((path, data))
     imp.db.select = lambda *args: rows
     imp.db.request = lambda db, method, table, **kw: rows.extend(kw['body'])
     imp.apply(('fake', 'key'), pictures[:1])
     path = 'items/42/import-inventario-sala-15-r2-c8.jpg'
-    assert uploaded == [(path, pictures[0]['jpeg'])]
+    assert uploaded == [(path, pictures[0]['jpeg']), (path.removesuffix('.jpg') + '.thumb.jpg', pictures[0]['thumb'])]
     assert rows == [{'item_id': 42, 'path': path, 'state': 'reference', 'note': imp.NOTE}]
     try:
         imp.apply(('fake', 'key'), pictures)
         assert False, 'second import should fail'
     except ValueError:
         pass
-    assert len(uploaded) == 1
+    assert len(uploaded) == 2
 print('ok')

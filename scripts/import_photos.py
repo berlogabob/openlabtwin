@@ -16,6 +16,10 @@ from import_inventory import NOTE, blank, norm
 SHEETS = ('Inventario Sala 15', 'Sala 1314', 'Inventario Mobiliario')
 
 
+def thumb_path(path):
+    return path.removesuffix('.jpg') + '.thumb.jpg'
+
+
 def photos(path, items):
     by_name = {}
     for item in items:
@@ -45,9 +49,12 @@ def photos(path, items):
                 picture.thumbnail((1600, 1600))
                 output = io.BytesIO()
                 picture.save(output, format='JPEG', quality=85)
+                picture.thumbnail((400, 400))
+                thumb = io.BytesIO()
+                picture.save(thumb, format='JPEG', quality=80)
             slug = re.sub(r'[^a-z0-9]+', '-', norm(sheet)).strip('-')
             dest = f"items/{item['id']}/import-{slug}-r{row}-c{col}.jpg" if item else None
-            result.append({'sheet': sheet, 'row': row, 'col': col, 'item': item, 'path': dest, 'jpeg': output.getvalue()})
+            result.append({'sheet': sheet, 'row': row, 'col': col, 'item': item, 'path': dest, 'jpeg': output.getvalue(), 'thumb': thumb.getvalue()})
     return result
 
 
@@ -55,7 +62,7 @@ def upload(database, path, data):
     base, key = database
     url = base.removesuffix('/rest/v1') + '/storage/v1/object/item-photos/' + path
     req = urllib.request.Request(url, data=data, method='POST', headers={
-        'Authorization': f'Bearer {key}', 'apikey': key, 'Content-Type': 'image/jpeg', 'x-upsert': 'false'})
+        'Authorization': f'Bearer {key}', 'apikey': key, 'Content-Type': 'image/jpeg', 'x-upsert': 'true', 'cache-control': 'max-age=31536000'})
     with urllib.request.urlopen(req, timeout=60) as response:
         response.read()
 
@@ -66,6 +73,7 @@ def apply(database, pictures):
     matched = [p for p in pictures if p['item']]
     for p in matched:
         upload(database, p['path'], p['jpeg'])
+        upload(database, thumb_path(p['path']), p['thumb'])
     if matched:
         db.request(database, 'POST', 'item_photos', body=[
             {'item_id': p['item']['id'], 'path': p['path'], 'state': 'reference', 'note': NOTE} for p in matched])
@@ -83,7 +91,7 @@ def main():
     for p in pictures:
         item = p['item']
         match = f"{item['id']} {item['name']}" if item else 'UNMATCHED'
-        print(f"{p['sheet']} row {p['row']} column {p['col']}: {match} {len(p['jpeg']) / 1024:.1f} KB")
+        print(f"{p['sheet']} row {p['row']} column {p['col']}: {match} {len(p['jpeg']) / 1024:.1f} KB, thumbnail {len(p['thumb']) / 1024:.1f} KB")
     matched = [p for p in pictures if p['item']]
     print(f"matched: {len(matched)}, unmatched: {len(pictures) - len(matched)}, items with photos: {len({p['item']['id'] for p in matched})}")
     if args.apply:

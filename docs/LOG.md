@@ -4,6 +4,8 @@ Git is the source of truth. Entries cover work committed in openlabtwin and vide
 
 ## 2026-11-17 (Tuesday)
 
+- Added thumbnails to the photo import and an incremental nightly photo backup.
+
 - Added staff-only item photos, the disassembled asset condition, and an offline-reviewable spreadsheet photo importer.
 - Added consumable use and staff-only item and unit photos to the office.
 
