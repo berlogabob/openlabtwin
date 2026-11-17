@@ -4,6 +4,8 @@ Git is the source of truth. Entries cover work committed in openlabtwin and vide
 
 ## 2026-11-17 (Tuesday)
 
+- Added consumable use and staff-only item and unit photos to the office.
+
 - Added a browser test and tap/time measurement for the everyday storage jobs.
 
 - Rewrote the storage guide around finding, handing out, taking back, moving and counting shelves.

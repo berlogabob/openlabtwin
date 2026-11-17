@@ -68,6 +68,12 @@ Things are in the **Storage** tab. Everyday work is on an item's, unit's or plac
 
 If an untagged item is here but not on the list, cancel the count. Open **Tools** → **Record movement**, receive it into the place, then count again.
 
+### Consumables and photos
+
+On an item page, turn **Consumable** on for stock that gets used up. **Use** records the place, quantity and optional person; **Move** relocates stock. Turning the switch off makes it portable; use Edit to restore stationary status.
+
+Add a reference photo from the item page. Tap a photo to enlarge it. On a place page, changing a tagged unit to **broken** or **disassembled** offers a photo; choose **Take photo** or **Skip**. The unit page shows its photos with their state and date. Photos are private to staff.
+
 ### Corrections and arrivals (Tools → Record movement)
 
 Use **Record movement** for other corrections and arrivals:

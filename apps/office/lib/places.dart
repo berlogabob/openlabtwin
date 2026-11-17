@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'pairing_logic.dart' show normaliseSerial;
 
 // Places: the storage tree (rooms, cabinets, shelves, boxes), each place's contents, and the stocktake.
@@ -10,6 +12,7 @@ import 'inventory.dart';
 import 'item_page.dart';
 import 'logic.dart';
 import 'pick.dart';
+import 'pick_photo.dart';
 import 'scan_widget.dart';
 import 'scan_screen.dart';
 
@@ -319,26 +322,8 @@ class _PlacePageState extends State<PlacePage> {
   }
 
   Future<void> _condition(Rec a) async {
-    final c = await showDialog<String>(
-      context: context,
-      builder: (context) => SimpleDialog(
-        title: Text('${a['tag']} is…'),
-        children: [
-          for (final c in const ['ok', 'broken', 'missing'])
-            SimpleDialogOption(
-              onPressed: () => Navigator.pop(context, c),
-              child: Text(c),
-            ),
-        ],
-      ),
-    );
-    if (c == null) return;
-    try {
-      await updateAssets([a['id'] as int], {'condition': c});
-      setState(() => a['condition'] = c);
-    } catch (e) {
-      if (mounted) say(context, 'Could not save: $e');
-    }
+    await changeCondition(context, a);
+    if (mounted) setState(() {});
   }
 
   Future<void> _tag() async {
@@ -726,4 +711,35 @@ class PlaceLinkPage extends StatelessWidget {
       return p == null ? const BookingsPage() : PlacePage(refs: refs, place: p);
     },
   );
+}
+
+Future<void> changeCondition(BuildContext context, Rec asset, {
+  Future<void> Function(List<int>, Rec)? update,
+  Future<Uint8List?> Function()? pick,
+  Future<void> Function({required int itemId, int? assetId, required Uint8List bytes, required String state, String? note})? savePhoto,
+}) async {
+  final condition = await showDialog<String>(context: context, builder: (c) => SimpleDialog(
+    title: Text('${asset['tag']} is…'),
+    children: [for (final value in const ['ok', 'broken', 'missing', 'disassembled'])
+      SimpleDialogOption(onPressed: () => Navigator.pop(c, value), child: Text(value))],
+  ));
+  if (condition == null || !context.mounted) return;
+  try {
+    await (update ?? updateAssets)([asset['id'] as int], {'condition': condition});
+    asset['condition'] = condition;
+    if (!context.mounted || (condition != 'broken' && condition != 'disassembled')) return;
+    final take = await showDialog<bool>(context: context, builder: (c) => AlertDialog(
+      title: const Text('Add a photo of its state?'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Skip')),
+        FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Take photo')),
+      ],
+    ));
+    if (take == true) {
+      final bytes = await (pick ?? pickPhoto)();
+      if (bytes != null) await (savePhoto ?? addItemPhoto)(itemId: asset['item_id'] as int, assetId: asset['id'] as int, bytes: bytes, state: condition);
+    }
+  } catch (e) {
+    if (context.mounted) say(context, 'Could not save: $e');
+  }
 }

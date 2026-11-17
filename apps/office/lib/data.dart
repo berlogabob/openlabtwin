@@ -1,4 +1,7 @@
 // Every query the office makes. RLS lets only staff (people.is_staff, linked by auth_user_id) read or write.
+import 'dart:math';
+import 'dart:typed_data';
+
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -219,6 +222,31 @@ Future<Rec> addAsset(int itemId, String tag, String serial) => db
     .insert({'item_id': itemId, if (tag.trim().isNotEmpty) 'tag': tag.trim(), 'serial': serial.trim().isEmpty ? null : serial.trim()})
     .select('id,item_id,tag,serial,condition')
     .single();
+
+Future<void> setItemKind(int id, String kind) => db.from('items').update({'kind': kind}).eq('id', id);
+
+/// The item's photos, newest first, each with a signed 'url': one Storage request for all of them (decision 0051's request budget).
+Future<List<Rec>> itemPhotos(int itemId) async {
+  final rows = await db.from('item_photos').select().eq('item_id', itemId).order('taken_at', ascending: false);
+  if (rows.isEmpty) return rows;
+  final urls = await db.storage.from('item-photos').createSignedUrlsResult([for (final r in rows) r['path'] as String], 3600);
+  final byPath = {for (final u in urls.whereType<SignedUrlSuccess>()) u.path: u.signedUrl};
+  return [for (final r in rows) {...r, 'url': byPath[r['path']]}];
+}
+
+Future<void> addItemPhoto({required int itemId, int? assetId, required Uint8List bytes, required String state, String? note}) async {
+  final suffix = Random.secure().nextInt(65536).toRadixString(16).padLeft(4, '0');
+  final path = 'items/$itemId/${DateTime.now().millisecondsSinceEpoch}-$suffix.jpg';
+  final bucket = db.storage.from('item-photos');
+  await bucket.uploadBinary(path, bytes, fileOptions: const FileOptions(contentType: 'image/jpeg'));
+  try {
+    await db.from('item_photos').insert({'item_id': itemId, 'asset_id': assetId, 'path': path, 'state': state, 'note': note});
+  } catch (_) {
+    await bucket.remove([path]);
+    rethrow;
+  }
+}
+
 
 /// Whether the public /kit/ list offers this item.
 Future<void> setLendable(int itemId, bool lendable) => db.from('items').update({'lendable': lendable}).eq('id', itemId);
