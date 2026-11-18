@@ -31,18 +31,21 @@ with tempfile.TemporaryDirectory() as temp:
     furniture = wb.create_sheet('Inventario Mobiliario')
     furniture['B4'] = 'Item'
     furniture['D4'] = 'Mesa'
+    furniture['E4'] = 'Ecras Lenovo'
     furniture.add_image(XLImage(img), 'D3')
+    furniture.add_image(XLImage(img), 'E3')
     xlsx = root / 'test.xlsx'
     wb.save(xlsx)
-    items = [{'id': 42, 'name': 'Cabos ethernet'}, {'id': 43, 'name': 'Mesa'}]
+    items = [{'id': 42, 'name': 'Cabos ethernet'}, {'id': 43, 'name': 'Mesa'}, {'id': 44, 'name': 'Ecrãs Lenovo ThinkVision T2054pC'}]
     items_file = root / 'items.json'
     items_file.write_text(json.dumps(items))
     output = subprocess.check_output([sys.executable, 'scripts/import_photos.py', str(xlsx), '--items-json', str(items_file)], text=True)
-    assert '42 Cabos ethernet' in output and 'matched: 3, unmatched: 0, items with photos: 2' in output
+    assert '42 Cabos ethernet' in output and 'matched: 4, unmatched: 0, items with photos: 3' in output
     pictures = imp.photos(xlsx, items)
-    assert len(pictures) == 3
+    assert len(pictures) == 4
     assert pictures[1]['path'] == 'items/42/import-inventario-sala-15-r2-c8-2.jpg'
     assert pictures[2]['path'] == 'items/43/import-inventario-mobiliario-r3-c4.jpg'
+    assert pictures[3]['path'] == 'items/44/import-inventario-mobiliario-r3-c5.jpg'
     assert Image.open(io.BytesIO(pictures[0]['jpeg'])).size == (1600, 800)
     assert Image.open(io.BytesIO(pictures[0]['thumb'])).size == (400, 200)
     uploaded, rows = [], []
@@ -54,15 +57,17 @@ with tempfile.TemporaryDirectory() as temp:
     assert uploaded == [(path, pictures[0]['jpeg']), (path.removesuffix('.jpg') + '.thumb.jpg', pictures[0]['thumb'])]
     assert rows == [{'item_id': 42, 'path': path, 'state': 'reference', 'note': imp.NOTE}]
     imp.apply(('fake', 'key'), pictures)
-    assert len(uploaded) == 6
+    assert len(uploaded) == 8
     assert uploaded[2:] == [
         (pictures[1]['path'], pictures[1]['jpeg']),
         (pictures[1]['path'].removesuffix('.jpg') + '.thumb.jpg', pictures[1]['thumb']),
         (pictures[2]['path'], pictures[2]['jpeg']),
         (pictures[2]['path'].removesuffix('.jpg') + '.thumb.jpg', pictures[2]['thumb']),
+        (pictures[3]['path'], pictures[3]['jpeg']),
+        (pictures[3]['path'].removesuffix('.jpg') + '.thumb.jpg', pictures[3]['thumb']),
     ]
-    assert len(rows) == 3
+    assert len(rows) == 4
     imp.apply(('fake', 'key'), pictures)
-    assert len(uploaded) == 6
-    assert len(rows) == 3
+    assert len(uploaded) == 8
+    assert len(rows) == 4
 print('ok')
