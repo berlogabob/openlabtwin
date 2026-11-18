@@ -161,7 +161,24 @@ void main() {
     await t.pumpAndSettle();
     await t.tap(find.text('Consumable'));
     await t.pumpAndSettle();
-    expect(kinds, ['consumable', 'portable']);
+    await t.tap(find.text('Stationary'));
+    await t.pumpAndSettle();
+    expect(kinds, ['consumable', 'stationary']);
+  });
+  testWidgets('turning consumable off can choose portable', (t) async {
+    final item = <String, dynamic>{'id': 3, 'name': 'Camera', 'kind': 'consumable'};
+    final kinds = <String>[];
+    await t.pumpWidget(MaterialApp(home: ItemPage(
+      refs: refs, item: item,
+      loader: () async => (<Rec>[], <Rec>[], <Rec>[], <Rec>[]),
+      saveKind: (id, kind) async { kinds.add(kind); },
+    )));
+    await t.pumpAndSettle();
+    await t.tap(find.text('Consumable'));
+    await t.pumpAndSettle();
+    await t.tap(find.text('Portable'));
+    await t.pumpAndSettle();
+    expect(kinds, ['portable']);
   });
 
   testWidgets('use records quantity and optional person', (t) async {

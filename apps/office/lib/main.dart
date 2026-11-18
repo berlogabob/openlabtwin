@@ -179,6 +179,7 @@ class _OfficeHomeState extends State<OfficeHome> {
           children: [
             BookingsPage(refs: r),
             StorageHome(refs: r),
+            selected == 2 ? const IdeasScreen() : const SizedBox.shrink(),
             Scaffold(
               appBar: AppBar(title: const Text('More')),
               body: ListView(
@@ -196,15 +197,6 @@ class _OfficeHomeState extends State<OfficeHome> {
                       context,
                       MaterialPageRoute<void>(
                         builder: (_) => const WallScreen(),
-                      ),
-                    ),
-                  ),
-                  ListTile(
-                    title: const Text('Ideas'),
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute<void>(
-                        builder: (_) => const IdeasScreen(),
                       ),
                     ),
                   ),
@@ -237,6 +229,10 @@ class _OfficeHomeState extends State<OfficeHome> {
             NavigationDestination(
               icon: Icon(Icons.inventory_2_outlined),
               label: 'Storage',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.lightbulb_outline),
+              label: 'Ideas',
             ),
             NavigationDestination(icon: Icon(Icons.more_horiz), label: 'More'),
           ],

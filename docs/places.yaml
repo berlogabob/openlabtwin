@@ -12,6 +12,27 @@ places:
     tier: long
     parent: B2
 
+  - code: R15-BOX-CABLES
+    name: Box, cables and power cords
+    kind: storage
+    tier: fast
+    parent: R15 # CONFIRM which shelf
+  - code: R15-BOX-NET
+    name: Box, adapters and network
+    kind: storage
+    tier: fast
+    parent: R15 # CONFIRM which shelf
+  - code: R15-BOX-PERIPH
+    name: Box, mice and keyboards
+    kind: storage
+    tier: fast
+    parent: R15 # CONFIRM which shelf
+  - code: R15-BOX-MCU
+    name: Box, microcontrollers and electronics
+    kind: storage
+    tier: fast
+    parent: R15 # CONFIRM which shelf
+
 cabinets:
   - code: ARM1
     name: Armario 1

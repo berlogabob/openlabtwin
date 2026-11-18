@@ -14,6 +14,8 @@ import db
 from import_inventory import NOTE, blank, norm
 
 SHEETS = ('Inventario Sala 15', 'Sala 1314', 'Inventario Mobiliario')
+# Furniture rows counted under model names on the Sala 13/14 sheet; matched by looking at the two photos (2026-11-18).
+PHOTO_ITEM = {'Projectores de teto': 'Projector NEC', 'Ecras Lenovo': 'Ecrãs Lenovo ThinkVision T2054pC'}
 
 
 def thumb_path(path):
@@ -38,7 +40,7 @@ def photos(path, items):
         for image in ws._images:
             row, col = image.anchor._from.row + 1, image.anchor._from.col + 1
             name = ws.cell(item_row, col).value if furniture and item_row else ws.cell(row, 3).value if not furniture else None
-            item = by_name.get(norm(name)) if not blank(name) else None
+            item = by_name.get(norm(PHOTO_ITEM.get(name, name))) if not blank(name) else None
             raw = image._data()
             digest = hashlib.sha256(raw).digest()
             if item and (item['id'], digest) in seen:
@@ -74,15 +76,16 @@ def upload(database, path, data):
 
 
 def apply(database, pictures):
-    if db.select(database, 'item_photos', {'select': 'id', 'note': f'eq.{NOTE}', 'order': 'id'}):
-        raise ValueError('Already imported: item photos with the import note exist.')
     matched = [p for p in pictures if p['item']]
-    for p in matched:
+    existing = {row['path'] for row in db.select(database, 'item_photos', {'select': 'path', 'order': 'id'})}
+    new = [p for p in matched if p['path'] not in existing]
+    for p in new:
         upload(database, p['path'], p['jpeg'])
         upload(database, thumb_path(p['path']), p['thumb'])
-    if matched:
+    if new:
         db.request(database, 'POST', 'item_photos', body=[
-            {'item_id': p['item']['id'], 'path': p['path'], 'state': 'reference', 'note': NOTE} for p in matched])
+            {'item_id': p['item']['id'], 'path': p['path'], 'state': 'reference', 'note': NOTE} for p in new])
+    print(f'new: {len(new)}, already imported: {len(matched) - len(new)}')
 
 
 def main():
