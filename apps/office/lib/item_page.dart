@@ -356,8 +356,25 @@ class _ItemPageState extends State<ItemPage> {
               title: const Text('Consumable'),
               value: item['kind'] == 'consumable',
               onChanged: (v) async {
-                // shortcut: a stationary item switched on then off comes back as portable; set stationary again in Edit
-                final kind = v ? 'consumable' : 'portable';
+                final kind = v
+                    ? 'consumable'
+                    : await showDialog<String>(
+                        context: context,
+                        builder: (context) => SimpleDialog(
+                          title: const Text('Not consumable. Which kind?'),
+                          children: [
+                            SimpleDialogOption(
+                              onPressed: () => Navigator.pop(context, 'portable'),
+                              child: const Text('Portable'),
+                            ),
+                            SimpleDialogOption(
+                              onPressed: () => Navigator.pop(context, 'stationary'),
+                              child: const Text('Stationary'),
+                            ),
+                          ],
+                        ),
+                      );
+                if (kind == null) return;
                 try {
                   await (widget.saveKind ?? setItemKind)(item['id'] as int, kind);
                   item['kind'] = kind;
