@@ -1,10 +1,11 @@
-# Box Groups & Consumables — Draft for Review
+# Box Groups & Consumables (confirmed 2026-11-18; consumables applied, boxes wait for W36.16)
 
 This draft groups the lab's small, generic parts (many identical, untagged units) into a few boxes, and lists items that get used up. Furniture and large equipment are excluded. Please review and adjust.
 
 ## Box groups
 
 ### Cables & Power Cords
+Box code: R15-BOX-CABLES
 - 429 Cabo HDMI
 - 441 Cabos HDMI
 - 439 Cabos VGA
@@ -16,6 +17,7 @@ This draft groups the lab's small, generic parts (many identical, untagged units
 - 520 Cabos de energia 2 pins
 
 ### Adapters & Network
+Box code: R15-BOX-NET
 - 440 Adaptador 3 VGA
 - 475 Adaptador PS/2Keyboard-USB
 - 443 Asus Network Cards
@@ -23,13 +25,16 @@ This draft groups the lab's small, generic parts (many identical, untagged units
 - 528 TPLINK AX 1500
 
 ### Computer Peripherals
+Box code: R15-BOX-PERIPH
 - 447 Ratos de Computador
 - 448 Teclados de Computador
 - 486 Rato Tiger-M57
 - 487 Teclado Monster - P013
 
 ### Microcontrollers & Electronics
+Box code: R15-BOX-MCU
 - 480 RaspBerry Pi 2 Model B
+- ESP32 boards: no item yet; add one as a quantity item before counting this box
 - 481 Arduino Yún
 - 482 Arduino Begginer Parts Kit
 - 483 Arduino Small BreadBoard
@@ -43,6 +48,12 @@ This draft groups the lab's small, generic parts (many identical, untagged units
 - 463 Astro Pi Kit
 - 473 Bitalino Hearbeat Kit
 - 478 Caixas Plux Kit
+
+### Sensors
+Box code: R15-BOX-SENS (exists already: PascoCar sensor box)
+- 493 Pasco Sensor
+- 494 Pasco Sensor-USB Adaptor
+- 500 Suportes de Fios PascoCar
 
 ## Consumable candidates
 
