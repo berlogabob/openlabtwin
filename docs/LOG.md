@@ -2,6 +2,11 @@
 
 Git is the source of truth. Entries cover work committed in openlabtwin and videowall; decision links point to the records.
 
+## 2026-11-21 (Saturday)
+
+- Recovered the idea bank. The 2026-10-21 move restored the 10-12 backup, which never had the idea, TV or wall tables, so the ideas stayed in the paused old project `huqecytswaswkswofrqd`. unidcom-iade was paused for about 15 minutes (free plan: 2 active projects), the old project restored, every table exported (node `~/openlabtwin-backups/old-project-huqecytswaswkswofrqd/`), then both swapped back. 51 ideas (old ids and status tokens) and 178 skill phrases imported into live; the audit logs show no real idea was ever deleted.
+- Backup now copies ideas, idea_skills, idea_matches, tv_media, tv_slides, wall_slides and wall_state; `tests/test_backup.py` fails when a migration adds a table the backup misses. Office bar: Bookings | Storage | Ideas | TV | More; the Ideas filter buttons show counts.
+
 ## 2026-11-17 (Tuesday)
 
 - Added thumbnails to the photo import and an incremental nightly photo backup.

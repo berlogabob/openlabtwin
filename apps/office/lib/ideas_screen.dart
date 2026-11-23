@@ -13,8 +13,27 @@ class IdeasScreen extends StatefulWidget {
 class _IdeasScreenState extends State<IdeasScreen> {
   String status = 'new', filter = '';
   late Future<List<Rec>> rows = ideas(status);
+  Map<String, int>? counts;
 
-  void _reload() => setState(() => rows = ideas(status));
+  @override
+  void initState() {
+    super.initState();
+    _loadCounts();
+  }
+
+  Future<void> _loadCounts() async {
+    try {
+      final c = await ideaCounts();
+      if (mounted) setState(() => counts = c);
+    } catch (_) {} // the buttons just show no number
+  }
+
+  String _label(String name, String key) => counts == null ? name : '$name ${counts![key]}';
+
+  void _reload() {
+    setState(() => rows = ideas(status));
+    _loadCounts();
+  }
 
   bool _hit(Rec i) {
     final q = filter.trim().toLowerCase();
@@ -30,10 +49,10 @@ class _IdeasScreenState extends State<IdeasScreen> {
             padding: const EdgeInsets.all(12),
             child: Wrap(spacing: 12, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
               SegmentedButton<String>(
-                segments: const [
-                  ButtonSegment(value: 'new', label: Text('New')),
-                  ButtonSegment(value: 'approved', label: Text('Approved')),
-                  ButtonSegment(value: 'archived', label: Text('Archived')),
+                segments: [
+                  ButtonSegment(value: 'new', label: Text(_label('New', 'new'))),
+                  ButtonSegment(value: 'approved', label: Text(_label('Approved', 'approved'))),
+                  ButtonSegment(value: 'archived', label: Text(_label('Archived', 'archived'))),
                 ],
                 selected: {status},
                 onSelectionChanged: (v) => setState(() {

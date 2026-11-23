@@ -1,4 +1,5 @@
 """Run: uv run python tests/test_backup.py"""
+import re
 import sys
 import tempfile
 from pathlib import Path
@@ -13,6 +14,13 @@ assert backup.TABLES.index("activities") < backup.TABLES.index("activity_items")
 assert backup.TABLES.index("items") < backup.TABLES.index("assets") < backup.TABLES.index("item_photos") < backup.TABLES.index("movements")
 assert backup.TABLES.index("people") < backup.TABLES.index("issue_waivers") and backup.ORDER["issue_waivers"] == "key"
 assert backup.TABLES.index("items") < backup.TABLES.index("archive_sheets") < backup.TABLES.index("archive_loans")
+T = backup.TABLES.index
+assert T("people") < T("ideas") < T("idea_skills") and T("ideas") < T("idea_matches")
+assert T("activities") < T("tv_slides") and T("tv_media") < T("tv_slides")
+assert backup.ORDER["idea_skills"] == "idea_id,side,phrase" and backup.ORDER["idea_matches"] == "idea_a,idea_b,kind" and backup.ORDER["tv_media"] == "name"
+sql = "\n".join(p.read_text(encoding="utf-8").lower() for p in sorted((Path(__file__).parent.parent / "supabase" / "migrations").glob("*.sql")))
+created = set(re.findall(r"create table (?:if not exists )?(\w+)", sql)) - set(re.findall(r"drop table (?:if exists )?(\w+)", sql))
+assert created == set(backup.TABLES) | backup.SKIP, f"backup out of step with migrations: {created ^ (set(backup.TABLES) | backup.SKIP)}"
 with tempfile.TemporaryDirectory() as temp:
     root = Path(temp)
     paths = ["items/1/a.jpg", "items/1/a.thumb.jpg", "items/2/b.jpg", "items/2/b.thumb.jpg"]
