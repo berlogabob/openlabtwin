@@ -323,6 +323,13 @@ Future<List<Rec>> ideas(String status) => db
     .eq('status', status)
     .order('created_at', ascending: false);
 
+/// Idea counts per status; 0 when a status has none.
+Map<String, int> countByStatus(Iterable<Rec> rows) => {
+      for (final s in const ['new', 'approved', 'archived']) s: rows.where((r) => r['status'] == s).length,
+    };
+
+Future<Map<String, int>> ideaCounts() async => countByStatus(await db.from('ideas').select('status'));
+
 Future<Rec> idea1(int id) => db
     .from('ideas')
     .select('id,person_id,body,link,can_bring,looking_for,status,workshop,created_at,ai_title,ai_summary,ai_keywords,ai_model,ai_done_at,'

@@ -167,7 +167,7 @@ Students scan the QR code (`apps/site/web/qr/book.svg`, served at `…/openlabtw
 Students drop project ideas at https://berlogabob.github.io/openlabtwin/ideas/. The printable QR code is `…/openlabtwin/qr/ideas.svg`. The form asks for name, email, an optional student number, the idea, an optional link, "I can bring" and "I'm looking for". They get a private link.
 
 - **The AI.** Every 15 minutes the lab PC reads new ideas with the local model (ornith). It writes an English title, a summary and keywords, and turns "I can bring" and "I'm looking for" into skill names. The student sees this on their link straight away. Nothing leaves the lab.
-- **The office.** The **Ideas** tab (bulb icon) at the bottom opens the idea bank (New / Approved / Archived, with a keyword filter). An idea shows what the student wrote, the AI version (edit it and press **Save AI text**), their other ideas, and its matches.
+- **The office.** The **Ideas** tab (bulb icon) at the bottom opens the idea bank (New / Approved / Archived, with a keyword filter; the filter buttons show how many ideas each list has). The bottom bar is Bookings, Storage, Ideas, TV, More (Video wall and Consultation hours are under More). An idea shows what the student wrote, the AI version (edit it and press **Save AI text**), their other ideas, and its matches.
   - **Approve** makes an idea matchable. Matches appear only between approved ideas, on the next AI run.
   - **Archive** retires an idea.
   - **Workshop bank** marks it for workshops (the list shows a cap icon).

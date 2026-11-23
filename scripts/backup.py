@@ -18,8 +18,11 @@ from pathlib import Path
 from db import connect, select
 
 TABLES = ["places", "items", "people", "organizations", "consultation_hours", "activities", "activity_items", "assets", "item_photos", "movements",
-          "issue_waivers", "archive_sheets", "archive_loans", "lessons", "audit_log"]  # parents before children
-ORDER = {"activity_items": "activity_id,item_id", "issue_waivers": "key"}  # tables without an id column
+          "issue_waivers", "archive_sheets", "archive_loans", "lessons",
+          "ideas", "idea_skills", "idea_matches", "tv_media", "tv_slides", "wall_slides", "wall_state", "audit_log"]  # parents before children
+SKIP = {"tv_status", "wall_status"}  # heartbeat rows rewritten every few minutes, nothing to restore
+ORDER = {"activity_items": "activity_id,item_id", "issue_waivers": "key", "idea_skills": "idea_id,side,phrase",
+         "idea_matches": "idea_a,idea_b,kind", "tv_media": "name"}  # tables without an id column
 KEEP = 30
 
 

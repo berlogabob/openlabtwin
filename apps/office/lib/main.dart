@@ -180,17 +180,11 @@ class _OfficeHomeState extends State<OfficeHome> {
             BookingsPage(refs: r),
             StorageHome(refs: r),
             selected == 2 ? const IdeasScreen() : const SizedBox.shrink(),
+            selected == 3 ? const TvScreen() : const SizedBox.shrink(),
             Scaffold(
               appBar: AppBar(title: const Text('More')),
               body: ListView(
                 children: [
-                  ListTile(
-                    title: const Text('TV'),
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute<void>(builder: (_) => const TvScreen()),
-                    ),
-                  ),
                   ListTile(
                     title: const Text('Video wall'),
                     onTap: () => Navigator.push(
@@ -234,6 +228,7 @@ class _OfficeHomeState extends State<OfficeHome> {
               icon: Icon(Icons.lightbulb_outline),
               label: 'Ideas',
             ),
+            NavigationDestination(icon: Icon(Icons.tv), label: 'TV'),
             NavigationDestination(icon: Icon(Icons.more_horiz), label: 'More'),
           ],
         ),

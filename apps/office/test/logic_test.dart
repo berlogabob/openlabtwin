@@ -1,8 +1,14 @@
 // Run: flutter test (from apps/office)
 import 'package:flutter_test/flutter_test.dart';
+import 'package:office/data.dart';
 import 'package:office/logic.dart';
 
 void main() {
+  test('countByStatus counts new, approved and archived, zero when absent', () {
+    expect(countByStatus([{'status': 'new'}, {'status': 'approved'}, {'status': 'new'}]), {'new': 2, 'approved': 1, 'archived': 0});
+    expect(countByStatus([]), {'new': 0, 'approved': 0, 'archived': 0});
+  });
+
   test('gone items have no stock and no loan', () {
     final stock = [{'item_id': 1, 'qty': 0}, {'item_id': 2, 'qty': 1}];
     final loans = [{'item_id': 1, 'qty': 1}];

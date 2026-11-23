@@ -178,7 +178,7 @@ The lab machines sit on the lab's ASUS router (`192.168.1.0/24`); the Mac, the n
 - **If the org is restricted again:** `supabase orgs create`, `supabase projects create`, `supabase db push`, load the newest non-empty folder of `~/openlabtwin-backups` with `scripts/restore.py` (identity columns must be BY DEFAULT while loading), then repoint the node `.env` and the GitHub secret/variables `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `SUPABASE_ANON_KEY`.
 
 - **Pausing:** free Supabase projects pause after 7 days of low activity, and any API request resets the timer. The edge node's export keeps it awake. A paused project can be restored from the dashboard within a year.
-- **Backups:** the free plan keeps none. `scripts/backup.py` on the edge node writes a nightly JSON copy of every table ([edge-node.md → Backups](edge-node.md#backups)).
+- **Backups:** the free plan keeps none. `scripts/backup.py` on the edge node writes a nightly JSON copy of every table except the two heartbeat tables (`tv_status`, `wall_status`); `tests/test_backup.py` fails when a migration adds a table the backup misses ([edge-node.md → Backups](edge-node.md#backups)).
 
 ## Security advisor
 
